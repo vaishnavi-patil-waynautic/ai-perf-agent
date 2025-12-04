@@ -1,0 +1,88 @@
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Button, MenuItem, Select, TextField, Checkbox, Table, TableBody, TableCell, TableHead, TableRow, Chip } from '@mui/material';
+import { fetchJiraItems } from '../../../services/nfr/jiraService';
+import { fetchADOItems } from '../../../services/nfr/adoService';
+import { ExternalItem } from '../types/nfrTypes';
+import { toggleItemSelection } from '../slices/nfrWizardSlice';
+import { RootState } from '../../../store/store'; 
+
+const WizardStep1_Fetch: React.FC = () => {
+  const dispatch = useDispatch();
+  const selectedItems = useSelector((state: RootState) => state.nfrWizard.selectedItems);
+  
+  const [items, setItems] = useState<ExternalItem[]>([]);
+  const [source, setSource] = useState<'Jira' | 'ADO'>('Jira');
+  const [filterType, setFilterType] = useState<string>('All');
+
+  const handleFetch = async () => {
+    // Determine which service to call based on dummy logic
+    // In real app, you might mix both
+    const data = await fetchJiraItems(filterType === 'All' ? undefined : filterType);
+    setItems(data);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex gap-4 items-end bg-gray-50 p-4 rounded-md border border-gray-200">
+        <div className="flex flex-col gap-1 w-48">
+          <label className="text-sm font-medium text-gray-600">Source</label>
+          <Select size="small" value={source} onChange={(e) => setSource(e.target.value as any)} className="bg-white">
+            <MenuItem value="Jira">Jira</MenuItem>
+            <MenuItem value="ADO">Azure DevOps</MenuItem>
+          </Select>
+        </div>
+        
+        <div className="flex flex-col gap-1 w-48">
+           <label className="text-sm font-medium text-gray-600">Type</label>
+           <Select size="small" value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-white">
+             <MenuItem value="All">All Types</MenuItem>
+             <MenuItem value="Story">Story</MenuItem>
+             <MenuItem value="Task">Task</MenuItem>
+             <MenuItem value="Epic">Epic</MenuItem>
+           </Select>
+        </div>
+
+        <Button variant="contained" onClick={handleFetch} className="h-10 bg-blue-600 hover:bg-blue-700">
+          Fetch Items
+        </Button>
+      </div>
+
+      <div className="border rounded-md overflow-hidden">
+        <Table size="small">
+          <TableHead className="bg-gray-100">
+            <TableRow>
+              <TableCell padding="checkbox">Select</TableCell>
+              <TableCell>ID</TableCell>
+              <TableCell>Title</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Tags</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {items.length === 0 ? (
+                <TableRow><TableCell colSpan={5} align="center" className="py-8 text-gray-500">No items fetched yet.</TableCell></TableRow>
+            ) : (
+                items.map((item) => {
+                  const isSelected = selectedItems.some(i => i.id === item.id);
+                  return (
+                    <TableRow key={item.id} hover selected={isSelected}>
+                      <TableCell padding="checkbox">
+                        <Checkbox checked={isSelected} onChange={() => dispatch(toggleItemSelection(item))} />
+                      </TableCell>
+                      <TableCell>{item.id}</TableCell>
+                      <TableCell>{item.title}</TableCell>
+                      <TableCell><Chip label={item.type} size="small" color={item.type === 'Epic' ? 'secondary' : 'default'} /></TableCell>
+                      <TableCell>{item.tags.join(', ')}</TableCell>
+                    </TableRow>
+                  );
+                })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+};
+
+export default WizardStep1_Fetch;
