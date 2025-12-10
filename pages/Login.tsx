@@ -37,7 +37,7 @@ const Login: React.FC = () => {
           className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-40" 
         />
         <div className="relative z-10 text-white p-12">
-          <h1 className="text-5xl font-bold mb-6">Waynautic</h1>
+          <h1 className="text-5xl font-bold mb-6">Waynautic AI Perf Agent</h1>
           <p className="text-xl font-light text-blue-100 max-w-md">
             The next-generation AI Performance Agent. Automate, Analyze, and Accelerate your performance engineering workflows.
           </p>
@@ -48,7 +48,7 @@ const Login: React.FC = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
         <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-xl border border-gray-100">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
+            <h2 className="text-3xl font-bold text-blue-800">Waynautic AI Perf Agent</h2>
             <p className="text-gray-500 mt-2">Sign in to access your dashboard</p>
           </div>
 
@@ -74,7 +74,7 @@ const Login: React.FC = () => {
                 required
               />
               <div className="flex justify-end -mt-3">
-                <Link to="/forgot-password" class="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                <Link to="/forgot-password" className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
                   Forgot Password?
                 </Link>
               </div>

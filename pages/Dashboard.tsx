@@ -18,61 +18,69 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  if (!selectedApp) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500 p-10">
-        <Activity size={64} className="mb-4 text-gray-300" />
-        <h2 className="text-xl font-medium mb-2">No Application Selected</h2>
-        <p>Select an application from the sidebar to view available tools.</p>
-      </div>
-    );
-  }
+  // if (!selectedApp) {
+  //   return (
+  //     <div className="flex flex-col items-center justify-center h-full text-gray-500 p-10">
+  //       <Activity size={64} className="mb-4 text-gray-300" />
+  //       <h2 className="text-xl font-medium mb-2">No Application Selected</h2>
+  //       <p>Select an application from the sidebar to view available tools.</p>
+  //     </div>
+  //   );
+  // }
 
   const tools = [
-    { 
-      id: 'autoscript', 
-      title: 'AutoScript', 
+    {
+      id: 'autoscript',
+      title: 'AutoScript',
       desc: 'Generate JMX scripts from HAR files automatically.',
       icon: <Zap size={24} className="text-yellow-600" />,
       color: 'bg-yellow-50 hover:border-yellow-300',
       action: () => navigate('/autoscript')
     },
-    { 
-      id: 'analysis', 
-      title: 'Auto Analysis', 
+    {
+      id: 'analysis',
+      title: 'Auto Analysis',
       desc: 'Analyze performance test results with AI insights.',
       icon: <Activity size={24} className="text-purple-600" />,
       color: 'bg-purple-50 hover:border-purple-300',
-      action: () => navigate('/nfr')
+      action: () => navigate('/autoanalysis')
     },
-    { 
-      id: 'governance', 
-      title: 'Governance', 
+    {
+      id: 'governance',
+      title: (
+        <div className="flex items-center space-x-2">
+          <span>Governance</span>
+          <span className="bg-yellow-200 text-yellow-800 text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full">
+            WIP
+          </span>
+        </div>
+      ),
       desc: 'Monitor compliance and NFR standards across pipelines.',
-      icon: <ShieldCheck size={24} className="text-green-600" />,
+      icon: (<ShieldCheck size={24} className="text-green-600" />),
       color: 'bg-green-50 hover:border-green-300',
       action: () => alert('Module coming soon')
     },
-    { 
-      id: 'scripting', 
-      title: 'Scripting Helper', 
-      desc: 'AI assistant for writing complex performance logic.',
+    {
+      id: 'nfr',
+      title: 'NFR Strategy Hub ',
+      desc: 'Generate Performance Test Strategy using AI',
       icon: <FileCode size={24} className="text-blue-600" />,
       color: 'bg-blue-50 hover:border-blue-300',
-      action: () => alert('Module coming soon')
+      action: () => navigate('/nfr')
     }
   ];
 
   return (
-    <div className="p-8">
+    <div className="p-10 mx-8">
       <div className="mb-8 border-b border-gray-200 pb-4">
-        <h1 className="text-2xl font-bold text-gray-800">{selectedApp.name}</h1>
-        <p className="text-gray-500">Project: {selectedProject.name}</p>
+        {/* <h1 className="text-2xl font-bold text-gray-800">{selectedApp.name}</h1> */}
+        {/* <p className="text-gray-500">Project: {selectedProject.name}</p> */}
+        <h1 className="text-2xl font-bold text-gray-800">{selectedProject.name}</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tools.map((tool) => (
-          <div 
+          <div
             key={tool.id}
             onClick={tool.action}
             className={`

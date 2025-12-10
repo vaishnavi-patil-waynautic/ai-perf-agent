@@ -134,73 +134,149 @@ export const ChatInput: React.FC<InputProps> = ({ onSend, isFullScreen }) => {
   };
 
   return (
-   <div
+//    <div
+//   className={`
+//     bg-white border-t border-gray-200 w-full
+//     ${isFullScreen ? "py-4" : "py-3"}  /* reduce padding for height */
+//   `}
+// >
+//   {/* Centered container */}
+//   <div
+//     className={`
+//       mx-auto w-full flex flex-col
+//       ${isFullScreen ? "max-w-4xl gap-2 px-4" : "max-w-xl gap-2 px-3"}
+//     `}
+//   >
+
+//       {/* Model Selector */}
+//       <div className="flex items-center justify-between mb-2 px-1">
+//          <Button 
+//             size="small" 
+//             startIcon={<SmartToyIcon fontSize="small" />}
+//             endIcon={<KeyboardArrowDownIcon fontSize="small" />}
+//             onClick={(e) => setAnchorEl(e.currentTarget)}
+//             className="text-gray-600 text-xs normal-case hover:bg-gray-100"
+//          >
+//             Model: <span className="font-bold ml-1">{selectedModel.name}</span>
+//          </Button>
+//          <Menu
+//             anchorEl={anchorEl}
+//             open={Boolean(anchorEl)}
+//             onClose={() => setAnchorEl(null)}
+//          >
+//             {models.map((m) => (
+//                 <MenuItem key={m.id} onClick={() => { setSelectedModel(m); setAnchorEl(null); }} dense>
+//                     {m.name}
+//                 </MenuItem>
+//             ))}
+//          </Menu>
+//       </div>
+
+//       {/* Input Field */}
+//       <div className="flex gap-2 items-end">
+//         <TextField
+//             fullWidth
+//             multiline
+//             maxRows={3}
+//             variant="outlined"
+//             placeholder="Ask me anything..."
+//             size="small"
+//             value={text}
+//             onChange={(e) => setText(e.target.value)}
+//             onKeyDown={handleKeyDown}
+//             InputProps={{
+//                 style: { fontSize: '0.9rem', padding: '8px 12px', borderRadius: '12px' }
+//             }}
+//             className="bg-gray-50"
+//         />
+//         <IconButton 
+//             color="primary" 
+//             className="bg-blue-600 text-white hover:bg-blue-700 w-10 h-10 shadow-sm"
+//             onClick={handleSend}
+//         >
+//             <SendIcon fontSize="small" />
+//         </IconButton>
+//       </div>
+//       <div className="text-[10px] text-gray-400 text-center mt-2">
+//         AI can make mistakes. Check important info.
+//       </div>
+//       </div>
+//     </div>
+
+
+<div
   className={`
     bg-white border-t border-gray-200 w-full
-    ${isFullScreen ? "py-4" : "py-3"}  /* reduce padding for height */
+    ${isFullScreen ? "py-4" : "py-3"}
   `}
 >
   {/* Centered container */}
   <div
     className={`
-      mx-auto w-full flex flex-col
+      mx-auto w-full flex flex-row items-end
       ${isFullScreen ? "max-w-4xl gap-2 px-4" : "max-w-xl gap-2 px-3"}
     `}
   >
-
-      {/* Model Selector */}
-      <div className="flex items-center justify-between mb-2 px-1">
-         <Button 
-            size="small" 
-            startIcon={<SmartToyIcon fontSize="small" />}
-            endIcon={<KeyboardArrowDownIcon fontSize="small" />}
-            onClick={(e) => setAnchorEl(e.currentTarget)}
-            className="text-gray-600 text-xs normal-case hover:bg-gray-100"
-         >
-            Model: <span className="font-bold ml-1">{selectedModel.name}</span>
-         </Button>
-         <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={() => setAnchorEl(null)}
-         >
-            {models.map((m) => (
-                <MenuItem key={m.id} onClick={() => { setSelectedModel(m); setAnchorEl(null); }} dense>
-                    {m.name}
-                </MenuItem>
-            ))}
-         </Menu>
-      </div>
-
-      {/* Input Field */}
-      <div className="flex gap-2 items-end">
-        <TextField
-            fullWidth
-            multiline
-            maxRows={3}
-            variant="outlined"
-            placeholder="Ask me anything..."
-            size="small"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            InputProps={{
-                style: { fontSize: '0.9rem', padding: '8px 12px', borderRadius: '12px' }
-            }}
-            className="bg-gray-50"
-        />
-        <IconButton 
-            color="primary" 
-            className="bg-blue-600 text-white hover:bg-blue-700 w-10 h-10 shadow-sm"
-            onClick={handleSend}
-        >
-            <SendIcon fontSize="small" />
-        </IconButton>
-      </div>
-      <div className="text-[10px] text-gray-400 text-center mt-2">
-        AI can make mistakes. Check important info.
-      </div>
-      </div>
+    {/* Model Selector (fixed width) */}
+    <div className="flex-shrink-0">
+      <Button 
+        size="small" 
+        startIcon={<SmartToyIcon fontSize="small" />}
+        endIcon={<KeyboardArrowDownIcon fontSize="small" />}
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+        className="text-gray-600 text-xs normal-case hover:bg-gray-100"
+      >
+        {selectedModel.name}
+      </Button>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
+      >
+        {models.map((m) => (
+            <MenuItem key={m.id} onClick={() => { setSelectedModel(m); setAnchorEl(null); }} dense>
+                {m.name}
+            </MenuItem>
+        ))}
+      </Menu>
     </div>
+
+    {/* Input Field (flex-1 = take remaining space) */}
+    <TextField
+      fullWidth
+      multiline
+      maxRows={3}
+      variant="outlined"
+      placeholder="Ask me anything..."
+      size="small"
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          handleSend();
+        }
+      }}
+      InputProps={{
+        style: { fontSize: '0.9rem', padding: '8px 12px', borderRadius: '12px' }
+      }}
+      className="bg-gray-50 flex-1"
+    />
+
+    {/* Send Button (fixed size) */}
+    <IconButton 
+      color="primary" 
+      className="bg-blue-600 text-white hover:bg-blue-700 w-10 h-10 shadow-sm"
+      onClick={handleSend}
+    >
+      <SendIcon fontSize="small" />
+    </IconButton>
+  </div>
+
+  <div className="text-[10px] text-gray-400 text-center mt-2">
+    AI can make mistakes. Check important info.
+  </div>
+</div>
+
   );
 };

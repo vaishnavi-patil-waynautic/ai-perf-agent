@@ -22,67 +22,195 @@ const WizardStep1_Fetch: React.FC = () => {
     setItems(data);
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex gap-4 items-end bg-gray-50 p-4 rounded-md border border-gray-200">
-        <div className="flex flex-col gap-1 w-48">
-          <label className="text-sm font-medium text-gray-600">Source</label>
-          <Select size="small" value={source} onChange={(e) => setSource(e.target.value as any)} className="bg-white">
-            <MenuItem value="Jira">Jira</MenuItem>
-            <MenuItem value="ADO">Azure DevOps</MenuItem>
-          </Select>
-        </div>
+//   return (
+//     <div className="space-y-3">
+//       <div className="flex gap-4 items-end bg-gray-50 p-4 rounded-md border border-gray-200">
+//         <div className="flex flex-col gap-1 w-48">
+//           <label className="text-xs font-medium text-gray-600">Source</label>
+//           <Select className="text-sm bg-white" size="small" value={source} onChange={(e) => setSource(e.target.value as any)} >
+//             <MenuItem className="text-sm" value="Jira">Jira</MenuItem>
+//             <MenuItem className="text-sm" value="ADO">Azure DevOps</MenuItem>
+//           </Select>
+//         </div>
         
-        <div className="flex flex-col gap-1 w-48">
-           <label className="text-sm font-medium text-gray-600">Type</label>
-           <Select size="small" value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-white">
-             <MenuItem value="All">All Types</MenuItem>
-             <MenuItem value="Story">Story</MenuItem>
-             <MenuItem value="Task">Task</MenuItem>
-             <MenuItem value="Epic">Epic</MenuItem>
-           </Select>
-        </div>
+//         <div className="flex flex-col gap-1 w-48">
+//            <label className="text-xs font-medium text-gray-600">Type</label>
+//            <Select size="small" value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-white">
+//              <MenuItem value="All">All Types</MenuItem>
+//              <MenuItem value="Story">Story</MenuItem>
+//              <MenuItem value="Task">Task</MenuItem>
+//              <MenuItem value="Epic">Epic</MenuItem>
+//            </Select>
+//         </div>
 
-        <Button variant="contained" onClick={handleFetch} className="h-10 bg-blue-600 hover:bg-blue-700">
-          Fetch Items
-        </Button>
+//         <Button variant="contained" onClick={handleFetch} className="h-10 bg-blue-600 hover:bg-blue-700">
+//           Fetch Items
+//         </Button>
+//       </div>
+
+//       <div className="border rounded-md overflow-hidden">
+//         <Table size="small">
+//           <TableHead className="bg-gray-100">
+//             <TableRow>
+//               <TableCell padding="checkbox">Select</TableCell>
+//               <TableCell>ID</TableCell>
+//               <TableCell>Title</TableCell>
+//               <TableCell>Type</TableCell>
+//               <TableCell>Tags</TableCell>
+//             </TableRow>
+//           </TableHead>
+//           <TableBody>
+//             {items.length === 0 ? (
+//                 <TableRow><TableCell colSpan={5} align="center" className="py-8 text-gray-500">No items fetched yet.</TableCell></TableRow>
+//             ) : (
+//                 items.map((item) => {
+//                   const isSelected = selectedItems.some(i => i.id === item.id);
+//                   return (
+//                     <TableRow key={item.id} hover selected={isSelected}>
+//                       <TableCell padding="checkbox">
+//                         <Checkbox checked={isSelected} onChange={() => dispatch(toggleItemSelection(item))} />
+//                       </TableCell>
+//                       <TableCell>{item.id}</TableCell>
+//                       <TableCell>{item.title}</TableCell>
+//                       <TableCell><Chip label={item.type} size="small" color={item.type === 'Epic' ? 'secondary' : 'default'} /></TableCell>
+//                       <TableCell>{item.tags.join(', ')}</TableCell>
+//                     </TableRow>
+//                   );
+//                 })
+//             )}
+//           </TableBody>
+//         </Table>
+//       </div>
+//     </div>
+//   );
+
+return (
+  <div className="space-y-3 text-xs">   {/* GLOBAL small text */}
+    
+    {/* === FILTER BAR === */}
+    <div className="flex gap-4 items-end bg-gray-50 p-4 rounded-md border border-gray-200 text-xs">
+      
+      <div className="flex flex-col gap-1 w-48">
+        <label className="text-xs font-medium text-gray-600">Source</label>
+
+        <Select
+          size="small"
+          value={source}
+          onChange={(e) => setSource(e.target.value as any)}
+          className="bg-white"
+          sx={{
+            fontSize: '0.75rem',
+            '& .MuiMenuItem-root': { fontSize: '0.75rem' },
+          }}
+        >
+          <MenuItem value="Jira" sx={{ fontSize: '0.75rem' }}>Jira</MenuItem>
+          <MenuItem value="ADO" sx={{ fontSize: '0.75rem' }}>Azure DevOps</MenuItem>
+        </Select>
       </div>
 
-      <div className="border rounded-md overflow-hidden">
-        <Table size="small">
-          <TableHead className="bg-gray-100">
-            <TableRow>
-              <TableCell padding="checkbox">Select</TableCell>
-              <TableCell>ID</TableCell>
-              <TableCell>Title</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Tags</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.length === 0 ? (
-                <TableRow><TableCell colSpan={5} align="center" className="py-8 text-gray-500">No items fetched yet.</TableCell></TableRow>
-            ) : (
-                items.map((item) => {
-                  const isSelected = selectedItems.some(i => i.id === item.id);
-                  return (
-                    <TableRow key={item.id} hover selected={isSelected}>
-                      <TableCell padding="checkbox">
-                        <Checkbox checked={isSelected} onChange={() => dispatch(toggleItemSelection(item))} />
-                      </TableCell>
-                      <TableCell>{item.id}</TableCell>
-                      <TableCell>{item.title}</TableCell>
-                      <TableCell><Chip label={item.type} size="small" color={item.type === 'Epic' ? 'secondary' : 'default'} /></TableCell>
-                      <TableCell>{item.tags.join(', ')}</TableCell>
-                    </TableRow>
-                  );
-                })
-            )}
-          </TableBody>
-        </Table>
+      <div className="flex flex-col gap-1 w-48">
+        <label className="text-xs font-medium text-gray-600">Type</label>
+
+        <Select
+          size="small"
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+          className="bg-white"
+          sx={{
+            fontSize: '0.75rem',
+            '& .MuiMenuItem-root': { fontSize: '0.75rem' },
+          }}
+        >
+          <MenuItem value="All" sx={{ fontSize: '0.75rem' }}>All Types</MenuItem>
+          <MenuItem value="Story" sx={{ fontSize: '0.75rem' }}>Story</MenuItem>
+          <MenuItem value="Task" sx={{ fontSize: '0.75rem' }}>Task</MenuItem>
+          <MenuItem value="Epic" sx={{ fontSize: '0.75rem' }}>Epic</MenuItem>
+        </Select>
       </div>
+
+      <Button
+        variant="contained"
+        onClick={handleFetch}
+        className="h-9 bg-blue-600 hover:bg-blue-700"
+        sx={{ fontSize: '0.70rem', padding: '4px 10px' }}
+      >
+        Fetch Items
+      </Button>
     </div>
-  );
+
+    {/* === TABLE === */}
+    <div className="border rounded-md overflow-hidden">
+      <Table
+        size="small"
+        sx={{
+          '& th, & td': {
+            fontSize: '0.75rem',      // <-- shrink everything
+            paddingTop: '4px',
+            paddingBottom: '4px',
+          },
+        }}
+      >
+        <TableHead
+            className="bg-gray-100"
+            sx={{
+                "& th": {
+                color: "#4B5563",  // Tailwind gray-600
+                fontWeight: 500,
+                }
+            }}
+            >
+          <TableRow>
+            <TableCell padding="checkbox">Select</TableCell>
+            <TableCell>ID</TableCell>
+            <TableCell>Title</TableCell>
+            <TableCell>Type</TableCell>
+            <TableCell>Tags</TableCell>
+          </TableRow>
+        </TableHead>
+
+        <TableBody>
+          {items.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={5}
+                align="center"
+                className="py-8 text-gray-500"
+              >
+                No items fetched yet.
+              </TableCell>
+            </TableRow>
+          ) : (
+            items.map((item) => {
+              const isSelected = selectedItems.some(i => i.id === item.id);
+              return (
+                <TableRow key={item.id} hover selected={isSelected}>
+                  <TableCell padding="checkbox">
+                    <Checkbox size="small" checked={isSelected} onChange={() => dispatch(toggleItemSelection(item))} />
+                  </TableCell>
+                  
+                  <TableCell>{item.id}</TableCell>
+                  <TableCell>{item.title}</TableCell>
+
+                  <TableCell>
+                    <Chip
+                      label={item.type}
+                      size="small"
+                      color={item.type === 'Epic' ? 'secondary' : 'default'}
+                      sx={{ fontSize: '0.65rem', height: '20px' }}
+                    />
+                  </TableCell>
+
+                  <TableCell>{item.tags.join(', ')}</TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  </div>
+);
+
 };
 
 export default WizardStep1_Fetch;

@@ -1,10 +1,12 @@
 import React from 'react';
-import { Menu, Search, User as UserIcon, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, Search, User as UserIcon, LogOut, ChevronDown, Settings } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
 import { selectProject } from '../store/projectSlice';
 import { logout } from '../store/authSlice';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from "react-router-dom";
+
+
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -16,6 +18,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { projects, selectedProject } = useSelector((state: RootState) => state.project);
   const [profileOpen, setProfileOpen] = React.useState(false);
+  const location = useLocation();
 
   const handleLogout = () => {
     dispatch(logout());
@@ -24,22 +27,48 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="h-16 px-4 flex items-center justify-between">
-        
+      <div className="h-16 px-6 flex items-center justify-between">
+
         {/* Left Section */}
         <div className="flex items-center space-x-4">
           <button onClick={toggleSidebar} className="text-gray-500 hover:text-gray-700 focus:outline-none">
             <Menu size={24} />
           </button>
-          
-          <div className="flex items-center space-x-2">
-            <div className="bg-blue-600 text-white font-bold p-1 rounded text-xs">EXG</div>
-            <span className="text-xl font-bold text-gray-800 tracking-tight">Waynautic AI Perf Agent</span>
-          </div>
 
-          <div className="h-6 w-px bg-gray-300 mx-2"></div>
+          <div
+  className="flex items-center space-x-3 cursor-pointer"
+  onClick={() => navigate('/')}
+>
+  <img
+    src="../static/exgenix.png"
+    alt="Exgenix"
+    className="h-6 w-auto"
+  />
+
+  <span className="text-xl font-bold text-gray-800 tracking-tight">
+    Waynautic AI Perf Agent
+  </span>
+</div>
+
+
+
+          {/* <div className="h-6 w-px bg-gray-300 mx-2"></div> */}
 
           {/* Project Dropdown */}
+
+        </div>
+
+        {/* Right Section */}
+        <div className="flex items-center space-x-6">
+          {/* <div className="relative">
+            <input 
+              type="text" 
+              placeholder="Search..." 
+              className="bg-gray-100 text-gray-700 rounded-full pl-10 pr-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 transition-all"
+            />
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          </div> */}
+
           <div className="relative">
             <select
               value={selectedProject?.id || ''}
@@ -53,22 +82,10 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
             </select>
             <ChevronDown size={14} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
           </div>
-        </div>
-
-        {/* Right Section */}
-        <div className="flex items-center space-x-6">
-          <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Search..." 
-              className="bg-gray-100 text-gray-700 rounded-full pl-10 pr-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 transition-all"
-            />
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          </div>
 
           {/* Profile Dropdown */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => setProfileOpen(!profileOpen)}
               className="flex items-center space-x-2 focus:outline-none"
             >
@@ -81,7 +98,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
 
             {profileOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-100 py-1 animate-in fade-in zoom-in duration-200 origin-top-right">
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
                 >
@@ -96,17 +113,106 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
 
       {/* Module Options (Sub-navbar) */}
       <div className="px-4 py-0 bg-gray-50 border-b border-gray-200 overflow-x-auto">
-        <nav className="flex space-x-1">
-          {['PTLC', 'NFR', 'Scripting', 'Auto Analysis', 'AI Governance', 'AI Chatbot', 'Governance / Dashboard'].map((item) => (
-            <button 
-              key={item}
-              className="px-3 py-2 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-white rounded-t-md transition-colors border-b-2 border-transparent hover:border-blue-500 whitespace-nowrap"
+        {/* <nav className="flex space-x-1">
+
+    <button
+      onClick={() => navigate('/autoscript')}
+      className="px-3 py-2 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-white rounded-t-md transition-colors border-b-2 border-transparent hover:border-blue-500 whitespace-nowrap"
+    >
+      Auto Script
+    </button>
+
+    <button
+      onClick={() => navigate('/autoanalysis')}
+      className="px-3 py-2 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-white rounded-t-md transition-colors border-b-2 border-transparent hover:border-blue-500 whitespace-nowrap"
+    >
+      Auto Analysis
+    </button>
+
+    <button
+      onClick={() => navigate('/nfr')}
+      className="px-3 py-2 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-white rounded-t-md transition-colors border-b-2 border-transparent hover:border-blue-500 whitespace-nowrap"
+    >
+      NFR
+    </button>
+
+    <button
+      onClick={() => navigate('/governance')}
+      className="px-3 py-2 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-white rounded-t-md transition-colors border-b-2 border-transparent hover:border-blue-500 whitespace-nowrap"
+    >
+      Governance / Dashboard
+    </button>
+
+  </nav> */}
+
+
+        <nav className="flex items-center justify-between">
+
+          {/* Left: tabs */}
+          <div className="flex space-x-1">
+
+            <button
+    onClick={() => navigate('/autoscript')}
+    className={`px-3 py-2 text-xs font-medium rounded-t-md transition-colors whitespace-nowrap border-b-2
+      ${location.pathname.startsWith('/autoscript')
+        ? 'text-blue-600 bg-white border-blue-500'
+        : 'text-gray-600 hover:text-blue-600 hover:bg-white hover:border-blue-500 border-transparent'}
+    `}
+  >
+    Auto Script
+  </button>
+
+            <button
+              onClick={() => navigate('/autoanalysis')}
+              className={`px-3 py-2 text-xs font-medium rounded-t-md transition-colors whitespace-nowrap border-b-2
+        ${location.pathname === '/autoanalysis'
+                  ? 'text-blue-600 bg-white border-blue-500'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-white hover:border-blue-500 border-transparent'}
+      `}
             >
-              {item}
+              Auto Analysis
             </button>
-          ))}
+
+            <button
+              onClick={() => navigate('/nfr')}
+              className={`px-3 py-2 text-xs font-medium rounded-t-md transition-colors whitespace-nowrap border-b-2
+        ${location.pathname === '/nfr'
+                  ? 'text-blue-600 bg-white border-blue-500'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-white hover:border-blue-500 border-transparent'}
+      `}
+            >
+              NFR
+            </button>
+
+            <button
+  onClick={() => navigate('/governance')}
+  className={`px-3 py-2 text-xs font-medium rounded-t-md transition-colors whitespace-nowrap border-b-2 flex items-center space-x-2
+    ${location.pathname === '/governance'
+      ? 'text-blue-600 bg-white border-blue-500'
+      : 'text-gray-600 hover:text-blue-600 hover:bg-white hover:border-blue-500 border-transparent'}
+  `}
+>
+  <span>Governance / Dashboard</span>
+  <span className="bg-yellow-200 text-yellow-800 text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full">
+    WIP
+  </span>
+</button>
+
+
+          </div>
+
+          {/* Right: settings icon */}
+          <button
+            onClick={() => navigate('/settings')}
+            className="p-1 py-3 text-gray-600 hover:text-blue-600 hover:bg-white rounded-md transition-colors"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
+
         </nav>
+
       </div>
+
     </header>
   );
 };

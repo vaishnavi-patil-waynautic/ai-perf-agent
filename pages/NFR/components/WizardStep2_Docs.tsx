@@ -21,9 +21,9 @@ const WizardStep2_Docs: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-10 space-y-6">
+    <div className="flex flex-col items-center justify-center py-5 space-y-6">
       <div 
-        className="border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg p-10 flex flex-col items-center cursor-pointer hover:bg-blue-100 transition-colors"
+        className="border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg p-5 flex flex-col items-center cursor-pointer hover:bg-blue-100 transition-colors"
         onClick={() => fileInputRef.current?.click()}
       >
         <CloudUploadIcon style={{ fontSize: 60 }} className="text-blue-500 mb-2" />
@@ -40,16 +40,28 @@ const WizardStep2_Docs: React.FC = () => {
       </div>
 
       <div className="w-full max-w-md">
-        <h4 className="text-lg font-semibold mb-2">Attached Files:</h4>
-        <List dense className="bg-white border rounded-md">
-            {files.length === 0 && <ListItem><ListItemText primary="No files selected" className="text-gray-400" /></ListItem>}
+        <h4 className="text-lg font-semibold mb-1">Attached Files:</h4>
+        <List dense className="bg-white ">
+            {files.length === 0 && (
+               <ListItem sx={{ justifyContent: "center" }}>
+                    <ListItemText
+                        primary="No files selected"
+                        className="text-gray-400 text-center"
+                    />
+                </ListItem>
+
+            )}
+
             {files.map((f, idx) => (
-                <ListItem key={idx} divider={idx !== files.length - 1}>
+                <div key={idx} className="my-1">   {/* margin between items */}
+                <ListItem className="border rounded-md">
                     <ListItemIcon><InsertDriveFileIcon /></ListItemIcon>
                     <ListItemText primary={f} />
                 </ListItem>
+                </div>
             ))}
         </List>
+
       </div>
     </div>
   );

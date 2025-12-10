@@ -6,8 +6,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AddIcon from '@mui/icons-material/Add';
-import { RootState } from '../../../store/store'; 
+import { RootState } from '../../../store/store';
 import { deleteStrategy } from '../slices/nfrListSlice';
+import { StatusBadge } from '@/pages/autoanalysis/components/StatusBadge';
+import PrimaryButton from '@/pages/autoanalysis/components/PrimaryButton';
+import { Download, EditIcon, Trash2, TrashIcon } from 'lucide-react';
 
 const NFRPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,19 +18,19 @@ const NFRPage: React.FC = () => {
   const { strategies } = useSelector((state: RootState) => state.nfrList);
 
   const getStatusColor = (status: string) => {
-      switch(status) {
-          case 'Completed': return 'success';
-          case 'In Process': return 'warning';
-          case 'Failed': return 'error';
-          default: return 'default';
-      }
+    switch (status) {
+      case 'Completed': return 'success';
+      case 'In Process': return 'warning';
+      case 'Failed': return 'error';
+      default: return 'default';
+    }
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="m-auto max-w-6xl p-10">
       {/* Header Section */}
-      <div className="flex flex-col items-center justify-center mb-10 space-y-4">
-        <h1 className="text-3xl font-bold text-gray-800">Performance Strategy Hub</h1>
+      {/* <div className="flex flex-col items-center justify-center mb-10 space-y-4">
+        <h1 className="text-2xl font-bold text-gray-800 flex items-center">Performance Strategy Hub</h1>
         <Button 
             variant="contained" 
             size="large" 
@@ -37,64 +40,289 @@ const NFRPage: React.FC = () => {
         >
             Generate Performance Test Strategy
         </Button>
+      </div> */}
+
+      <div className="mb-8 flex items-center justify-between">
+
+        {/* Left side text */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Performance Strategy Hub
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Generate Performance Test Strategy using AI
+          </p>
+        </div>
+
+        {/* Right side button */}
+        <Button
+          variant="contained"
+          size="medium"
+          startIcon={<AddIcon />}
+          className="mt-1 rounded min-w-fit"
+          disableElevation
+          onClick={() => navigate('/nfr/wizard')}
+        >
+          Generate Performance Test Strategy
+        </Button>
+
+
       </div>
 
+
+      {/* <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+          Performance Strategy Hub
+        </h1>
+        <p className="text-gray-500 mt-1">Generate Performance Test Strategy using AI</p>
+      </div>
+
+      <div className="flex flex-col items-center justify-center mb-10 space-y-4">
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/nfr/wizard')}
+          sx={{
+            textTransform: "none",
+            px: 3,            // horizontal padding
+            py: 1.5,             // vertical padding
+            fontSize: "1.1rem",
+            borderRadius: "9px", // fully rounded
+            backgroundColor: "#4375e2ff",
+            "&:hover": {
+              backgroundColor: "#1d4ed8",
+            },
+            boxShadow: "0 5px 10px rgba(0,0,0,0.15)", // bigger shadow
+          }}
+        >
+          Generate Performance Test Strategy
+        </Button>
+
+
+      </div> */}
+
       {/* Table Section */}
-      <Paper elevation={2} className="overflow-hidden rounded-xl border border-gray-200">
-          <div className="p-4 bg-gray-50 border-b font-semibold text-gray-700">
-              Generated Performance Test Strategies
-          </div>
-          <TableContainer>
-            <Table>
-                <TableHead>
-                    <TableRow className="bg-gray-100">
-                        <TableCell className="font-bold">App Name</TableCell>
-                        <TableCell className="font-bold">Created On</TableCell>
-                        <TableCell className="font-bold">Status</TableCell>
-                        <TableCell className="font-bold">Created By</TableCell>
-                        <TableCell className="font-bold text-center">Actions</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {strategies.map((row) => (
-                        <TableRow key={row.id} hover>
-                            <TableCell>{row.appName}</TableCell>
-                            <TableCell>{row.createdOn}</TableCell>
-                            <TableCell>
-                                <Chip label={row.status} color={getStatusColor(row.status) as any} size="small" variant="outlined" />
-                            </TableCell>
-                            <TableCell>{row.createdBy}</TableCell>
-                            <TableCell align="center">
-                                <div className="flex justify-center gap-2">
-                                    <Button 
-                                        variant="outlined" 
-                                        size="small" 
-                                        startIcon={<VisibilityIcon />}
-                                        onClick={() => navigate(`/nfr/result/${row.id}`)}
-                                        disabled={row.status !== 'Completed'}
-                                    >
-                                        View
-                                    </Button>
-                                    <IconButton color="primary" disabled={row.status !== 'Completed'}>
-                                        <DownloadIcon />
-                                    </IconButton>
-                                    <IconButton color="error" onClick={() => dispatch(deleteStrategy(row.id))}>
-                                        <DeleteIcon />
-                                    </IconButton>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                    {strategies.length === 0 && (
-                        <TableRow>
-                            <TableCell colSpan={5} align="center" className="py-10 text-gray-500">
-                                No strategies generated yet. Click the button above to start.
-                            </TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
-            </Table>
-          </TableContainer>
+      <Paper elevation={0} className="overflow-hidden rounded-lg  ">
+        <div className="pl-1 pb-4 bg-gray-50 font-semibold text-gray-700">
+          Generated Performance Test Strategies
+        </div>
+        {/* 
+        <TableContainer component={Paper} elevation={0} className="border border-slate-200">
+
+          <Table>
+            <TableHead>
+              <TableRow className="bg-gray-100">
+                <TableCell className="font-bold">APP NAME</TableCell>
+                <TableCell className="font-bold">CREATED ON</TableCell>
+                <TableCell className="font-bold">STATUS</TableCell>
+                <TableCell className="font-bold">CREATED BY</TableCell>
+                <TableCell className="font-bold text-center"></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {strategies.map((row) => (
+                <TableRow key={row.id} hover>
+                  <TableCell>{row.appName}</TableCell>
+                  <TableCell>{row.createdOn}</TableCell>
+                  {/* <TableCell>
+                    <Chip label={row.status} color={getStatusColor(row.status) as any} size="small" variant="outlined" />
+                  </TableCell> 
+                  <TableCell>
+                    <StatusBadge status={row.status} />
+                  </TableCell>
+
+                  <TableCell>{row.createdBy}</TableCell>
+                  <TableCell align="center">
+                    <div className="flex justify-center gap-2">
+
+
+                      <PrimaryButton
+                        size="small"
+                        onClick={() => navigate(`/nfr/result/${row.id}`)}
+                        disabled={row.status != 'Completed'}
+                      >
+                        View
+                      </PrimaryButton>
+
+                      <button
+                        className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-colors"
+                        title="Download"
+                        disabled={row.status !== 'Completed'}
+                      >
+                        <Download size={18} />
+                      </button>
+                      <button
+                        onClick={() => dispatch(deleteStrategy(row.id))}
+                        className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {strategies.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" className="py-10 text-gray-500">
+                    No strategies generated yet. Click the button above to start.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer> */}
+
+
+        {/* <div className="space-y-4 w-full mx-auto bg-transparent">
+
+          {strategies.length === 0 && (
+            <div className="text-center py-10 text-gray-500">
+              No strategies generated yet. Click the button above to start.
+            </div>
+          )}
+
+          {strategies.map((row) => (
+            <div
+              key={row.id}
+              className="flex flex-col sm:flex-row sm:items-start sm:justify-between 
+             p-4 bg-white rounded-lg shadow-sm border border-gray-200 bg-gray-50"
+            >
+
+              {/* Left section 
+              <div className="flex-1 space-y-1">
+
+                {/* Name + Status on same row 
+                <div className="flex items-center space-x-3 mb-1">
+                  <div className="text-base font-semibold text-gray-900">
+                    {row.appName}
+                  </div>
+                  <StatusBadge status={row.status} />
+                </div>
+
+                {/* Created On 
+                <div className="text-xs text-gray-500">
+                  Created On: {row.createdOn}
+                </div>
+
+                {/* Created By
+                <div className="text-xs text-gray-500">
+                  Created By: {row.createdBy}
+                </div>
+              </div>
+
+              {/* Right section: Actions 
+              <div className="flex items-center space-x-3 mt-2 sm:mt-0">
+                <PrimaryButton
+                  size="small"
+                  onClick={() => navigate(`/nfr/result/${row.id}`)}
+                  disabled={row.status !== "Completed"}
+                >
+                  View
+                </PrimaryButton>
+
+                <button
+                  className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-colors"
+                  title="Download"
+                  disabled={row.status !== "Completed"}
+                >
+                  <Download size={18} />
+                </button>
+
+                <button
+                  onClick={() => dispatch(deleteStrategy(row.id))}
+                  className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div> */}
+
+        <div className="space-y-4 w-full mx-auto">
+          {strategies.map((app) => (
+            <div
+              key={app.id}
+              className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-200"
+            >
+              {/* Left section: title and description */}
+              <div>
+
+                <div className="flex items-center space-x-3 mb-1">
+                  <div className="text-base font-semibold text-gray-900">{app.appName}</div>
+                  <StatusBadge status={app.status} />
+                </div>
+
+                {/* <div 
+                onClick={() => navigate(`/reports/${app.lastReportId}`)}
+                sx={{
+                      textTransform: "none",
+                      padding: 0,
+                      minWidth: "unset",
+                      fontSize: "0.875rem",
+                      color: "primary.main",
+                      justifyContent: "flex-start",
+                      cursor: "pointer",
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                        textDecoration: "underline",
+                      },
+                    }} 
+                    className="text-sm text-gray-500">{app.lastReportName || "-"}</div>
+                <div className="text-xs text-gray-400 mt-0.5">{app.info}</div> */}
+
+
+                {/* Created On */}
+                <div className="text-xs text-gray-500 mt-1">
+                  Created On: {app.createdOn}
+                </div>
+
+                {/* Created By */}
+                <div className="text-xs text-gray-500 mt-1">
+                  Created By: {app.createdBy}
+                </div>
+
+
+
+
+              </div>
+
+              {/* Right section: icons and button */}
+              <div className="flex items-center space-x-3">
+                {/* Edit icon */}
+                <button
+                  className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-colors"
+                  title="Download"
+                  disabled={app.status !== "Completed"}
+                >
+                  <Download size={18} />
+                </button>
+
+                <button
+                  onClick={() => dispatch(deleteStrategy(app.id))}
+                  className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 size={18} />
+                </button>
+
+                {/* View Collection button */}
+                <button
+                  onClick={() => navigate(`/autoanalysis/${app.id}`)}
+                  className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition"
+                >
+                  View
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+
+
       </Paper>
     </div>
   );

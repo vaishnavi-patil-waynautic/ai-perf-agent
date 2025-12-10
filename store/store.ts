@@ -4,6 +4,8 @@ import projectReducer from './projectSlice';
 
 import nfrListReducer from '../pages/NFR/slices/nfrListSlice';
 import nfrWizardReducer from '../pages/NFR/slices/nfrWizardSlice';
+import { autoAnalysisReducer } from '../pages/autoanalysis';
+
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +13,7 @@ export const store = configureStore({
     project: projectReducer,
     nfrList: nfrListReducer,
     nfrWizard: nfrWizardReducer,
+    autoAnalysis: autoAnalysisReducer,
   },
 });
 

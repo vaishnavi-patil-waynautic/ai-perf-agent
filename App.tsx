@@ -17,6 +17,10 @@ import ChatWidget from './pages/chat/ChatWidget';
 import ChatPanel from './pages/chat/ChatPanel'; // New Component below
 import { Fab, Tooltip } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
+import { AutoAnalysisRoutes } from './pages/autoanalysis';
+import { ConfigDetailsPage } from './pages/autoanalysis/pages/ConfigDetailsPage';
+import { ResultPage } from './pages/autoanalysis/pages/ResultPage';
+import { DashboardPage } from './pages/autoanalysis/pages/DashboardPage';
 
 
 // Protected Route Wrapper
@@ -57,7 +61,7 @@ const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
 
 
 const AppLayout = ({ children }: { children?: React.ReactNode }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Chat State
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -190,6 +194,40 @@ const App: React.FC = () => {
             <ProtectedRoute>
               <AppLayout>
                 <NFRResultPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+
+        <Route
+          path="/autoanalysis"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <DashboardPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/autoanalysis/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <ConfigDetailsPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/autoanalysis/:id/result/:buildId"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <ResultPage />
               </AppLayout>
             </ProtectedRoute>
           }
