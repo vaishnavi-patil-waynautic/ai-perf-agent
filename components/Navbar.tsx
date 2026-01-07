@@ -1,10 +1,14 @@
-import React from 'react';
-import { Menu, Search, User as UserIcon, LogOut, ChevronDown, Settings } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Menu, Search, User as UserIcon, LogOut, ChevronDown, Settings, Power } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
-import { selectProject } from '../store/projectSlice';
+import { selectProject } from '../pages/project/store/project.slice';
 import { logout } from '../store/authSlice';
 import { useLocation, useNavigate } from "react-router-dom";
+import { Tooltip } from '@mui/material';
+import { fetchProjectById } from '@/pages/project/store/project.thunks';
+import type { AppDispatch } from '../store/store';
+import { logout as logoutService } from '@/pages/authentication/services/logoutService';
 
 
 
@@ -13,16 +17,25 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   const { projects, selectedProject } = useSelector((state: RootState) => state.project);
   const [profileOpen, setProfileOpen] = React.useState(false);
   const location = useLocation();
 
-  const handleLogout = () => {
+  useEffect(() => {
+    if (!selectedProject) {
+      dispatch(fetchProjectById(1));
+    }
+  }, [dispatch, selectedProject]);
+
+
+
+  const handleLogout = async () => {
     dispatch(logout());
     navigate('/login');
+    await logoutService();
   };
 
   return (
@@ -31,24 +44,25 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
 
         {/* Left Section */}
         <div className="flex items-center space-x-4">
-          <button onClick={toggleSidebar} className="text-gray-500 hover:text-gray-700 focus:outline-none">
+          {/* <button onClick={toggleSidebar} className="text-gray-500 hover:text-gray-700 focus:outline-none">
             <Menu size={24} />
-          </button>
+          </button> */}
 
           <div
-  className="flex items-center space-x-3 cursor-pointer"
-  onClick={() => navigate('/')}
->
-  <img
-    src="../static/exgenix.png"
-    alt="Exgenix"
-    className="h-6 w-auto"
-  />
+            className="flex items-center space-x-3 cursor-pointer"
+            onClick={() => navigate('/')}
+          >
+            <img
+              // src="../static/exgenix.png"
+              src="/ai-perf-agent/img/exgenix.png"
+              alt="Exgenix"
+              className="h-6 w-auto"
+            />
 
-  <span className="text-xl font-bold text-gray-800 tracking-tight">
-    Waynautic AI Perf Agent
-  </span>
-</div>
+            <span className="text-xl font-bold text-gray-800 tracking-tight">
+              Waynautic AI Perf Agent
+            </span>
+          </div>
 
 
 
@@ -72,10 +86,13 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
           <div className="relative">
             <select
               value={selectedProject?.id || ''}
-              onChange={(e) => dispatch(selectProject(e.target.value))}
+              onChange={(e) => dispatch(selectProject(Number(e.target.value)))}
               className="appearance-none bg-gray-50 border border-gray-300 text-gray-700 py-1 pl-3 pr-8 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer hover:bg-gray-100 transition-colors"
             >
-              <option value="" disabled>Select Project</option>
+              <option value="" disabled hidden>
+                Select Project
+              </option>
+
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
@@ -84,7 +101,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
           </div>
 
           {/* Profile Dropdown */}
-          <div className="relative">
+          {/* <div className="relative">
             <button
               onClick={() => setProfileOpen(!profileOpen)}
               className="flex items-center space-x-2 focus:outline-none"
@@ -107,7 +124,58 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
                 </button>
               </div>
             )}
+          </div> */}
+
+
+          <div className="flex items-center gap-4">
+
+            {/* Profile → Profile settings */}
+            <Tooltip title="Profile Settings" arrow>
+              <button
+                onClick={() => navigate("/profile")}
+                className="flex items-center space-x-2 focus:outline-none hover:opacity-90"
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-medium overflow-hidden border border-blue-200">
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <UserIcon size={18} />
+                  )}
+                </div>
+
+                <span className="text-sm font-medium text-gray-700 hidden md:block">
+                  {user?.name}
+                </span>
+              </button>
+            </Tooltip>
+
+            {/* Sign Out – clear, destructive, with tooltip */}
+            <Tooltip title="Sign out" arrow>
+              <button
+                onClick={handleLogout}
+                className="
+                  flex items-center gap-2
+                  py-1.5 px-1.5
+                  rounded-md
+                  text-sm font-medium
+                  text-red-600
+                  hover:bg-red-50 hover:text-red-700
+                  focus:outline-none
+                "
+              >
+                <Power size={16} />
+
+                {/* <span className="hidden sm:inline">Sign Out</span> */}
+              </button>
+            </Tooltip>
+
           </div>
+
+
         </div>
       </div>
 
@@ -152,15 +220,15 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
           <div className="flex space-x-1">
 
             <button
-    onClick={() => navigate('/autoscript')}
-    className={`px-3 py-2 text-xs font-medium rounded-t-md transition-colors whitespace-nowrap border-b-2
+              onClick={() => navigate('/autoscript')}
+              className={`px-3 py-2 text-xs font-medium rounded-t-md transition-colors whitespace-nowrap border-b-2
       ${location.pathname.startsWith('/autoscript')
-        ? 'text-blue-600 bg-white border-blue-500'
-        : 'text-gray-600 hover:text-blue-600 hover:bg-white hover:border-blue-500 border-transparent'}
+                  ? 'text-blue-600 bg-white border-blue-500'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-white hover:border-blue-500 border-transparent'}
     `}
-  >
-    Auto Script
-  </button>
+            >
+              Auto Script
+            </button>
 
             <button
               onClick={() => navigate('/autoanalysis')}
@@ -185,18 +253,18 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
             </button>
 
             <button
-  onClick={() => navigate('/governance')}
-  className={`px-3 py-2 text-xs font-medium rounded-t-md transition-colors whitespace-nowrap border-b-2 flex items-center space-x-2
-    ${location.pathname === '/governance'
-      ? 'text-blue-600 bg-white border-blue-500'
-      : 'text-gray-600 hover:text-blue-600 hover:bg-white hover:border-blue-500 border-transparent'}
-  `}
->
-  <span>Governance / Dashboard</span>
-  <span className="bg-yellow-200 text-yellow-800 text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full">
-    WIP
-  </span>
-</button>
+              onClick={() => navigate('/governance')}
+              className={`px-3 py-2 text-xs font-medium rounded-t-md transition-colors whitespace-nowrap border-b-2 flex items-center space-x-2
+              ${location.pathname === '/governance'
+                  ? 'text-blue-600 bg-white border-blue-500'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-white hover:border-blue-500 border-transparent'}
+              `}
+            >
+              <span>Governance / Dashboard</span>
+              <span className="bg-yellow-200 text-yellow-800 text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full">
+                WIP
+              </span>
+            </button>
 
 
           </div>

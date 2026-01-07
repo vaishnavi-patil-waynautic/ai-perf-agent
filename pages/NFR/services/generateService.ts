@@ -1,4 +1,4 @@
-import { NFRStrategy } from "../../pages/NFR/types/nfrTypes";
+import { NFRStrategy } from "../types/nfrTypes";
 
 export const generateStrategy = async (data: any): Promise<Partial<NFRStrategy>> => {
   return new Promise((resolve) => {

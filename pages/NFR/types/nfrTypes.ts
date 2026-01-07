@@ -2,6 +2,8 @@ export interface ExternalItem {
   id: string;
   title: string;
   type: 'Story' | 'Task' | 'Epic';
+  jiraUrl: string;
+  description: string;
   source: 'Jira' | 'ADO';
   tags: string[];
 }
@@ -24,4 +26,5 @@ export interface WizardState {
     environment: string;
   };
   additionalInstructions: string;
+  applicationName: string;
 }

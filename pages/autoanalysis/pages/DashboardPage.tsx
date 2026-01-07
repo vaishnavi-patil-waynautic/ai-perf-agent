@@ -3,25 +3,71 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Button, IconButton, Typography, Box, Toolbar
+  Button, IconButton, Typography, Box, Toolbar,
+  Tooltip,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { Add, Settings, Delete, Visibility } from '@mui/icons-material';
 import { fetchApps, removeApp } from '../store/autoAnalysisSlice';
-import { StatusBadge } from '../components/StatusBadge';
+import { StatusBadge } from '../../../components/StatusBadge';
 import { AddApplicationModal } from '../components/AddApplicationModal';
 import { SettingsModal } from '../components/SettingsModal';
 import PrimaryButton from '../components/PrimaryButton';
-import { EditIcon, Trash2, TrashIcon } from 'lucide-react';
+import { Activity, CheckCircle, EditIcon, Trash2, TrashIcon } from 'lucide-react';
 import AddIcon from '@mui/icons-material/Add';
+import SearchBar from '../../../components/SearchBar';
+import InfoCard from '@/components/InfoCard';
+import { RootState } from '@/store/store';
+
 
 export const DashboardPage: React.FC = () => {
   const dispatch = useDispatch<any>();
   const navigate = useNavigate();
   // @ts-ignore
   const { applications, loading } = useSelector((state) => state.autoAnalysis);
+  
+  const { selectedApp, selectedProject } = useSelector((state: RootState) => state.project);
+
+  if (!selectedProject) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-gray-500 p-10">
+        <Activity size={64} className="mb-4 text-gray-300" />
+        <h2 className="text-xl font-medium mb-2">No Project Selected</h2>
+        <p>Please select a project from the top navigation bar to get started.</p>
+      </div>
+    );
+  }
 
   const [openAdd, setOpenAdd] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filteredApplications = applications.filter((app: any) =>
+    app.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+  }>({
+    open: false,
+    message: ""
+  });
+
+
+  const handleDelete = async (id: string) => {
+    try {
+      // dispatch(removeApp(id));  
+      setSnackbar({
+        open: true,
+        message: "Application deleted successfully"
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
 
   useEffect(() => {
     dispatch(fetchApps());
@@ -29,6 +75,23 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <Box >
+
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          icon={<CheckCircle size={20} />}
+          severity="success"
+          onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+          sx={{ alignItems: "center" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
 
       <div className="m-auto max-w-6xl p-10 ">
         {/* <Toolbar className="flex justify-between mb-6 px-4 py-2"> */}
@@ -42,10 +105,55 @@ export const DashboardPage: React.FC = () => {
             <p className="text-gray-500 mt-1">Configure and run your tests</p>
           </div>
 
-          <Box className="flex items-center gap-2 ">
+
+          <Box className="flex items-center gap-2">
+            {/* Search tooltip */}
+            <Tooltip title="Search applications" arrow>
+              <Box>
+                <SearchBar
+                  value={search}
+                  onChange={setSearch}
+                  placeholder="Search applications..."
+                  onSearch={{}}
+                />
+              </Box>
+            </Tooltip>
+
+            {/* Add application */}
+            <Tooltip title="Add application" arrow>
+              <IconButton
+                onClick={() => setOpenAdd(true)}
+                sx={{
+                  borderRadius: 2,
+                  color: "primary.main",
+                  bgcolor: "rgba(25, 118, 210, 0.08)",
+                  transition: "all 0.15s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(25, 118, 210, 0.15)",
+                    transform: "translateY(-1px)"
+                  }
+                }}
+              >
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+
+
+
+
+          {/* <Box className="flex items-center gap-2 ">
             {/* <IconButton onClick={() => setOpenSettings(true)} color="primary">
               <Settings />
-            </IconButton> */}
+            </IconButton> 
+
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder="Search applications..."
+              onSearch={{}}
+            />
 
             <Button
               variant="contained"
@@ -57,7 +165,7 @@ export const DashboardPage: React.FC = () => {
             >
               Add Application
             </Button>
-          </Box>
+          </Box> */}
         </div>
 
         {/* </Toolbar> */}
@@ -195,21 +303,21 @@ export const DashboardPage: React.FC = () => {
 
 
 
-        <div className="space-y-4 w-full mx-auto">
-          {applications.map((app) => (
+        {/* <div className="space-y-4 w-full mx-auto">
+          {filteredApplications.map((app) => (
             <div
               key={app.id}
               className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-200"
             >
-              {/* Left section: title and description */}
+              {/* Left section: title and description 
               <div>
 
                 <div className="flex items-center space-x-3 mb-1">
                   <div className="text-base font-semibold text-gray-900">{app.name}</div>
                   <StatusBadge status={app.status} />
-                </div>
+                </div> */}
 
-                {/* <div 
+        {/* <div 
                 onClick={() => navigate(`/reports/${app.lastReportId}`)}
                 sx={{
                       textTransform: "none",
@@ -227,31 +335,31 @@ export const DashboardPage: React.FC = () => {
                     className="text-sm text-gray-500">{app.lastReportName || "-"}</div>
                 <div className="text-xs text-gray-400 mt-0.5">{app.info}</div> */}
 
-                
-<div className="mt-2 flex items-center space-x-2">
-  <div className="text-xs text-gray-500">
-    Recent Build:
-  </div>
-  <a
-    href={`/reports/${app.lastReportId}`}
-    onClick={e => {
-      e.preventDefault();
-      navigate(`/reports/${app.lastReportId}`);
-    }}
-    className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-semibold"
-  >
-    {app.lastReportName || "-"}
-  </a>
-</div>
+
+        {/* <div className="mt-2 flex items-center space-x-2">
+                  <div className="text-xs text-gray-500">
+                    Recent Build:
+                  </div>
+                  <a
+                    href={`/reports/${app.lastReportId}`}
+                    onClick={e => {
+                      e.preventDefault();
+                      navigate(`/reports/${app.lastReportId}`);
+                    }}
+                    className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-semibold"
+                  >
+                    {app.lastReportName || "-"}
+                  </a>
+                </div>
 
 
 
 
               </div>
 
-              {/* Right section: icons and button */}
+              {/* Right section: icons and button 
               <div className="flex items-center space-x-3">
-                {/* Edit icon */}
+                {/* Edit icon 
                 <button
                   onClick={() => navigate(`/autoanalysis/${app.id}`)}
                   className="text-gray-400 hover:text-gray-600"
@@ -260,7 +368,7 @@ export const DashboardPage: React.FC = () => {
                   <EditIcon className="w-5 h-5" />
                 </button>
 
-                {/* Delete icon */}
+                {/* Delete icon 
                 <button
                   onClick={() => navigate(`/autoanalysis/${app.id}`)}
                   className="text-red-500 hover:text-red-700"
@@ -269,7 +377,7 @@ export const DashboardPage: React.FC = () => {
                   <TrashIcon className="w-5 h-5" />
                 </button>
 
-                {/* View Collection button */}
+                {/* View Collection button 
                 <button
                   onClick={() => navigate(`/autoanalysis/${app.id}`)}
                   className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition"
@@ -279,8 +387,19 @@ export const DashboardPage: React.FC = () => {
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
 
+        <div className="space-y-4 w-full mx-auto">
+          {filteredApplications.map((app) => (
+            <InfoCard
+              name={app.name}
+              recentBuild={{ id: app.lastReportId, name: app.lastReportName, link: `/autoanalysis/${app.id}/reports/b1` }}
+              status={app.status}
+              onDelete={() => handleDelete(app.id)}
+              onView={() => navigate(`/autoanalysis/${app.id}`)}
+            />
+          ))}
+        </div>
 
 
 

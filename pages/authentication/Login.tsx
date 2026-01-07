@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginStart, loginSuccess, loginFailure } from '../store/authSlice';
-import { authApi } from '../services/api';
-import Input from '../components/Input';
-import Button from '../components/Button';
+import { loginStart, loginSuccess, loginFailure } from '../../store/authSlice';
+import { authApi } from '../../services/api';
+import Input from '../../components/Input';
+import Button from '../../components/Button';
+import { login } from './services/loginService';
+import { fetchProjectById } from '../project/store/project.thunks';
+import { useAppDispatch } from '../settings/store/hooks';
+import { config } from '../../config/backendConfig';
+
 
 const Login: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,9 +22,10 @@ const Login: React.FC = () => {
     e.preventDefault();
     dispatch(loginStart());
     try {
-      const data = await authApi.login(email, password);
-      dispatch(loginSuccess(data));
-      navigate('/');
+        const res = await login(config.username, config.password);
+        await dispatch(fetchProjectById(1)); 
+        dispatch(loginSuccess(res));
+        navigate('/');
     } catch (err) {
       setError('Invalid email or password.');
       dispatch(loginFailure());

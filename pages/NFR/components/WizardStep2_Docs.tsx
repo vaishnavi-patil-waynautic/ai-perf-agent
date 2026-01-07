@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Button, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { uploadDocuments } from '../../../services/nfr/documentService';
+import { uploadDocuments } from '../services/documentService';
 import { setUploadedFiles } from '../slices/nfrWizardSlice';
 import { RootState } from '../../../store/store'; 
 

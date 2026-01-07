@@ -164,20 +164,144 @@ import Close from '@mui/icons-material/Close';
 // ✅ FIX: Use MUI Grid v2
 
 
-const IntegrationTile = ({ title, active }: { title: string, active: boolean }) => (
-    <Paper
-        elevation={0}
-        className={`p-4 border-l-4 ${active ? 'border-green-500' : 'border-amber-400'} border border-slate-200 rounded-lg`}
+// const IntegrationTile = ({ title, active, link }: { title: string, active: boolean, link: string }) => (
+//     <Paper
+//         elevation={0}
+//         onClick={() => window.location.href = link}
+//         className={`p-4 border-l-4 ${active ? 'border-green-500' : 'border-amber-400'} border border-slate-200 rounded-lg`}
+//     >
+//         <div className="flex justify-between items-center">
+//             <Typography variant="subtitle2" className="text-slate-700">{title}</Typography>
+//             {active ? <CheckCircle className="text-green-500" fontSize="small" /> : <Cancel className="text-amber-400" fontSize="small" />}
+//         </div>
+//         <Typography variant="caption" className="text-slate-500">
+//             {active ? 'Configured' : 'Not Configured'}
+//         </Typography>
+//     </Paper>
+// );
+
+const IntegrationTile = ({
+    title,
+    active,
+    link,
+}: {
+    title: string;
+    active: boolean;
+    link: string;
+}) => (
+    <>
+
+        {/* <a
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block cursor-pointer"
     >
-        <div className="flex justify-between items-center">
-            <Typography variant="subtitle2" className="text-slate-700">{title}</Typography>
-            {active ? <CheckCircle className="text-green-500" fontSize="small" /> : <Cancel className="text-amber-400" fontSize="small" />}
+    <div className="max-w-xl">
+        <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-4 rounded-2xl shadow-xl text-white">
+          <div className="flex items-start justify-between">
+            
+            <div>
+              <p className="text-sm opacity-90 mb-2">{title}</p>
+              
+                <span className="bg-white/20 px-2 py-1 rounded-full text-[11px] font-medium">{active ? 'Configured' : 'Not Configured'}</span>
+            </div>
+            {active ? (
+                    <CheckCircle className="text-green-500" fontSize="small" />
+                ) : (
+                    <Cancel className="text-amber-400" fontSize="small" />
+            )}
+            
+          </div>
         </div>
-        <Typography variant="caption" className="text-slate-500">
-            {active ? 'Configured' : 'Not Configured'}
-        </Typography>
-    </Paper>
+      </div>
+
+      </a> */}
+
+        <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block cursor-pointer"
+        >
+            <div className="max-w-xl">
+
+                <div
+  className={`
+    p-4 rounded-2xl shadow-xl
+    transition-transform transition-shadow duration-300 ease-out
+    hover:scale-[1.03] 
+
+    ${
+      active
+        ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white border border-transparent"
+        : "bg-white text-gray-800 border-2 border-yellow-400"
+    }
+  `}
+>
+  <div className="flex items-start justify-between">
+    <div>
+      <p
+        className={`text-sm mb-2 ${
+          active ? "text-white font-medium" : "text-gray-600"
+        }`}
+      >
+        {title}
+      </p>
+
+      <span
+        className={`px-2 py-1 rounded-full text-[11px] font-medium ${
+          active
+            ? "bg-white/20 text-white"
+            : "bg-yellow-100 text-yellow-800"
+        }`}
+      >
+        {active ? "Configured" : "Not Configured"}
+      </span>
+    </div>
+
+    {active ? (
+      <CheckCircle className="text-green-300" fontSize="small" />
+    ) : (
+      <Cancel className="text-yellow-500" fontSize="small" />
+    )}
+  </div>
+</div>
+
+            </div>
+        </a>
+
+        {/* <a
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block cursor-pointer"
+    >
+        <Paper
+            elevation={0}
+            className={`p-4 border-l-4 transition hover:bg-slate-50
+        ${active ? 'border-green-500' : 'border-amber-400'}
+        border border-slate-200 rounded-lg`}
+        >
+            <div className="flex justify-between items-center">
+                <Typography variant="subtitle2" className="text-slate-700">
+                    {title}
+                </Typography>
+                {active ? (
+                    <CheckCircle className="text-green-500" fontSize="small" />
+                ) : (
+                    <Cancel className="text-amber-400" fontSize="small" />
+                )}
+            </div>
+
+            <Typography variant="caption" className="text-slate-500">
+                {active ? 'Configured' : 'Not Configured'}
+            </Typography>
+        </Paper>
+    </a> */}
+    </>
 );
+
 
 
 export const ConfigDetailsPage: React.FC = () => {
@@ -210,7 +334,7 @@ export const ConfigDetailsPage: React.FC = () => {
     }
 
     return (
-        <Box className="p-6 bg-slate-50 min-h-screen">
+        <Box className="bg-slate-50 min-h-screen m-auto max-w-6xl p-10">
 
 
             <Button
@@ -262,12 +386,12 @@ export const ConfigDetailsPage: React.FC = () => {
 
 
                             <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
-                                <IntegrationTile title="GitHub" active={currentApp.integrations.github} />
-                                <IntegrationTile title="BlazeMeter" active={currentApp.integrations.blazemeter} />
-                                <IntegrationTile title="CI/CD" active={currentApp.integrations.cicd} />
-                                <IntegrationTile title="Load Gen" active={currentApp.integrations.loadGenerator} />
-                                <IntegrationTile title="Azure DevOps" active={currentApp.integrations.ado} />
-                                <IntegrationTile title="Datadog" active={currentApp.integrations.datadog} />
+                                <IntegrationTile title="Script" active={currentApp.integrations.loadGenerator} link={"https://github.com/"} />
+                                <IntegrationTile title="GitHub" active={currentApp.integrations.github} link={"https://github.com/"} />
+                                <IntegrationTile title="BlazeMeter" active={currentApp.integrations.blazemeter} link={"https://github.com/"} />
+                                <IntegrationTile title="CI/CD" active={currentApp.integrations.cicd} link={"https://github.com/"} />
+                                <IntegrationTile title="Azure DevOps" active={currentApp.integrations.ado} link={"https://github.com/"} />
+                                <IntegrationTile title="Datadog" active={currentApp.integrations.datadog} link={"https://github.com/"} />
                             </div>
 
                         </div>
@@ -434,6 +558,35 @@ export const ConfigDetailsPage: React.FC = () => {
                             </List>
 
                         </div> */}
+
+
+                        {currentApp.nfrLink && (
+                            <div className="flex items-center justify-between mt-2  border-b py-8">
+                                <Typography variant="h6" gutterBottom>
+                                    Performance Test Strategy
+                                </Typography>
+
+
+
+                                <Button
+                                    component="a"
+                                    href={currentApp.nfrLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    variant="contained"
+                                    color="primary"
+                                    disableElevation
+                                    sx={{
+                                        ml: 2,
+                                        textDecoration: 'none',
+                                    }}
+                                >
+                                    View
+                                </Button>
+
+                            </div>
+                        )}
+
 
 
                         <div className="pt-6 mt-2">

@@ -23,6 +23,7 @@ export interface AppConfiguration {
   };
   executionStrategy: 'automated' | 'manual';
   emailRecipients: string[];
+  nfrLink: string;
   builds: BuildResult[];
 }
 

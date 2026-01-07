@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
-import { selectApp } from '../store/projectSlice';
+import { selectApplication  } from '../pages/project/store/project.slice';
 import { ChevronRight, Box, Grid } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,8 +14,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const navigate = useNavigate();
   const { applications, selectedApp, selectedProject } = useSelector((state: RootState) => state.project);
 
-  const handleAppClick = (appId: string) => {
-    dispatch(selectApp(appId));
+  const handleAppClick = (appId: number) => {
+    dispatch(selectApplication (appId));
     navigate('/dashboard'); // Reset to dashboard view of the app
   };
 

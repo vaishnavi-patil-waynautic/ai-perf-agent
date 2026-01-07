@@ -6,6 +6,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import { RootState } from '../../../store/store'; 
+import { ArrowBack } from '@mui/icons-material';
 
 const NFRResultPage: React.FC = () => {
   const { id } = useParams();
@@ -25,12 +26,33 @@ const NFRResultPage: React.FC = () => {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/nfr')} className="mb-4">
-          Back
-      </Button>
+    <div className="p-10 max-w-6xl mx-auto">
 
-      <Paper className="p-8 rounded-lg shadow-lg">
+      <Button
+                      startIcon={<ArrowBack />}
+                      onClick={() => navigate('/nfr')}
+                      sx={{
+                          mb: 1,
+                          color: "#5c5f66",
+                          textTransform: "none",
+                          fontWeight: 500,
+                          paddingBottom: 1,
+                      }}
+                  >
+                      Back to Dashboard
+                  </Button>
+
+      <Paper
+                      elevation={0}
+                      sx={{
+                          borderRadius: "12px",
+                          background: "#ffffff",
+                          border: "1px solid #e4e6eb",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                          p: 3,
+                          mt: 1,
+                      }}
+                  >
           <div className="flex justify-between items-start mb-6">
               <div>
                   <Typography variant="h4" className="font-bold text-gray-800">{strategy.appName}</Typography>

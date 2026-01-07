@@ -14,6 +14,7 @@ let currentConfig: AppConfiguration = {
   integrations: { github: true, blazemeter: true, cicd: true, loadGenerator: true, ado: false, datadog: true },
   executionStrategy: 'automated',
   emailRecipients: ['devops@company.com', 'lead@company.com'],
+  nfrLink: '/ai-perf-agent/#/autoanalysis/STRAT-1234',
   builds: [
     { id: 'b1', name: 'Build #452', date: '2023-10-25 14:30', status: 'pass' },
     { id: 'b2', name: 'Build #451', date: '2023-10-24 09:15', status: 'fail' },

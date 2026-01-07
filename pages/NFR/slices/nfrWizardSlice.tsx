@@ -6,6 +6,7 @@ const initialState: WizardState = {
   uploadedFiles: [],
   questionnaire: { targetUsers: '', peakLoad: '', environment: '' },
   additionalInstructions: '',
+  applicationName: 'Default App',
 };
 
 const nfrWizardSlice = createSlice({
