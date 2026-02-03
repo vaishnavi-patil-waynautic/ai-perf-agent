@@ -1,45 +1,59 @@
-import { config } from '../../../config/backendConfig';  
+import { config } from "../../../config/backendConfig";
 
-export const login = async (email: string, password: string) => {
-  const res = await fetch(
-    `${config.baseUrl}/users/login/`,
-    {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        // CSRF is usually NOT required for JWT login,
-        // but since your curl uses it, keep it for now
+interface LoginResponse {
+  user: any;
+  access: string;
+  refresh: string;
+}
+
+export const login = async (
+  email: string,
+  password: string
+): Promise<{ user: any; access: string }> => {
+
+  const res = await fetch(`${config.baseUrl}/users/login/`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ...(getCsrfTokenFromCookie() && {
         "X-CSRFTOKEN": getCsrfTokenFromCookie(),
-      },
-      body: JSON.stringify({
-        email: email,
-        password: password,
       }),
-    }
-  );
+    },
+    body: JSON.stringify({
+      email,
+      password,
+    }),
+  });
 
   if (!res.ok) {
-    throw new Error("Login failed");
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.message || "Login failed");
   }
 
   const data = await res.json();
 
-  const { access, refresh, user } = data.data;
+  // backend returns: { data: { access, refresh, user } }
+  const { access, refresh, user }: LoginResponse = data.data;
 
+  if (!access || !refresh || !user) {
+    throw new Error("Invalid login response");
+  }
+
+  // Persist auth data
   localStorage.setItem("access_token", access);
   localStorage.setItem("refresh_token", refresh);
   localStorage.setItem("user", JSON.stringify(user));
 
-  return user;
+  // IMPORTANT: return BOTH user + token
+  return { user, access };
 };
 
-
-
-const getCsrfTokenFromCookie = () => {
-  return document.cookie
+// CSRF helper
+const getCsrfTokenFromCookie = (): string | null => {
+  const match = document.cookie
     .split("; ")
-    .find(row => row.startsWith("csrftoken="))
-    ?.split("=")[1];
-};
+    .find(row => row.startsWith("csrftoken="));
 
+  return match ? match.split("=")[1] : null;
+};

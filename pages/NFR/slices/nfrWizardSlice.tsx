@@ -1,38 +1,75 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { WizardState, ExternalItem } from '../types/nfrTypes';
+import { WizardState } from '../types/nfrTypes';
+
+
+
 
 const initialState: WizardState = {
-  selectedItems: [],
+  selectedItemIds: [],
   uploadedFiles: [],
-  questionnaire: { targetUsers: '', peakLoad: '', environment: '' },
+  questionnaireResponses: [],
   additionalInstructions: '',
-  applicationName: 'Default App',
+  selectedApplicationId: null,
 };
 
 const nfrWizardSlice = createSlice({
   name: 'nfrWizard',
   initialState,
   reducers: {
-    toggleItemSelection: (state, action: PayloadAction<ExternalItem>) => {
-      const exists = state.selectedItems.find(i => i.id === action.payload.id);
-      if (exists) {
-        state.selectedItems = state.selectedItems.filter(i => i.id !== action.payload.id);
+    // Step 1: Toggle Jira / ADO IDs
+    toggleItemId: (state, action: PayloadAction<string>) => {
+      if (state.selectedItemIds.includes(action.payload)) {
+        state.selectedItemIds = state.selectedItemIds.filter(
+          id => id !== action.payload
+        );
       } else {
-        state.selectedItems.push(action.payload);
+        state.selectedItemIds.push(action.payload);
       }
     },
-    setUploadedFiles: (state, action: PayloadAction<string[]>) => {
+
+    // Step 2: Documents
+    setUploadedFiles: (state, action: PayloadAction<File[]>) => {
       state.uploadedFiles = action.payload;
     },
-    updateQuestionnaire: (state, action: PayloadAction<Partial<WizardState['questionnaire']>>) => {
-      state.questionnaire = { ...state.questionnaire, ...action.payload };
+
+    // Step 3: Questionnaire (upsert answer)
+    upsertQuestionAnswer: (
+      state,
+      action: PayloadAction<{ questionId: string; answer: string }>
+    ) => {
+      const existing = state.questionnaireResponses.find(
+        q => q.questionId === action.payload.questionId
+      );
+
+      if (existing) {
+        existing.answer = action.payload.answer;
+      } else {
+        state.questionnaireResponses.push(action.payload);
+      }
     },
-    setInstructions: (state, action: PayloadAction<string>) => {
+
+    // Step 4: Additional instructions
+    setAdditionalInstructions: (state, action: PayloadAction<string>) => {
       state.additionalInstructions = action.payload;
     },
+
+    // Step 4: Application selection
+    setSelectedApplication: (state, action: PayloadAction<string>) => {
+      state.selectedApplicationId = action.payload;
+    },
+
+    // Reset everything
     resetWizard: () => initialState,
   },
 });
 
-export const { toggleItemSelection, setUploadedFiles, updateQuestionnaire, setInstructions, resetWizard } = nfrWizardSlice.actions;
+export const {
+  toggleItemId,
+  setUploadedFiles,
+  upsertQuestionAnswer,
+  setAdditionalInstructions,
+  setSelectedApplication,
+  resetWizard,
+} = nfrWizardSlice.actions;
+
 export default nfrWizardSlice.reducer;

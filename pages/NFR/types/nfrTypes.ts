@@ -8,23 +8,21 @@ export interface ExternalItem {
   tags: string[];
 }
 
-export interface NFRStrategy {
-  id: string;
-  appName: string;
-  createdOn: string;
-  status: 'In Process' | 'Completed' | 'Failed';
-  createdBy: string;
-  resultContent?: string;
-}
 
 export interface WizardState {
-  selectedItems: ExternalItem[];
-  uploadedFiles: string[]; // Storing file names for mock
-  questionnaire: {
-    targetUsers: string;
-    peakLoad: string;
-    environment: string;
-  };
+  // Step 1: Jira / ADO
+  selectedItemIds: string[];
+
+  // Step 2: Documents
+  uploadedFiles: File[];
+
+  // Step 3: Questionnaire (dynamic)
+  questionnaireResponses: {
+    questionId: string;
+    answer: string;
+  }[];
+
+  // Step 4: Final inputs
   additionalInstructions: string;
-  applicationName: string;
+  selectedApplicationId: string | null;
 }

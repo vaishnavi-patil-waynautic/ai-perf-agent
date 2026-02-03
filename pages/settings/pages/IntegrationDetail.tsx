@@ -168,7 +168,7 @@ export default function IntegrationDetail() {
 
     <div className="p-8 space-y-12 bg-gray-50 min-h-screen">
       {/* Variation 1: Modern Glass Card */}
-      <div className="max-w-2xl">
+      {/* <div className="max-w-2xl">
         <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 1: Modern Glass Card</h2>
         <h1 className="text-2xl font-bold mb-6 text-gray-800">{integration.name}</h1>
         <div className="bg-white/70 backdrop-blur-sm border border-gray-200 p-6 rounded-2xl shadow-lg">
@@ -184,7 +184,7 @@ export default function IntegrationDetail() {
         </div>
       </div>
 
-      {/* Variation 2: Gradient Border Card */}
+      {/* Variation 2: Gradient Border Card 
       <div className="max-w-2xl">
         <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 2: Gradient Border Card</h2>
         <h1 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">{integration.name}</h1>
@@ -199,9 +199,9 @@ export default function IntegrationDetail() {
             </button>
           </div>
         </div>
-      </div>
+      </div>*/}
 
-      {/* Variation 3: Minimalist Shadow Card */}
+      {/* Variation 3: Minimalist Shadow Card 
       <div className="max-w-2xl">
         <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 3: Minimalist Shadow Card</h2>
         <h1 className="text-xl font-semibold mb-5 text-gray-900">{integration.name}</h1>
@@ -216,7 +216,7 @@ export default function IntegrationDetail() {
         </div>
       </div>
 
-      {/* Variation 4: Bold Colored Card */}
+      {/* Variation 4: Bold Colored Card 
       <div className="max-w-2xl">
         <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 4: Bold Colored Card</h2>
         <h1 className="text-2xl font-bold mb-6 text-gray-900">{integration.name}</h1>
@@ -234,7 +234,7 @@ export default function IntegrationDetail() {
         </div>
       </div>
 
-      {/* Variation 5: Outlined Minimalist */}
+      {/* Variation 5: Outlined Minimalist 
       <div className="max-w-2xl">
         <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 5: Outlined Minimalist</h2>
         <h1 className="text-xl font-semibold mb-5 text-gray-800">{integration.name}</h1>
@@ -249,11 +249,11 @@ export default function IntegrationDetail() {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Variation 6: Card with Icon */}
       <div className="max-w-2xl">
-        <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 6: Card with Icon</h2>
+        {/* <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 6: Card with Icon</h2> */}
         <h1 className="text-2xl font-bold mb-6 text-gray-900">{integration.name}</h1>
         <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm">
           <div className="flex items-start gap-4">
@@ -265,11 +265,22 @@ export default function IntegrationDetail() {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-3">
                 <h3 className="font-semibold text-gray-900">Connected</h3>
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Active</span>
+                {/* <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Active</span> */}
               </div>
-              <p className="text-sm text-gray-600 mb-1">Token</p>
-              <p className="font-mono text-sm text-gray-900 mb-3">****{integration.token?.slice(-4)}</p>
-              <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
+
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="text-sm opacity-90 mb-1">Authentication Token</p>
+                  <p className="text-xl font-mono font-semibold">****{integration.token?.slice(-4)}</p>
+                </div>
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full" onClick={()=>{console.log("clicked")}}>Active</span>
+              </div>
+              {/* <p className="text-sm text-gray-600 mb-1">Token</p> */}
+              {/* <p className="font-mono text-sm text-gray-900 mb-3">****{integration.token?.slice(-4)}</p> */}
+              {/* <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                Edit Token
+              </button> */}
+              <button className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
                 Edit Token
               </button>
             </div>
@@ -278,7 +289,7 @@ export default function IntegrationDetail() {
       </div>
 
       {/* Variation 7: Dark Mode Card */}
-      <div className="max-w-2xl">
+      {/* <div className="max-w-2xl">
         <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 7: Dark Mode Card</h2>
         <h1 className="text-2xl font-bold mb-6 text-white">{integration.name}</h1>
         <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-2xl">
@@ -295,10 +306,10 @@ export default function IntegrationDetail() {
             Edit Token
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Variation 8: Soft Pastel Card */}
-      <div className="max-w-2xl">
+      {/* <div className="max-w-2xl">
         <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 8: Soft Pastel Card</h2>
         <h1 className="text-2xl font-bold mb-6 text-gray-800">{integration.name}</h1>
         <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 p-6 rounded-2xl">
@@ -314,10 +325,10 @@ export default function IntegrationDetail() {
             Manage Token →
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Variation 9: Split Two-Tone Card */}
-      <div className="max-w-2xl">
+      {/* <div className="max-w-2xl">
         <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 9: Split Two-Tone Card</h2>
         <h1 className="text-2xl font-bold mb-6 text-gray-900">{integration.name}</h1>
         <div className="flex rounded-xl overflow-hidden shadow-lg">
@@ -339,25 +350,25 @@ export default function IntegrationDetail() {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Variation 10: Neumorphic Card */}
-      <div className="max-w-2xl">
+      {/* <div className="max-w-2xl">
         <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 10: Neumorphic Card</h2>
         <h1 className="text-2xl font-bold mb-6 text-gray-800">{integration.name}</h1>
-        <div className="bg-gray-100 p-8 rounded-3xl" style={{boxShadow: '20px 20px 60px #bebebe, -20px -20px 60px #ffffff'}}>
-          <div className="bg-gray-100 p-5 rounded-2xl mb-5" style={{boxShadow: 'inset 8px 8px 16px #bebebe, inset -8px -8px 16px #ffffff'}}>
+        <div className="bg-gray-100 p-8 rounded-3xl" style={{ boxShadow: '20px 20px 60px #bebebe, -20px -20px 60px #ffffff' }}>
+          <div className="bg-gray-100 p-5 rounded-2xl mb-5" style={{ boxShadow: 'inset 8px 8px 16px #bebebe, inset -8px -8px 16px #ffffff' }}>
             <p className="text-xs text-gray-500 font-medium mb-2">API Token</p>
             <p className="font-mono text-gray-900 text-lg">****{integration.token?.slice(-4)}</p>
           </div>
-          <button 
+          <button
             className="w-full py-3 bg-gray-100 rounded-xl text-blue-600 font-semibold transition-all"
-            style={{boxShadow: '8px 8px 16px #bebebe, -8px -8px 16px #ffffff'}}
+            style={{ boxShadow: '8px 8px 16px #bebebe, -8px -8px 16px #ffffff' }}
           >
             Edit Token
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

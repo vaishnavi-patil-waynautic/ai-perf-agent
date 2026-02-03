@@ -2,12 +2,12 @@ import { autoScriptApi } from "@/services/api";
 import { JMXRecord } from "../types/type";
 import axios from "axios";
 import { getUserApplication } from "./application";
-import { config, getAuthHeaders } from "@/config/backendConfig";
+import { config } from "@/config/backendConfig";
 
 
 const API_BASE = config.baseUrl;
 const token = localStorage.getItem("access_token");
-const headers = getAuthHeaders();
+const headers = config.headers;
 
 
 export const autoScriptService = {
@@ -54,14 +54,15 @@ export const autoScriptService = {
   // },
 
 
-  getHistory: async (): Promise<JMXRecord[]> => {
+  getHistory: async ( projectId: number ): Promise<JMXRecord[]> => {
     // TEMP: ensure logged in (should be done elsewhere)
     // await login();
     await getUserApplication(3);
 
-    const projectId = 1;
 
     if (!token) {
+      const token = localStorage.getItem("access_token");
+      console.log("Using token:", token);
       throw new Error("Missing access token");
     }
 

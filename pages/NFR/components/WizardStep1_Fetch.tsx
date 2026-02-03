@@ -4,12 +4,12 @@ import { Button, MenuItem, Select, TextField, Checkbox, Table, TableBody, TableC
 import { fetchJiraItems } from '../services/jiraService';
 import { fetchADOItems } from '../services/adoService';
 import { ExternalItem } from '../types/nfrTypes';
-import { toggleItemSelection } from '../slices/nfrWizardSlice';
+import { toggleItemId } from '../slices/nfrWizardSlice';
 import { RootState } from '../../../store/store';
 
 const WizardStep1_Fetch: React.FC = () => {
   const dispatch = useDispatch();
-  const selectedItems = useSelector((state: RootState) => state.nfrWizard.selectedItems);
+  const selectedItems = useSelector((state: RootState) => state.nfrWizard.selectedItemIds);
 
   const [items, setItems] = useState<ExternalItem[]>([]);
   const [source, setSource] = useState<'Jira' | 'ADO'>('Jira');
@@ -192,7 +192,8 @@ const WizardStep1_Fetch: React.FC = () => {
               </TableRow>
             ) : (
               items.map((item) => {
-                const isSelected = selectedItems.some(i => i.id === item.id);
+                const isSelected = selectedItems.includes(item.id);
+
                 return (
                   // <TableRow key={item.id} hover selected={isSelected}>
                   //   <TableCell padding="checkbox">
@@ -219,7 +220,7 @@ const WizardStep1_Fetch: React.FC = () => {
                       <Checkbox
                         size="small"
                         checked={isSelected}
-                        onChange={() => dispatch(toggleItemSelection(item))}
+                        onChange={() => dispatch(toggleItemId(item.id))}
                       />
                     </TableCell>
 

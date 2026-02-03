@@ -16,6 +16,7 @@ export const projectService = {
    * Returns project + applications
    */
   async getProjectById(projectId: number) {
+
     const token = localStorage.getItem('access_token');
     if (!token) throw new Error('Missing access token');
 
@@ -26,11 +27,34 @@ export const projectService = {
       },
     });
 
+    if (!res.ok) throw new Error('Failed to fetch project');
+
+    const json = await res.json();
+    return json.data;
+  },
+
+
+  async getAllProjects() {
+    const token = localStorage.getItem('access_token');
+    if (!token) throw new Error('Missing access token');
+
+    const res = await fetch(`${config.baseUrl}/users/project`, {
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
     if (!res.ok) {
-      throw new Error('Failed to fetch project');
+      throw new Error('Failed to fetch projects');
     }
 
-    return res.json(); // { status, data }
+    const json = await res.json();
+
+    console.log("RAW PROJECT API:", json);
+
+    // unwrap backend envelope
+    return json.data;
   },
 
   /**

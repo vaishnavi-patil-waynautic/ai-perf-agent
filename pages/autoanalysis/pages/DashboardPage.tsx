@@ -9,9 +9,9 @@ import {
   Alert
 } from '@mui/material';
 import { Add, Settings, Delete, Visibility } from '@mui/icons-material';
-import { fetchApps, removeApp } from '../store/autoAnalysisSlice';
+import { fetchApps } from '../store/autoAnalysisSlice';
 import { StatusBadge } from '../../../components/StatusBadge';
-import { AddApplicationModal } from '../components/AddApplicationModal';
+// import { AddApplicationModal } from '../components/AddApplicationModal';
 import { SettingsModal } from '../components/SettingsModal';
 import PrimaryButton from '../components/PrimaryButton';
 import { Activity, CheckCircle, EditIcon, Trash2, TrashIcon } from 'lucide-react';
@@ -25,9 +25,11 @@ export const DashboardPage: React.FC = () => {
   const dispatch = useDispatch<any>();
   const navigate = useNavigate();
   // @ts-ignore
-  const { applications, loading } = useSelector((state) => state.autoAnalysis);
+  const { loading, applications } = useSelector((state) => state.autoAnalysis);
   
-  const { selectedApp, selectedProject } = useSelector((state: RootState) => state.project);
+  const { selectedProject } = useSelector((state: RootState) => state.project);
+
+    console.log("SELECTED PROJECT IN AUTOSCRIPT : ",selectedProject);
 
   if (!selectedProject) {
     return (
@@ -70,7 +72,8 @@ export const DashboardPage: React.FC = () => {
 
 
   useEffect(() => {
-    dispatch(fetchApps());
+    if (!selectedProject) return;
+    dispatch(fetchApps(selectedProject.id));
   }, [dispatch]);
 
   return (
@@ -394,7 +397,7 @@ export const DashboardPage: React.FC = () => {
             <InfoCard
               name={app.name}
               recentBuild={{ id: app.lastReportId, name: app.lastReportName, link: `/autoanalysis/${app.id}/reports/b1` }}
-              status={app.status}
+              status={app.config_status}
               onDelete={() => handleDelete(app.id)}
               onView={() => navigate(`/autoanalysis/${app.id}`)}
             />
@@ -403,7 +406,7 @@ export const DashboardPage: React.FC = () => {
 
 
 
-        <AddApplicationModal open={openAdd} onClose={() => setOpenAdd(false)} />
+        {/* <AddApplicationModal open={openAdd} onClose={() => setOpenAdd(false)} /> */}
         <SettingsModal open={openSettings} onClose={() => setOpenSettings(false)} />
       </div>
 

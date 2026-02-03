@@ -160,6 +160,7 @@ import { fetchConfig } from '../store/autoAnalysisSlice';
 import { updateEmailRecipients } from '../services/mockService';
 import Grid from "@mui/material/Grid";
 import Close from '@mui/icons-material/Close';
+import { RootState } from '@/store/store';
 
 // ✅ FIX: Use MUI Grid v2
 
@@ -227,46 +228,43 @@ const IntegrationTile = ({
             <div className="max-w-xl">
 
                 <div
-  className={`
+                    className={`
     p-4 rounded-2xl shadow-xl
     transition-transform transition-shadow duration-300 ease-out
     hover:scale-[1.03] 
 
-    ${
-      active
-        ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white border border-transparent"
-        : "bg-white text-gray-800 border-2 border-yellow-400"
-    }
+    ${active
+                            ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white border border-transparent"
+                            : "bg-white text-gray-800 border-2 border-yellow-400"
+                        }
   `}
->
-  <div className="flex items-start justify-between">
-    <div>
-      <p
-        className={`text-sm mb-2 ${
-          active ? "text-white font-medium" : "text-gray-600"
-        }`}
-      >
-        {title}
-      </p>
+                >
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <p
+                                className={`text-sm mb-2 ${active ? "text-white font-medium" : "text-gray-600"
+                                    }`}
+                            >
+                                {title}
+                            </p>
 
-      <span
-        className={`px-2 py-1 rounded-full text-[11px] font-medium ${
-          active
-            ? "bg-white/20 text-white"
-            : "bg-yellow-100 text-yellow-800"
-        }`}
-      >
-        {active ? "Configured" : "Not Configured"}
-      </span>
-    </div>
+                            <span
+                                className={`px-2 py-1 rounded-full text-[11px] font-medium ${active
+                                    ? "bg-white/20 text-white"
+                                    : "bg-yellow-100 text-yellow-800"
+                                    }`}
+                            >
+                                {active ? "Configured" : "Not Configured"}
+                            </span>
+                        </div>
 
-    {active ? (
-      <CheckCircle className="text-green-300" fontSize="small" />
-    ) : (
-      <Cancel className="text-yellow-500" fontSize="small" />
-    )}
-  </div>
-</div>
+                        {active ? (
+                            <CheckCircle className="text-green-300" fontSize="small" />
+                        ) : (
+                            <Cancel className="text-yellow-500" fontSize="small" />
+                        )}
+                    </div>
+                </div>
 
             </div>
         </a>
@@ -309,21 +307,39 @@ export const ConfigDetailsPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch<any>();
     // @ts-ignore
-    const { currentApp } = useSelector((state) => state.autoAnalysis);
+    const { currentApp } = useSelector(
+        (state: RootState) => state.autoAnalysis
+    );
+
     const [emailInput, setEmailInput] = useState('');
     const [collapsed, setCollapsed] = React.useState(true);
     const [showEmailInput, setShowEmailInput] = useState(false);
 
+    const { selectedProject } = useSelector((state: RootState) => state.project);
+
 
     useEffect(() => {
-        if (id) dispatch(fetchConfig(id));
-    }, [id, dispatch]);
+        if (!selectedProject?.id || !id) return;
 
-    if (!currentApp) return <Box p={4}>Loading Configuration...</Box>;
+        console.log("Before fetching autoanalysis : ", currentApp);
+
+        dispatch(fetchConfig({
+            projectId: selectedProject.id,
+            appId: Number(id)
+        }));
+
+        console.log("After fetching autoanalysis : ", currentApp);
+    }, [id, selectedProject?.id]);
+
+    if (!currentApp || !currentApp.config) {
+        return <Box p={4}>Loading Configuration...</Box>;
+    }
+
 
     const handleAddEmail = () => {
         if (emailInput) {
-            const newEmails = [...currentApp.emailRecipients, emailInput];
+            const newEmails = [...currentApp.config.recipient_list
+                , emailInput];
             updateEmailRecipients(newEmails); // Mock API
             setEmailInput('');
         }
@@ -368,7 +384,7 @@ export const ConfigDetailsPage: React.FC = () => {
                     className="pt-6 pl-6"
                     sx={{ fontWeight: 'bold', color: 'text.primary' }}
                 >
-                    Configuration: App ID {currentApp.id}
+                    Configuration: App ID {currentApp.config?.id}
                 </Typography>
 
 
@@ -386,12 +402,12 @@ export const ConfigDetailsPage: React.FC = () => {
 
 
                             <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
-                                <IntegrationTile title="Script" active={currentApp.integrations.loadGenerator} link={"https://github.com/"} />
-                                <IntegrationTile title="GitHub" active={currentApp.integrations.github} link={"https://github.com/"} />
-                                <IntegrationTile title="BlazeMeter" active={currentApp.integrations.blazemeter} link={"https://github.com/"} />
-                                <IntegrationTile title="CI/CD" active={currentApp.integrations.cicd} link={"https://github.com/"} />
-                                <IntegrationTile title="Azure DevOps" active={currentApp.integrations.ado} link={"https://github.com/"} />
-                                <IntegrationTile title="Datadog" active={currentApp.integrations.datadog} link={"https://github.com/"} />
+                                {/* <IntegrationTile title="Script" active={currentApp.integrations.loadGenerator} link={"https://github.com/"} /> */}
+                                <IntegrationTile title="GitHub" active={currentApp.config.gha_repo_url !== null} link={currentApp.config.gha_repo_url} />
+                                <IntegrationTile title="BlazeMeter" active={currentApp.config.blazemeter_url !== null} link={currentApp.config.blazemeter_url} />
+                                {/* <IntegrationTile title="CI/CD" active={currentApp.integrations.cicd} link={"https://github.com/"} /> */}
+                                <IntegrationTile title="Azure DevOps" active={currentApp.config.ado_url !== null} link={currentApp.config.ado_url} />
+                                <IntegrationTile title="Datadog" active={currentApp.config.datadog_url !== null} link={currentApp.config.datadog_url} />
                             </div>
 
                         </div>
@@ -402,12 +418,12 @@ export const ConfigDetailsPage: React.FC = () => {
 
                             <List>
                                 {/* Most recent build */}
-                                {currentApp.builds.length > 0 && (
+                                {currentApp?.builds?.length > 0 && (
                                     <>
                                         {/* Recent Build */}
                                         <ListItem disablePadding>
                                             <ListItemButton
-                                                onClick={() => navigate(`result/${currentApp.builds[0].id}`)}
+                                                onClick={() => navigate(`result/${currentApp.builds[0].build_number}`)}
                                                 sx={{
                                                     display: "flex",
                                                     justifyContent: "space-between",
@@ -428,20 +444,20 @@ export const ConfigDetailsPage: React.FC = () => {
                                                 }}
                                             >
                                                 <ListItemText
-                                                    primary={currentApp.builds[0].name}
-                                                    secondary={currentApp.builds[0].date}
+                                                    primary={currentApp.builds[0].build_number}
+                                                    secondary={currentApp.builds[0].test_timing}
                                                 />
-                                                <Box className={`px-2 py-1 rounded text-xs font-bold uppercase ${currentApp.builds[0].status === 'pass' ? 'bg-green-100 text-green-700' :
+                                                {/* <Box className={`px-2 py-1 rounded text-xs font-bold uppercase ${currentApp.builds[0].status === 'pass' ? 'bg-green-100 text-green-700' :
                                                     currentApp.builds[0].status === 'fail' ? 'bg-red-100 text-red-700' :
                                                         'bg-orange-100 text-orange-700'
                                                     }`}>
                                                     {currentApp.builds[0].status}
-                                                </Box>
+                                                </Box> */}
                                             </ListItemButton>
                                         </ListItem>
 
                                         {/* Older builds collapsible */}
-                                        {currentApp.builds.length > 1 && (
+                                        {currentApp?.builds?.length > 1 && (
                                             <>
 
                                                 <div className='mt-8'>
@@ -454,7 +470,7 @@ export const ConfigDetailsPage: React.FC = () => {
                                                 <Collapse in={!collapsed} timeout="auto" unmountOnExit>
                                                     {currentApp.builds.slice(1).map((build) => (
                                                         <ListItemButton
-                                                            key={build.id}
+                                                            key={build.build_number}
                                                             sx={{
                                                                 marginY: 1,
                                                                 display: "flex",
@@ -474,18 +490,18 @@ export const ConfigDetailsPage: React.FC = () => {
                                                                 },
 
                                                             }}
-                                                            onClick={() => navigate(`result/${build.id}`)}
+                                                            onClick={() => navigate(`result/${build.build_number}`)}
                                                         >
                                                             <ListItemText
-                                                                primary={build.name}
-                                                                secondary={build.date}
+                                                                primary={build.build_number}
+                                                                secondary={build.test_timing}
                                                             />
-                                                            <Box className={`px-2 py-1 rounded text-xs font-bold uppercase ${build.status === 'pass' ? 'bg-green-100 text-green-700' :
+                                                            {/* <Box className={`px-2 py-1 rounded text-xs font-bold uppercase ${build.status === 'pass' ? 'bg-green-100 text-green-700' :
                                                                 build.status === 'fail' ? 'bg-red-100 text-red-700' :
                                                                     'bg-orange-100 text-orange-700'
                                                                 }`}>
                                                                 {build.status}
-                                                            </Box>
+                                                            </Box> */}
                                                         </ListItemButton>
                                                     ))}
                                                 </Collapse>
@@ -507,11 +523,11 @@ export const ConfigDetailsPage: React.FC = () => {
                             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                                 <Box>
                                     <Typography variant="body2" color="textSecondary">
-                                        Current Mode: <strong>{currentApp.executionStrategy.toUpperCase()}</strong>
+                                        Current Mode: <strong>{currentApp.config?.run_schedule?.toUpperCase()}</strong>
                                     </Typography>
 
                                     <Typography variant="caption" display="block">
-                                        {currentApp.executionStrategy === 'automated'
+                                        {currentApp.config?.run_schedule === 'automated'
                                             ? 'Tests run automatically after every deployment to the staging environment.'
                                             : 'Tests must be triggered manually via CI/CD or this dashboard.'}
                                     </Typography>
@@ -560,7 +576,7 @@ export const ConfigDetailsPage: React.FC = () => {
                         </div> */}
 
 
-                        {currentApp.nfrLink && (
+                        {currentApp.config.nfrLink && (
                             <div className="flex items-center justify-between mt-2  border-b py-8">
                                 <Typography variant="h6" gutterBottom>
                                     Performance Test Strategy
@@ -570,7 +586,7 @@ export const ConfigDetailsPage: React.FC = () => {
 
                                 <Button
                                     component="a"
-                                    href={currentApp.nfrLink}
+                                    // href={currentApp.nfrLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     variant="contained"
@@ -643,7 +659,7 @@ export const ConfigDetailsPage: React.FC = () => {
                             )}
 
                             <List dense>
-                                {currentApp.emailRecipients.map((email: string) => (
+                                {currentApp.config?.recipient_list?.split(",").map((email: string) => (
                                     <ListItem key={email}>
                                         <ListItemText primary={email} />
                                         <IconButton size="small" onClick={() => handleRemoveEmail(email)}>

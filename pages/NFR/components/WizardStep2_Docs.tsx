@@ -12,13 +12,13 @@ const WizardStep2_Docs: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const files = useSelector((state: RootState) => state.nfrWizard.uploadedFiles);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const fileList = Array.from(e.target.files);
-      const uploadedNames = await uploadDocuments(fileList);
-      dispatch(setUploadedFiles([...files, ...uploadedNames]));
-    }
-  };
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (!e.target.files) return;
+
+  const fileList = Array.from(e.target.files);
+  dispatch(setUploadedFiles([...files, ...fileList]));
+};
+
 
   return (
     <div className="flex flex-col items-center justify-center py-5 space-y-6">
@@ -56,7 +56,7 @@ const WizardStep2_Docs: React.FC = () => {
                 <div key={idx} className="my-1">   {/* margin between items */}
                 <ListItem className="border rounded-md">
                     <ListItemIcon><InsertDriveFileIcon /></ListItemIcon>
-                    <ListItemText primary={f} />
+                    <ListItemText primary={f.name} />
                 </ListItem>
                 </div>
             ))}

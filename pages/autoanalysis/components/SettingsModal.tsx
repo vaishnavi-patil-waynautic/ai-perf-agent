@@ -3,7 +3,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   TextField, MenuItem, Box, Typography, Divider
 } from '@mui/material';
-import { saveSettings } from '../services/mockService';
+// import { saveSettings } from '../services/mockService';
 
 interface Props {
   open: boolean;
@@ -24,7 +24,7 @@ export const SettingsModal: React.FC<Props> = ({ open, onClose }) => {
   };
 
   const handleSubmit = async () => {
-    await saveSettings(formData);
+    // await saveSettings(formData);
     onClose();
   };
 

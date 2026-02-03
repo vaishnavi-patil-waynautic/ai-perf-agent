@@ -16,3 +16,5 @@ export const selectSelectedApplication = (state: RootState) =>
 
 export const selectProjectLoading = (state: RootState) =>
   state.project.loading;
+
+

@@ -6,7 +6,7 @@ export default function ApplicationCard({ app, onEdit, onDelete }: { app: Applic
   return (
     <div
                     key={app.id}
-                    className="flex items-center justify-between p-6 bg-white rounded-lg shadow-sm border border-gray-200"
+                    className="flex items-center justify-between p-6 bg-white rounded-lg shadow-sm border border-gray-200 "
                   >
                     {/* Left section: title and description */}
                     <div>

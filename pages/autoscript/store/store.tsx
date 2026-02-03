@@ -21,9 +21,9 @@ const initialState: AutoScriptState = {
 // Load history
 export const fetchHistory = createAsyncThunk(
   "autoscript/fetchHistory",
-  async (_, { rejectWithValue }) => {
+  async (projectId: number, { rejectWithValue }) => {
     try {
-      return await autoScriptService.getHistory();
+      return await autoScriptService.getHistory(projectId);
     } catch (e: any) {
       return rejectWithValue("Failed to load history");
     }
@@ -40,7 +40,7 @@ export const generateJmx = createAsyncThunk(
   ) => {
     try {
       await autoScriptService.generate(file1, file2, projectId, applicationId);
-      return await autoScriptService.getHistory();
+      return await autoScriptService.getHistory(projectId);
     } catch (e: any) {
       return rejectWithValue("Generation failed");
     }

@@ -18,6 +18,9 @@ const Dashboard: React.FC = () => {
     );
   }
 
+
+  console.log("Selected Project in Dashboard:", selectedProject);
+
   // if (!selectedApp) {
   //   return (
   //     <div className="flex flex-col items-center justify-center h-full text-gray-500 p-10">

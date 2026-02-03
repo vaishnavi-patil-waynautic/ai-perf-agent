@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Dispatch, useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Tooltip } from '@mui/material';
@@ -6,18 +6,98 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AddIcon from '@mui/icons-material/Add';
-import { RootState } from '../../../store/store';
-import { deleteStrategy } from '../slices/nfrListSlice';
+import { AppDispatch, RootState } from '../../../store/store';
+import { deleteNfrById, fetchNfrReport, fetchNfrList } from '../slices/nfr.thunks'
+import {resetWizard} from '../slices/nfrWizardSlice';
 import { StatusBadge } from '@/components/StatusBadge';
 import PrimaryButton from '@/pages/autoanalysis/components/PrimaryButton';
 import { Activity, Download, EditIcon, Trash2, TrashIcon } from 'lucide-react';
 import InfoCard from '@/components/InfoCard';
+import { nfrService } from '../services/nfrService';
+import AppSnackbar, { SnackbarType } from '@/components/AppSnackbar';
 
 const NFRPage: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { selectedProject } = useSelector((state: RootState) => state.project);
+  // const [polling, setPolling] = useState(false);
+  let count = 0;
+  const pollingRef = useRef(null);
+
+    console.log("SELECTED PROJECT IN NFR : ",selectedProject);
+
+
   const { strategies } = useSelector((state: RootState) => state.nfrList);
-  const { selectedApp, selectedProject } = useSelector((state: RootState) => state.project);
+
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    type: SnackbarType;
+  }>({
+    open: false,
+    message: '',
+    type: 'success',
+  });
+
+  useEffect(() => {
+
+    const hasPending = (list) =>
+      list.some(s => s.status === 'pending' || s.status === 'draft');
+
+    dispatch(resetWizard());
+
+    const startPolling = async () => {
+      try {
+
+        const strategies = await dispatch(fetchNfrList()).unwrap();
+
+        if (!hasPending(strategies)) return;
+
+        // Prevent duplicate intervals
+        if (pollingRef.current) return;
+
+        pollingRef.current = setInterval(async () => {
+
+          try {
+            const updated = await dispatch(fetchNfrList()).unwrap();
+
+            if (!hasPending(updated)) {
+
+              setSnackbar({
+                open: true,
+                message: 'NFR generation completed',
+                type: 'success',
+              });
+
+              clearInterval(pollingRef.current);
+              pollingRef.current = null;
+            }
+
+          } catch (err) {
+            console.error('Polling failed', err);
+          }
+
+        }, 5000);
+
+      } catch (err) {
+        console.error('Initial fetch failed', err);
+      }
+    };
+
+    startPolling();
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+
+  }, [dispatch]);
+
+
+
 
   if (!selectedProject) {
     return (
@@ -29,14 +109,114 @@ const NFRPage: React.FC = () => {
     );
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed': return 'success';
-      case 'In Process': return 'warning';
-      case 'Failed': return 'error';
-      default: return 'default';
+
+
+
+  const handleDownload = async (id: number) => {
+    try {
+      const blob = await nfrService.downloadById(id);
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `nfr-${id}.txt`;
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      setSnackbar({
+        open: true,
+        message: 'NFR downloaded successfully',
+        type: 'success',
+      });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: 'Failed to download NFR',
+        type: 'error',
+      });
     }
   };
+
+
+  const handleDelete = async (id: number) => {
+    try {
+      console.log("Delete called", id);
+      await dispatch(deleteNfrById(id));
+      setSnackbar({
+        open: true,
+        message: 'NFR deleted successfully',
+        type: 'success',
+      });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: 'Failed to delete NFR',
+        type: 'error',
+      });
+    }
+  }
+
+
+
+
+  // useEffect(() => {
+
+  //   const hasPending = (list) =>
+  //     list.some(s => s.status === 'pending');
+
+  //   const startPolling = async () => {
+  //     try {
+
+  //       const strategies = await dispatch(fetchNfrList()).unwrap();
+
+  //       if (!hasPending(strategies)) return;
+
+  //       // Prevent duplicate intervals
+  //       if (pollingRef.current) return;
+
+  //       pollingRef.current = setInterval(async () => {
+
+  //         try {
+  //           const updated = await dispatch(fetchNfrList()).unwrap();
+
+  //           if (!hasPending(updated)) {
+
+  //             setSnackbar({
+  //               open: true,
+  //               message: 'NFR generation completed',
+  //               type: 'success',
+  //             });
+
+  //             clearInterval(pollingRef.current);
+  //             pollingRef.current = null;
+  //           }
+
+  //         } catch (err) {
+  //           console.error('Polling failed', err);
+  //         }
+
+  //       }, 5000);
+
+  //     } catch (err) {
+  //       console.error('Initial fetch failed', err);
+  //     }
+  //   };
+
+  //   startPolling();
+
+  //   return () => {
+  //     if (pollingRef.current) {
+  //       clearInterval(pollingRef.current);
+  //       pollingRef.current = null;
+  //     }
+  //   };
+
+  // }, [dispatch]);
+
+
 
   return (
     <div className="m-auto max-w-6xl p-10">
@@ -135,10 +315,10 @@ const NFRPage: React.FC = () => {
 
       {/* Table Section */}
       {/* <Paper elevation={0} className="overflow-hidden rounded-lg  "> */}
-        {/* <div className="pl-1 pb-4 bg-gray-50 font-semibold text-gray-700">
+      {/* <div className="pl-1 pb-4 bg-gray-50 font-semibold text-gray-700">
           Generated Performance Test Strategies
         </div> */}
-        {/* 
+      {/* 
         <TableContainer component={Paper} elevation={0} className="border border-slate-200">
 
           <Table>
@@ -206,7 +386,7 @@ const NFRPage: React.FC = () => {
         </TableContainer> */}
 
 
-        {/* <div className="space-y-4 w-full mx-auto bg-transparent">
+      {/* <div className="space-y-4 w-full mx-auto bg-transparent">
 
           {strategies.length === 0 && (
             <div className="text-center py-10 text-gray-500">
@@ -353,22 +533,29 @@ const NFRPage: React.FC = () => {
             ))}
           </div> */}
 
-        <div className="space-y-4 w-full mx-auto">
-          {strategies.map((strategy) => (
-            <InfoCard
-              name={strategy.appName}
-              createdOn={strategy.createdOn}
-              createdBy={strategy.createdBy}
-              status={strategy.status}
-              onDownload={() => console.log("download", strategy.id)}
-              onDelete={() => dispatch(deleteStrategy(strategy.id))}
-              onView={() => navigate(`/nfr/result/${strategy.id}`)}
-            />
+      <AppSnackbar
+        open={snackbar.open}
+        message={snackbar.message}
+        type={snackbar.type}
+        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+      />
 
-          ))}
-        </div>
+      <div className="space-y-4 w-full mx-auto">
+        {strategies.map((strategy) => (
+          <InfoCard key={strategy.id}
+            name={strategy.application_name == 'N/A' ? "Default Application" : strategy.application_name}
+            createdOn={strategy.created_on && strategy.created_on.replace("Z", "") || "N/A"}
+            createdBy={strategy.created_by_name || "N/A"}
+            status={strategy.status}
+            onDownload={() => handleDownload(strategy.id)}
+            onDelete={() => handleDelete(strategy.id)}
+            onView={() => navigate(`/nfr/result/${strategy.id}`)}
+          />
 
-        {/* </div> */}
+        ))}
+      </div>
+
+      {/* </div> */}
 
       {/* </Paper> */}
     </div>

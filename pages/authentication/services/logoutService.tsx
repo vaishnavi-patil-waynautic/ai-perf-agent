@@ -1,49 +1,43 @@
-import { Token } from '@mui/icons-material';
-import { config } from '../../../config/backendConfig';
+import { config } from "../../../config/backendConfig";
 
-export const logout = async () => {
+export const logoutService = async (): Promise<void> => {
+  const token = localStorage.getItem("access_token");
+  const refresh = localStorage.getItem("refresh_token");
 
-    const token = localStorage.getItem("access_token");
-    const refresh = localStorage.getItem("refresh_token");
-    if (!token) throw new Error("Authentication token not found");
+  // If no token, just exit silently
+  if (!token || !refresh) {
+    return;
+  }
 
-    const formData = new FormData();
+  const formData = new FormData();
+  formData.append("refresh", refresh);
 
-    formData.append("refresh", refresh);
-
-    const res = await fetch(
-        `${config.baseUrl}/users/logout/`,
-        {
-            method: "POST",
-            headers: {
-                Accept: "application/json",
-                Authorization: `Bearer ${token}`,
-                "X-CSRFTOKEN": getCsrfTokenFromCookie(),
-            },
-            body: formData,
-        }
-    );
+  try {
+    const res = await fetch(`${config.baseUrl}/users/logout/`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(getCsrfTokenFromCookie() && {
+          "X-CSRFTOKEN": getCsrfTokenFromCookie(),
+        }),
+      },
+      body: formData,
+    });
 
     if (!res.ok) {
-        console.error("Logout failed with status:", res);
-        throw new Error("Logout failed");
+      console.warn("Backend logout failed:", res.status);
     }
-
-    console.log("Logout successful");
-
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("user");
-
-    return;
+  } catch (error) {
+    console.warn("Logout request error:", error);
+  }
 };
 
+// CSRF helper
+const getCsrfTokenFromCookie = (): string | null => {
+  const match = document.cookie
+    .split("; ")
+    .find(row => row.startsWith("csrftoken="));
 
-
-const getCsrfTokenFromCookie = () => {
-    return document.cookie
-        .split("; ")
-        .find(row => row.startsWith("csrftoken="))
-        ?.split("=")[1];
+  return match ? match.split("=")[1] : null;
 };
-

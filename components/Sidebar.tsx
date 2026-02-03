@@ -34,12 +34,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
            <p className="text-sm text-gray-500 italic">Select a project to view apps.</p>
         )}
 
-        {selectedProject && applications.length === 0 && (
+        {selectedProject && applications?.length === 0 && (
            <p className="text-sm text-gray-500 italic">No apps found.</p>
         )}
 
         <ul className="space-y-1">
-          {applications.map((app) => (
+          {applications?.map((app) => (
             <li key={app.id}>
               <button
                 onClick={() => handleAppClick(app.id)}

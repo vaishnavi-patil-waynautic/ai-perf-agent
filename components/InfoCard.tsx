@@ -41,11 +41,7 @@ const InfoCard: React.FC<InfoCardProps> = ({
   const navigate = useNavigate();
   // Only enable buttons for these statuses
   const isDisabled =
-    status && !["Completed", "configured", "unconfigured"].includes(status);
-
-  status && console.log("Status:", status);
-  status && console.log("isDisabled:", isDisabled);
-  recentBuild && console.log("Recent Build:", recentBuild.link);
+    status && !["Completed",'completed', "configured", "unconfigured"].includes(status);
 
   return (
     <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-200">

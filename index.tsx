@@ -10,6 +10,11 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
+if (window.location.pathname === "/ai-perf-agent") {
+  window.location.replace("/ai-perf-agent/");
+}
+
+
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>

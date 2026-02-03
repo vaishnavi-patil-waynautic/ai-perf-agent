@@ -1,14 +1,15 @@
 import React, { useEffect } from 'react';
 import { Menu, Search, User as UserIcon, LogOut, ChevronDown, Settings, Power } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store/store';
-import { selectProject } from '../pages/project/store/project.slice';
+import { RootState, store } from '../store/store';
+import { resetProjectState, selectProject } from '../pages/project/store/project.slice';
 import { logout } from '../store/authSlice';
 import { useLocation, useNavigate } from "react-router-dom";
 import { Tooltip } from '@mui/material';
-import { fetchProjectById } from '@/pages/project/store/project.thunks';
+import { fetchProjectById, fetchProjects } from '@/pages/project/store/project.thunks';
 import type { AppDispatch } from '../store/store';
-import { logout as logoutService } from '@/pages/authentication/services/logoutService';
+import { logoutService } from '@/pages/authentication/services/logoutService';
+import { fetchProject } from '@/services/application/slice';
 
 
 
@@ -24,19 +25,46 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
   const [profileOpen, setProfileOpen] = React.useState(false);
   const location = useLocation();
 
+
+  console.log("SELECTED PROJECT IN NAVBAR : ", selectedProject);
+
+
   useEffect(() => {
-    if (!selectedProject) {
-      dispatch(fetchProjectById(1));
+    if (projects.length === 0) {
+      dispatch(fetchProjects());
     }
-  }, [dispatch, selectedProject]);
+
+    const storedId = localStorage.getItem('selectedProjectId');
+
+    if (storedId) {
+      dispatch(fetchProjectById(Number(storedId)));
+    }
+  }, [dispatch, projects.length]);
+
+
+
+  const handleProjectSelect = (projectId: number) => {
+    dispatch(selectProject(projectId));
+    dispatch(fetchProjectById(projectId));
+  }
 
 
 
   const handleLogout = async () => {
-    dispatch(logout());
-    navigate('/login');
-    await logoutService();
+    try {
+      // First inform backend
+      await logoutService();
+    } catch (err) {
+      console.warn("Logout API error:", err);
+    } finally {
+      // Always clear frontend state
+      dispatch(logout());
+      dispatch(resetProjectState());
+
+      navigate("/login", { replace: true });
+    }
   };
+
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -86,7 +114,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
           <div className="relative">
             <select
               value={selectedProject?.id || ''}
-              onChange={(e) => dispatch(selectProject(Number(e.target.value)))}
+              onChange={(e) => handleProjectSelect(Number(e.target.value))}
               className="appearance-none bg-gray-50 border border-gray-300 text-gray-700 py-1 pl-3 pr-8 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer hover:bg-gray-100 transition-colors"
             >
               <option value="" disabled hidden>

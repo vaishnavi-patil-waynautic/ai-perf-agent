@@ -197,7 +197,7 @@ export default function ApplicationSelect() {
                         <em>Default Application</em>
                     </MenuItem>
 
-                    {applications.map((app) => (
+                    {applications?.map((app) => (
                         <MenuItem key={app.id} value={app.id}>
                             {app.name}
                         </MenuItem>

@@ -1,45 +1,116 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TextField, Button, CircularProgress, Dialog, DialogContent, DialogTitle } from '@mui/material';
-import { setInstructions, resetWizard } from '../slices/nfrWizardSlice';
-import { addStrategy } from '../slices/nfrListSlice';
-import { generateStrategy } from '../services/generateService';
-import { RootState } from '../../../store/store';
+import { setAdditionalInstructions, resetWizard } from '../slices/nfrWizardSlice';
+// import { addStrategy } from '../slices/nfrListSlice';
+import { AppDispatch, RootState } from '../../../store/store';
 import { useNavigate } from 'react-router-dom';
 import ApplicationSelect from '@/components/ApplicationSelect';
+import { generateNfr } from '../slices/nfr.thunks';
+import { WizardState } from '../types/nfrTypes';
+import AppSnackbar, { SnackbarType } from '@/components/AppSnackbar';
 
 const WizardStep4_Generate: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
+
     const wizardState = useSelector((state: RootState) => state.nfrWizard);
-    const [applicationId, setApplicationId] = React.useState("");
+
+    const { selectedApp, selectedProject } = useSelector((state: RootState) => state.project);
 
     const [loading, setLoading] = React.useState(false);
 
-    const handleGenerate = async () => {
-        setLoading(true);
-        try {
-            const strategy = await generateStrategy(wizardState);
 
-            // Add User defaults
-            const completeStrategy = {
-                ...strategy,
-                createdBy: 'Current User', // Mock auth
-                appName: strategy.appName || 'Unknown App'
-            } as any;
+    const [snackbar, setSnackbar] = useState<{
+        open: boolean;
+        message: string;
+        type: SnackbarType;
+    }>({
+        open: false,
+        message: '',
+        type: 'success',
+    });
 
-            dispatch(addStrategy(completeStrategy));
+    const buildGenerateNfrPayload = (
+        wizardState: WizardState,
+        projectId: number,
+        applicationId: number
+    ) => {
+        const answer = (id: string) =>
+            wizardState.questionnaireResponses.find(q => q.questionId === id)?.answer ?? '';
 
-            setTimeout(() => {
-                dispatch(resetWizard());
-                setLoading(false);
-                navigate('/nfr');
-            }, 1500); // Slight delay to show the modal
-        } catch (error) {
-            setLoading(false);
-            alert("Generation failed");
-        }
+        return {
+            projectId,
+            applicationId,
+            env: answer('environment'),
+            sla: answer('sla'),
+            wlm: answer('wlm'),
+            additionalInput: wizardState.additionalInstructions,
+            files: wizardState.uploadedFiles,
+        };
     };
+
+
+    // const handleGenerate = async () => {
+    //     setLoading(true);
+    //     try {
+    //         // ✅ API call
+    //         // const strategy = await generateStrategyApi({
+    //         //     ...wizardState,
+    //         //     applicationId: selectedApp?.id,
+    //         //     questionnaireResponses: wizardState.questionnaireResponses,
+    //         // });
+
+    //         // ✅ Normalize / enrich before storing
+    //         const completeStrategy = {
+    //             ...wizardState,
+    //             applicationId: selectedApp?.id,
+    //             questionnaireResponses: wizardState.questionnaireResponses
+    //         };
+
+    //         // ✅ Redux write
+    //         dispatch(generateNfr(completeStrategy));
+
+    //         navigate('/strategy/result');
+    //     } catch (error) {
+    //         console.error(error);
+    //         alert('Generation failed');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+
+    const handleGenerate = async () => {
+        if (!selectedApp?.id || !selectedProject?.id) {
+            alert('Missing project or application');
+            return;
+        }
+
+        setLoading(true);
+
+        const payload = buildGenerateNfrPayload(
+            wizardState,
+            selectedProject.id,
+            selectedApp.id
+        );
+
+        const result = await dispatch(generateNfr(payload));
+
+        if (generateNfr.fulfilled.match(result)) {
+            navigate('/nfr');
+            setSnackbar({
+                open: true,
+                message: 'NFR generation started...',
+                type: 'success',
+            });
+        } else {
+            alert(result.payload || 'NFR generation failed');
+        }
+
+        setLoading(false);
+    };
+
 
     return (
         <div className="max-w-3xl mx-auto">
@@ -53,18 +124,15 @@ const WizardStep4_Generate: React.FC = () => {
                     placeholder="Any specific focus areas for the AI model..."
                     variant="outlined"
                     value={wizardState.additionalInstructions}
-                    onChange={(e) => dispatch(setInstructions(e.target.value))}
+                    onChange={(e) => dispatch(setAdditionalInstructions(e.target.value))}
                     className="bg-white"
                 />
 
             </div>
 
             <div className="w-full mb-8">
-                  <ApplicationSelect
-                    value={applicationId}
-                    onChange={setApplicationId}
-                  />
-                </div>
+                <ApplicationSelect />
+            </div>
 
             {/* <div className="p-6 bg-blue-50 rounded-lg border border-blue-200 text-center">
           <h2 className="text-xl font-semibold text-blue-900 mb-2">Ready to Generate?</h2>
@@ -88,7 +156,7 @@ const WizardStep4_Generate: React.FC = () => {
                 </h2>
 
                 <p className="text-sm text-gray-600 mb-6">
-                    You have selected <span className="font-medium">{wizardState.selectedItems.length}</span> items and
+                    You have selected <span className="font-medium">{wizardState.selectedItemIds.length}</span> items and
                     uploaded <span className="font-medium">{wizardState.uploadedFiles.length}</span> documents.
                 </p>
 
@@ -119,6 +187,13 @@ const WizardStep4_Generate: React.FC = () => {
                     <DialogContent>Please wait while we analyze your documents.</DialogContent>
                 </div>
             </Dialog>
+
+            <AppSnackbar
+                open={snackbar.open}
+                message={snackbar.message}
+                type={snackbar.type}
+                onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+            />
         </div>
     );
 };

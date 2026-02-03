@@ -1,10 +1,10 @@
 export interface Application {
-  id: string;
+  id: number;
   name: string;
-  status: 'configured' | 'unconfigured';
-  lastReportName: string | null;
-  lastRunDate: string | null;
+  config_status: string | null;
+  total_builds: number;
 }
+
 
 export interface JmxScriptOption {
   id: string;
@@ -12,32 +12,30 @@ export interface JmxScriptOption {
 }
 
 export interface AppConfiguration {
-  id: string;
-  integrations: {
-    github: boolean;
-    blazemeter: boolean;
-    cicd: boolean;
-    loadGenerator: boolean;
-    ado: boolean;
-    datadog: boolean;
-  };
-  executionStrategy: 'automated' | 'manual';
-  emailRecipients: string[];
-  nfrLink: string;
-  builds: BuildResult[];
-}
+  id: number;
+  project_id: number;
+  application_id: number;
+  script_id: number;
 
+  blazemeter_url: string | null;
+  gha_repo_url: string | null;
+  ado_url: string | null;
+  datadog_url: string | null;
+  nfrLink: string | null;
+
+  recipient_list: string; // comma separated emails
+  run_schedule: 'manual' | 'automated';
+
+  created_on: string;
+  updated_on: string;
+}
 export interface BuildResult {
-  id: string;
-  name: string;
-  date: string;
-  status: 'pass' | 'fail' | 'warning';
+  build_number: string;
+  test_timing: string;
+  result_id: string;
 }
-
-export interface GlobalSettings {
-  blazemeterToken: string;
-  cicdTool: string;
-  cicdToken: string;
-  apmTool: string;
-  apmToken: string;
+export interface AppDetails {
+  config: AppConfiguration;
+  builds: BuildResult[];
+  total_builds: number;
 }

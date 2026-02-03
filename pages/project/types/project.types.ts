@@ -4,7 +4,9 @@ export interface Project {
   id: number;
   name: string;
   description?: string;
+  applications?: Application[];
 }
+
 
 export interface Application {
   id: number;

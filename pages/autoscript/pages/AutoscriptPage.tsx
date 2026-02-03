@@ -20,10 +20,15 @@ const AutoScriptPage: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { selectedProject } = useSelector((state: RootState) => state.project);
 
-  
+  console.log("SELECTED PROJECT IN AUTOSCRIPT : ",selectedProject);
+
+
   const applicationId = useSelector(
     (state: RootState) => state.project.selectedApp
   );
+
+
+  console.log("APPLICATION ID IN AUTOSCRIPT : ",applicationId);
 
   const fileRef1 = useRef<HTMLInputElement>(null);
   const fileRef2 = useRef<HTMLInputElement>(null);
@@ -112,64 +117,113 @@ const AutoScriptPage: React.FC = () => {
     }
   };
 
-
-
-
   // useEffect(() => {
-  //   autoScriptService.getHistory().then(setHistory);
-  // }, []);
+  //   let cancelled = false;
+  //   let timeoutId: ReturnType<typeof setTimeout>;
+
+  //   const fetchHistory = async () => {
+  //     try {
+  //       const data = await autoScriptService.getHistory(selectedProject.id);
+
+  //       if (cancelled) return;
+
+  //       setHistory(data);
+
+  //       const stillRunning = data.some(
+  //         s => s.status === 'IN_PROGRESS' || s.status === 'PROCESSING'
+  //       );
+
+  //       // Stop polling if no running scripts
+  //       if (!stillRunning) {
+  //         if (polling) {
+  //           setSnackbar({
+  //             open: true,
+  //             message: "Script generation completed",
+  //             type: "success",
+  //           });
+  //         }
+
+  //         setPolling(false);
+  //         return;
+  //       }
+
+  //       // Schedule next poll
+  //       timeoutId = setTimeout(fetchHistory, 5000);
+
+  //     } catch (error) {
+  //       console.error("Polling failed:", error);
+
+  //       // Stop polling on error
+  //       setPolling(false);
+  //     }
+  //   };
+
+  //   // Always load history once
+  //   fetchHistory();
+
+  //   return () => {
+  //     cancelled = true;
+  //     if (timeoutId) clearTimeout(timeoutId);
+  //   };
+
+  // }, [polling]);
 
   useEffect(() => {
 
-    autoScriptService.getHistory()
-      .then(setHistory)
-      .catch(console.error);
+  if (!selectedProject?.id) return;
 
-    if (!polling) return;
+  let cancelled = false;
+  let timeoutId: ReturnType<typeof setTimeout>;
 
-    let interval: ReturnType<typeof setInterval>;
+  const fetchHistory = async () => {
 
-    const startPolling = async () => {
-      const scripts = await autoScriptService.getHistory();
-      setHistory(scripts);
+    try {
+      const data = await autoScriptService.getHistory(selectedProject.id);
 
-      const hasRunning = scripts.some(
+      if (cancelled) return;
+
+      setHistory(data);
+
+      const stillRunning = data.some(
         s => s.status === 'IN_PROGRESS' || s.status === 'PROCESSING'
       );
 
-      if (!hasRunning) {
-        setPolling(false);
-        return;
-      }
+      if (stillRunning) {
 
-      interval = setInterval(async () => {
-        const updated = await autoScriptService.getHistory();
-        setHistory(updated);
+        timeoutId = setTimeout(fetchHistory, 5000);
 
-        const stillRunning = updated.some(
-          s => s.status === 'IN_PROGRESS' || s.status === 'PROCESSING'
-        );
+      } else {
 
-        if (!stillRunning) {
+        // Only show message if polling was ACTIVE
+        if (polling) {
           setSnackbar({
             open: true,
             message: "Script generation completed",
-            type: 'success',
+            type: "success",
           });
-
-          setPolling(false);
-          clearInterval(interval);
         }
-      }, 5000);
-    };
 
-    startPolling();
+        const data = await autoScriptService.getHistory(selectedProject.id);
+        setHistory(data);
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [polling]);
+        setPolling(false);
+      }
 
+    } catch (error) {
+
+      console.error("Polling failed:", error);
+      setPolling(false);
+    }
+  };
+
+  fetchHistory();
+
+  return () => {
+    cancelled = true;
+    if (timeoutId) clearTimeout(timeoutId);
+  };
+
+}, [selectedProject?.id, polling]);
 
 
   const generate = async () => {
@@ -178,36 +232,131 @@ const AutoScriptPage: React.FC = () => {
     try {
       setIsGenerating(true);
 
-      console.log("Generating script for project:", selectedProject.id, "application:", applicationId);
-
-      const message = await autoScriptService.generate(file1, file2, selectedProject.id, applicationId.id);
-      // assuming generate() returns a message string
-
-      setHistory(await autoScriptService.getHistory());
+      await autoScriptService.generate(
+        file1,
+        file2,
+        selectedProject.id,
+        applicationId.id
+      );
 
       setSnackbar({
         open: true,
         message: "Script generation started",
-        type: 'success',
+        type: "success",
       });
 
-
       setPolling(true);
+
+      // Reset only after success
+      setFile1(null);
+      setFile2(null);
+
+      if (fileRef1.current) fileRef1.current.value = '';
+      if (fileRef2.current) fileRef2.current.value = '';
 
     } catch (err) {
       console.error(err);
     } finally {
       setIsGenerating(false);
-
-      // ✅ Reset React state
-      setFile1(null);
-      setFile2(null);
-
-      // ✅ Reset DOM inputs (THIS IS THE KEY)
-      if (fileRef1.current) fileRef1.current.value = '';
-      if (fileRef2.current) fileRef2.current.value = '';
     }
   };
+
+
+
+
+  // useEffect(() => {
+  //   autoScriptService.getHistory().then(setHistory);
+  // }, []);
+
+  // useEffect(() => {
+
+  //   autoScriptService.getHistory()
+  //     .then(setHistory)
+  //     .catch(console.error);
+
+  //   if (!polling) return;
+
+  //   let interval: ReturnType<typeof setInterval>;
+
+  //   const startPolling = async () => {
+  //     const scripts = await autoScriptService.getHistory();
+  //     setHistory(scripts);
+
+  //     const hasRunning = scripts.some(
+  //       s => s.status === 'IN_PROGRESS' || s.status === 'PROCESSING'
+  //     );
+
+  //     if (!hasRunning) {
+  //       setPolling(false);
+  //       return;
+  //     }
+
+  //     interval = setInterval(async () => {
+  //       const updated = await autoScriptService.getHistory();
+  //       setHistory(updated);
+
+  //       const stillRunning = updated.some(
+  //         s => s.status === 'IN_PROGRESS' || s.status === 'PROCESSING'
+  //       );
+
+  //       if (!stillRunning) {
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Script generation completed",
+  //           type: 'success',
+  //         });
+
+  //         setPolling(false);
+  //         clearInterval(interval);
+  //       }
+  //     }, 5000);
+  //   };
+
+  //   startPolling();
+
+  //   return () => {
+  //     if (interval) clearInterval(interval);
+  //   };
+  // }, [polling]);
+
+
+
+  // const generate = async () => {
+  //   if (!file1 || !file2) return;
+
+  //   try {
+  //     setIsGenerating(true);
+
+  //     console.log("Generating script for project:", selectedProject.id, "application:", applicationId);
+
+  //     const message = await autoScriptService.generate(file1, file2, selectedProject.id, applicationId.id);
+  //     // assuming generate() returns a message string
+
+  //     setHistory(await autoScriptService.getHistory());
+
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Script generation started",
+  //       type: 'success',
+  //     });
+
+
+  //     setPolling(true);
+
+  //   } catch (err) {
+  //     console.error(err);
+  //   } finally {
+  //     setIsGenerating(false);
+
+  //     // ✅ Reset React state
+  //     setFile1(null);
+  //     setFile2(null);
+
+  //     // ✅ Reset DOM inputs (THIS IS THE KEY)
+  //     if (fileRef1.current) fileRef1.current.value = '';
+  //     if (fileRef2.current) fileRef2.current.value = '';
+  //   }
+  // };
 
 
   if (!selectedProject) {

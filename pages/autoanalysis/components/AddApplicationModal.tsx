@@ -4,13 +4,32 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   TextField, MenuItem, LinearProgress, Box, Typography, Alert
 } from '@mui/material';
-import { fetchJmx, addApp } from '../store/autoAnalysisSlice';
+// import { fetchJmx, addApp } from '../store/autoAnalysisSlice';
 import { AppDispatch } from '../../../store/store'; // Assume global store type location
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
+
+const fetchJmx = async () => {
+  return [
+    { id: 'jmx1', name: 'checkout_flow_v2.jmx' },
+    { id: 'jmx2', name: 'login_stress_test.jmx' },
+    { id: 'jmx3', name: 'search_load.jmx' },
+  ];
+};
+
+const addApp = async (data: any) => {
+  return {
+    id: Math.random().toString(36).substr(2, 9),
+    name: data.appName,
+    status: 'configured',
+    lastReportName: null,
+    lastRunDate: new Date().toISOString().split('T')[0],
+  };
+};
+
 
 export const AddApplicationModal: React.FC<Props> = ({ open, onClose }) => {
   const dispatch = useDispatch<AppDispatch>();

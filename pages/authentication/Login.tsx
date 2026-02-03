@@ -18,19 +18,26 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    dispatch(loginStart());
-    try {
-        const res = await login(config.username, config.password);
-        await dispatch(fetchProjectById(1)); 
-        dispatch(loginSuccess(res));
-        navigate('/');
-    } catch (err) {
-      setError('Invalid email or password.');
-      dispatch(loginFailure());
-    }
-  };
+  e.preventDefault();
+
+  dispatch(loginStart());
+
+  try {
+    const res = await login(config.username, config.password); // USE FORM STATE
+
+    dispatch(loginSuccess(res));
+
+    navigate("/", { replace: true });
+
+  } catch (err: any) {
+    console.error("Login error:", err);
+    setError(err.message || "Invalid email or password");
+    dispatch(loginFailure());
+  }
+};
+
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
