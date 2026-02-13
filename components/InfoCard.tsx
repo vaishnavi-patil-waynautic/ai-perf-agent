@@ -2,9 +2,11 @@ import React from "react";
 import { StatusBadge } from "./StatusBadge";
 import { Download, EditIcon, Trash2 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
+import { AddApplicationModal } from "@/pages/autoanalysis/components/AddApplicationModal";
 
 
 type RecentBuild = {
+  state: any;
   id: string;
   name: string;
   link: string;
@@ -23,6 +25,7 @@ type InfoCardProps = {
   onDelete?: () => void;
   onView?: () => void;
   onEdit?: () => void;
+  onUnconfigured?: () => void;
 };
 
 const InfoCard: React.FC<InfoCardProps> = ({
@@ -36,12 +39,21 @@ const InfoCard: React.FC<InfoCardProps> = ({
   onDelete,
   onView,
   onEdit,
+  onUnconfigured,
 }) => {
 
   const navigate = useNavigate();
   // Only enable buttons for these statuses
   const isDisabled =
-    status && !["Completed",'completed', "configured", "unconfigured"].includes(status);
+    status && !["Completed", 'completed', "configured", "unconfigured"].includes(status);
+
+
+  const handleRecentBuildClick = () => {
+    navigate(recentBuild.link, {
+      state: recentBuild.state
+    });
+  };
+
 
   return (
     <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-200">
@@ -66,12 +78,8 @@ const InfoCard: React.FC<InfoCardProps> = ({
           <div className="mt-2 flex items-center space-x-2">
             <div className="text-xs text-gray-500">Recent Build:</div>
             <span
-              onClick={() => {
-                if (recentBuild?.link) {
-                  console.log("Navigating to:", recentBuild.link);
-                  navigate(recentBuild.link);
-                }
-              }} className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-semibold"
+              onClick={handleRecentBuildClick}
+              className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-semibold"
             >
               {recentBuild.name || "-"}
             </span>
@@ -114,7 +122,7 @@ const InfoCard: React.FC<InfoCardProps> = ({
           </button>
         )}
 
-        {onView && (
+        {onView && status!="not_configured" && (
           <button
             onClick={onView}
             disabled={isDisabled}
@@ -123,8 +131,23 @@ const InfoCard: React.FC<InfoCardProps> = ({
             View
           </button>
         )}
+
+
+        {onUnconfigured && (status=="not_configured" || status=="failed")&& (
+          <button
+            onClick={onUnconfigured}
+            className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            {status=="not_configured" ? "Configure" : "Reconfigure" }
+          </button>
+        )}
+
       </div>
+
     </div>
+
+
+
   );
 };
 

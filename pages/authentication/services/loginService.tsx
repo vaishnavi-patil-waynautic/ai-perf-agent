@@ -28,8 +28,11 @@ export const login = async (
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => null);
-    throw new Error(errorData?.message || "Login failed");
+    console.error(errorData)
+    throw new Error(errorData?.message || errorData?.data?.error || "Login failed");
   }
+
+  getUserInfo();
 
   const data = await res.json();
 
@@ -48,6 +51,10 @@ export const login = async (
   // IMPORTANT: return BOTH user + token
   return { user, access };
 };
+
+const getUserInfo = () =>{
+  
+}
 
 // CSRF helper
 const getCsrfTokenFromCookie = (): string | null => {

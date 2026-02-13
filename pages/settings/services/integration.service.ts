@@ -1,12 +1,37 @@
-import { Integration } from "../types/settings.types";
+import { config } from "../../../config/backendConfig";
+import {
+  IntegrationListResponse,
+  IntegrationType,
+} from "../types/settings.types";
+
+const getHeaders = () => ({
+  Accept: "application/json",
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+});
 
 export const integrationService = {
-  list: async (): Promise<Integration[]> => {
-    return Promise.resolve([
-      { type: "github", name: "GitHub", connected: true, token: "ghp_xxx" },
-      { type: "datadog", name: "Datadog", connected: false }
-    ]);
+  async list(projectId: number): Promise<IntegrationListResponse> {
+    const res = await fetch(
+      `${config.baseUrl}/autoanalysis/projects/${projectId}/integrations/`,
+      { headers: getHeaders() }
+    );
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.data?.error || "Failed to fetch integrations");
+
+    return json;
   },
-  connect: async (type: string, token: string) => Promise.resolve(),
-  update: async (type: string, token: string) => Promise.resolve()
+
+  async delete(projectId: number, integrationId: number) {
+    const res = await fetch(
+      `${config.baseUrl}/autoanalysis/projects/${projectId}/integrations/${integrationId}/`,
+      { method: "DELETE", headers: getHeaders() }
+    );
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.data?.error || "Delete failed");
+
+    return json;
+  },
 };

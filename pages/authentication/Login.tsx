@@ -25,7 +25,7 @@ const Login: React.FC = () => {
   dispatch(loginStart());
 
   try {
-    const res = await login(config.username, config.password); // USE FORM STATE
+    const res = await login(email, password); // USE FORM STATE
 
     dispatch(loginSuccess(res));
 
@@ -45,7 +45,8 @@ const Login: React.FC = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-blue-600 items-center justify-center relative">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700 to-blue-900 opacity-90"></div>
         <img 
-          src="https://picsum.photos/1000/1000?grayscale" 
+          // src="https://picsum.photos/1000/1000?grayscale" 
+          src = "public/img/19197363.jpg"
           alt="Login Visual" 
           className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-40" 
         />

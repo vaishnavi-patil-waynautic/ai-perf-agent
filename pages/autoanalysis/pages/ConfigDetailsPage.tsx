@@ -161,6 +161,7 @@ import { updateEmailRecipients } from '../services/mockService';
 import Grid from "@mui/material/Grid";
 import Close from '@mui/icons-material/Close';
 import { RootState } from '@/store/store';
+import AppSnackbar, { SnackbarType } from '@/components/AppSnackbar';
 
 // ✅ FIX: Use MUI Grid v2
 
@@ -317,6 +318,16 @@ export const ConfigDetailsPage: React.FC = () => {
 
     const { selectedProject } = useSelector((state: RootState) => state.project);
 
+    const [snackbar, setSnackbar] = useState<{
+        open: boolean;
+        message: string;
+        type: SnackbarType;
+    }>({
+        open: false,
+        message: '',
+        type: 'success',
+    });
+
 
     useEffect(() => {
         if (!selectedProject?.id || !id) return;
@@ -331,19 +342,72 @@ export const ConfigDetailsPage: React.FC = () => {
         console.log("After fetching autoanalysis : ", currentApp);
     }, [id, selectedProject?.id]);
 
+
+    useEffect(() => {
+        if (!currentApp) return;
+
+        console.log("currentApp changed → update UI / derived state");
+
+    }, [currentApp]);   // ✔ allowed here (NO dispatch inside)
+
+
     if (!currentApp || !currentApp.config) {
         return <Box p={4}>Loading Configuration...</Box>;
     }
 
 
     const handleAddEmail = () => {
-        if (emailInput) {
-            const newEmails = [...currentApp.config.recipient_list
-                , emailInput];
-            updateEmailRecipients(newEmails); // Mock API
-            setEmailInput('');
+        if (!emailInput.trim()) return;
+
+        console.log("Update Recipient Before:", currentApp.config.recipient_list);
+
+        const existingEmails =
+            currentApp.config?.recipient_list
+                ?.split(",")
+                .map(e => e.trim())
+                .filter(Boolean) ?? [];
+
+        const newEmails = [...existingEmails, emailInput.trim()];
+
+        console.log("Update Recipient After:", newEmails);
+
+
+
+        try {
+            updateEmailRecipients(
+                selectedProject.id,
+                currentApp.config.application_id,
+                newEmails
+            );
+
+            setSnackbar({
+                open: true,
+                message: "Recipients updated successfully",
+                type: "success"
+            });
+
+        } catch (err: any) {
+
+
+            console.log("Entered Catch ", err?.data?.error?.recipient_list?.[0], " ||| ", err?.message  )
+
+            // 🔥 Extract backend error safely
+            const msg =
+                err?.data?.error?.recipient_list?.[0] ||
+                err?.message ||
+                "Failed to update recipients";
+
+            setSnackbar({
+                open: true,
+                message: msg,
+                type: "error"
+            });
         }
+
+
+        setEmailInput("");
     };
+
 
     function handleRemoveEmail(email: string): void {
         throw new Error('Function not implemented.');
@@ -384,7 +448,7 @@ export const ConfigDetailsPage: React.FC = () => {
                     className="pt-6 pl-6"
                     sx={{ fontWeight: 'bold', color: 'text.primary' }}
                 >
-                    Configuration: App ID {currentApp.config?.id}
+                    Configuration: {currentApp.config?.application_name}
                 </Typography>
 
 
@@ -402,7 +466,7 @@ export const ConfigDetailsPage: React.FC = () => {
 
 
                             <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
-                                {/* <IntegrationTile title="Script" active={currentApp.integrations.loadGenerator} link={"https://github.com/"} /> */}
+                                <IntegrationTile title="Script" active={currentApp.config.script_id !== null} link={String(currentApp.config.script_id)} />
                                 <IntegrationTile title="GitHub" active={currentApp.config.gha_repo_url !== null} link={currentApp.config.gha_repo_url} />
                                 <IntegrationTile title="BlazeMeter" active={currentApp.config.blazemeter_url !== null} link={currentApp.config.blazemeter_url} />
                                 {/* <IntegrationTile title="CI/CD" active={currentApp.integrations.cicd} link={"https://github.com/"} /> */}
@@ -418,12 +482,24 @@ export const ConfigDetailsPage: React.FC = () => {
 
                             <List>
                                 {/* Most recent build */}
-                                {currentApp?.builds?.length > 0 && (
+                                {currentApp?.builds?.length > 0 ? (
                                     <>
                                         {/* Recent Build */}
                                         <ListItem disablePadding>
                                             <ListItemButton
-                                                onClick={() => navigate(`result/${currentApp.builds[0].build_number}`)}
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/autoanalysis/projects/${currentApp.config.project_id}/apps/${currentApp.config.application_id}/result/${currentApp.builds[0].build_number}`,
+                                                        {
+                                                            state: {
+                                                                projectName: selectedProject.name,
+                                                                appName: currentApp.config.application_name
+                                                            }
+                                                        }
+                                                    )
+
+                                                }
+
                                                 sx={{
                                                     display: "flex",
                                                     justifyContent: "space-between",
@@ -490,7 +566,17 @@ export const ConfigDetailsPage: React.FC = () => {
                                                                 },
 
                                                             }}
-                                                            onClick={() => navigate(`result/${build.build_number}`)}
+                                                            onClick={() =>
+                                                                navigate(
+                                                                    `/autoanalysis/projects/${currentApp.config.project_id}/apps/${currentApp.config.application_id}/result/${build.build_number}`,
+                                                                    {
+                                                                        state: {
+                                                                            projectName: selectedProject.name,
+                                                                            appName: currentApp.config.application_name
+                                                                        }
+                                                                    }
+                                                                )
+                                                            }
                                                         >
                                                             <ListItemText
                                                                 primary={build.build_number}
@@ -508,7 +594,18 @@ export const ConfigDetailsPage: React.FC = () => {
                                             </>
                                         )}
                                     </>
-                                )}
+                                ) : (
+
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ color: "text.disabled", pl: 2, pt: 1 }}
+                                    >
+                                        No build found
+                                    </Typography>
+
+                                )
+
+                                }
                             </List>
 
                         </div>
@@ -523,13 +620,22 @@ export const ConfigDetailsPage: React.FC = () => {
                             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                                 <Box>
                                     <Typography variant="body2" color="textSecondary">
-                                        Current Mode: <strong>{currentApp.config?.run_schedule?.toUpperCase()}</strong>
+                                        Current Mode: <strong>
+                                            {currentApp.config?.run_schedule
+                                                ? currentApp.config.run_schedule.toUpperCase()
+                                                : "NO MODE CONFIGURED"}
+                                        </strong>
+
                                     </Typography>
 
                                     <Typography variant="caption" display="block">
                                         {currentApp.config?.run_schedule === 'automated'
                                             ? 'Tests run automatically after every deployment to the staging environment.'
-                                            : 'Tests must be triggered manually via CI/CD or this dashboard.'}
+                                            : currentApp.config?.run_schedule === 'manual'
+                                                ? 'Tests must be triggered manually via CI/CD or this dashboard.'
+                                                : 'Execution mode has not been configured yet.'
+                                        }
+
                                     </Typography>
                                 </Box>
 
@@ -658,16 +764,30 @@ export const ConfigDetailsPage: React.FC = () => {
                                 </Box>
                             )}
 
-                            <List dense>
-                                {currentApp.config?.recipient_list?.split(",").map((email: string) => (
-                                    <ListItem key={email}>
-                                        <ListItemText primary={email} />
-                                        <IconButton size="small" onClick={() => handleRemoveEmail(email)}>
-                                            <Delete fontSize="small" />
-                                        </IconButton>
-                                    </ListItem>
-                                ))}
-                            </List>
+                            {currentApp.config?.recipient_list ? (
+
+                                <List dense>
+                                    {currentApp.config.recipient_list.split(",").map((email: string) => (
+                                        <ListItem key={email}>
+                                            <ListItemText primary={email} />
+                                            <IconButton size="small" onClick={() => handleRemoveEmail(email)}>
+                                                <Delete fontSize="small" />
+                                            </IconButton>
+                                        </ListItem>
+                                    ))}
+                                </List>
+
+                            ) : (
+
+                                <Typography
+                                    variant="body2"
+                                    sx={{ color: "text.disabled", pl: 1 }}
+                                >
+                                    No email recipient configured for this application
+                                </Typography>
+
+                            )}
+
                         </div>
 
 

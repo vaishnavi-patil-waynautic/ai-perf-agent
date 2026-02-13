@@ -40,6 +40,7 @@ import {
   deleteNfrById,
   generateNfr,
   fetchNfrReport,
+  getNfrById
 } from "./nfr.thunks";
 
 interface NFRListState {
@@ -72,6 +73,18 @@ const nfrListSlice = createSlice({
         state.strategies = action.payload;
       })
       .addCase(fetchNfrList.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch NFR list";
+      })
+
+      .addCase(getNfrById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getNfrById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.strategies = action.payload;
+      })
+      .addCase(getNfrById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to fetch NFR list";
       })

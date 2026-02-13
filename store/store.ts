@@ -5,7 +5,8 @@ import projectReducer from '../pages/project/store/project.slice';
 import nfrListReducer from '../pages/NFR/slices/nfrListSlice';
 import nfrWizardReducer from '../pages/NFR/slices/nfrWizardSlice';
 import { autoAnalysisReducer } from '../pages/autoanalysis';
-import settingsReducer from "../pages/settings/store/settings.store";
+import IntegrationSlice from "../pages/settings/store/integration.slice";
+import userReducer from "../pages/settings/store/user.slice"
 
 
 
@@ -17,7 +18,8 @@ export const store = configureStore({
     nfrList: nfrListReducer,
     nfrWizard: nfrWizardReducer,
     autoAnalysis: autoAnalysisReducer,
-    settings: settingsReducer
+    integration: IntegrationSlice,
+    user: userReducer
   },
 });
 

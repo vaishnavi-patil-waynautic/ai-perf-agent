@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
@@ -6,19 +6,22 @@ import {
 } from '@mui/material';
 // import { fetchJmx, addApp } from '../store/autoAnalysisSlice';
 import { AppDispatch } from '../../../store/store'; // Assume global store type location
+import { fetchJmx } from '../store/autoAnalysisSlice';
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  selectedApplicationId: string | null;
+  selectedApplicationName: string | null;
 }
 
-const fetchJmx = async () => {
-  return [
-    { id: 'jmx1', name: 'checkout_flow_v2.jmx' },
-    { id: 'jmx2', name: 'login_stress_test.jmx' },
-    { id: 'jmx3', name: 'search_load.jmx' },
-  ];
-};
+// const fetchJmx = async () => {
+//   return [
+//     { id: 'jmx1', name: 'checkout_flow_v2.jmx' },
+//     { id: 'jmx2', name: 'login_stress_test.jmx' },
+//     { id: 'jmx3', name: 'search_load.jmx' },
+//   ];
+// };
 
 const addApp = async (data: any) => {
   return {
@@ -31,7 +34,7 @@ const addApp = async (data: any) => {
 };
 
 
-export const AddApplicationModal: React.FC<Props> = ({ open, onClose }) => {
+export const AddApplicationModal: React.FC<Props> = ({ open, onClose, selectedApplicationId, selectedApplicationName }) => {
   const dispatch = useDispatch<AppDispatch>();
   // @ts-ignore
   const jmxOptions = useSelector((state) => state.autoAnalysis.jmxOptions);
@@ -39,7 +42,7 @@ export const AddApplicationModal: React.FC<Props> = ({ open, onClose }) => {
   const [step, setStep] = useState<'form' | 'processing' | 'success'>('form');
   const [progress, setProgress] = useState(0);
   const [formData, setFormData] = useState({
-    appName: '',
+    appName: selectedApplicationName,
     jmxSource: 'auto', // 'file' or 'auto'
     jmxFile: null as File | null,
     jmxScriptId: '',
@@ -49,21 +52,27 @@ export const AddApplicationModal: React.FC<Props> = ({ open, onClose }) => {
   });
 
   useEffect(() => {
-    if (open) dispatch(fetchJmx());
+    if (open) {
+      // fetchjmx
+      dispatch(fetchJmx());
+    }
   }, [open, dispatch]);
+  const progressRef = useRef(null);
 
   const handleStart = async () => {
     setStep('processing');
+    setProgress(0);
 
-    // Simulate Progress Steps
-    const stages = [10, 30, 60, 80, 100];
-    for (const p of stages) {
-      await new Promise(r => setTimeout(r, 600)); // Simulate API polling
-      setProgress(p);
+    let val = 0;
+  progressRef.current = setInterval(() => {
+    val += 10;
+    setProgress(val);
+
+    if (val >= 100) {
+      clearInterval(progressRef.current);
+      setStep('success');
     }
-
-    await dispatch(addApp({ appName: formData.appName }));
-    setStep('success');
+  }, 400);
   };
 
   const handleClose = () => {
@@ -370,11 +379,11 @@ export const AddApplicationModal: React.FC<Props> = ({ open, onClose }) => {
       pt: 2.5,
       fontWeight: 700,
       fontSize: '1.5rem',
-      color: 'blue',
+      color: '#1d4ed8',
       textAlign: step === 'success' ? 'center' : 'left',
     }}
   >
-    {step === 'success' ? 'Application Configured Successfully!' : 'Add New Application'}
+    {step === 'success' ? 'Application Configured Successfully!' : 'Configure Application'}
   </DialogTitle>
 
   <DialogContent sx={{ pt: 1, display: 'flex', flexDirection: 'column', alignItems: step === 'form' ? 'stretch' : 'center' }}>
@@ -386,8 +395,8 @@ export const AddApplicationModal: React.FC<Props> = ({ open, onClose }) => {
           fullWidth
           size="small"
           margin="normal"
-          value={formData.appName}
-          onChange={(e) => setFormData({ ...formData, appName: e.target.value })}
+          value={selectedApplicationName}
+          disabled
           sx={{
             '& .MuiOutlinedInput-root': { borderRadius: 2, boxShadow: 1 },
           }}
@@ -493,14 +502,27 @@ export const AddApplicationModal: React.FC<Props> = ({ open, onClose }) => {
         <Button
   variant="contained"
   onClick={handleStart}
-  disabled={!formData.appName}
   disableElevation
-  sx={{ px: 4, py: 1.2, textTransform: 'none' }}
+  sx={{ px: 4, py: 1.2, textTransform: 'none', bgcolor: '#1d4ed8',      // blue-700
+    '&:hover': {
+      bgcolor: '#1e40af'     // blue-800
+    } }}
+  className='bg-blue-700'
 >
   Start Configuration
 </Button>
       </>
     )}
+    {step === 'processing' && (
+    <Button
+      variant="outlined"
+      color="error"
+      onClick={handleClose}
+      sx={{ textTransform: 'none' }}
+    >
+      Close
+    </Button>
+  )}
     {step === 'success' && (
       <Button variant="contained" onClick={handleClose} sx={{ textTransform: 'none' }}>
         Done

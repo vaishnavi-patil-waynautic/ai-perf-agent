@@ -16,6 +16,19 @@ export const fetchNfrList = createAsyncThunk<any[]>(
   }
 );
 
+
+export const getNfrById = createAsyncThunk(
+  "nfr/getById",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      console.log("NFR get by id : ",id );
+      return await nfrService.getNfrListByProjectId(id);
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
 /**
  * Delete NFR by ID
  */

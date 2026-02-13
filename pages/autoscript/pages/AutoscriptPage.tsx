@@ -87,7 +87,7 @@ const AutoScriptPage: React.FC = () => {
   };
 
 
-  const handleDownload = async (id: number) => {
+  const handleDownload = async (id: number, script_name: string) => {
     try {
       const blob = await autoScriptService.downloadJmx(id);
 
@@ -95,7 +95,7 @@ const AutoScriptPage: React.FC = () => {
       const a = document.createElement("a");
 
       a.href = url;
-      a.download = `script-${id}.jmx`; // filename
+      a.download = `Script-${script_name}.jmx`; // filename
       document.body.appendChild(a);
       a.click();
 
@@ -232,11 +232,13 @@ const AutoScriptPage: React.FC = () => {
     try {
       setIsGenerating(true);
 
+      console.log("Project : ", selectedProject.id, " application id : ", applicationId?.id);
+
       await autoScriptService.generate(
         file1,
         file2,
         selectedProject.id,
-        applicationId.id
+        applicationId?.id ?? undefined 
       );
 
       setSnackbar({
@@ -419,7 +421,7 @@ const AutoScriptPage: React.FC = () => {
       <HistoryTable
         history={history}
         onDelete={(id) => handleDelete(id)}
-        onDownload={(id) => { handleDownload(id) }}
+        onDownload={(id, script_name:string) => { handleDownload(id, script_name) }}
       />
 
       <input hidden ref={fileRef1} type="file" accept=".har" onChange={e => setFile1(e.target.files?.[0] || null)} />

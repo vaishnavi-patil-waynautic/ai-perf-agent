@@ -4,7 +4,7 @@ import { HistoryRow } from "./HistoryRow";
 interface Props {
   history: JMXRecord[];
   onDelete: (id: number) => void;
-  onDownload: (id: number) => void;
+  onDownload: (id: number, script_name: string) => void;
 }
 
 export const HistoryTable: React.FC<Props> = ({ history, onDelete, onDownload }) => (

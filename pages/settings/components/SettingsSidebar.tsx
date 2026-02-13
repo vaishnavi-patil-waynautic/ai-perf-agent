@@ -22,7 +22,7 @@ export default function SettingsSidebar() {
             {/* Integrations */}
             <div>
                 <h3 className="text-xs font-semibold text-gray-400 mb-2">INTEGRATIONS</h3>
-                {integrations.map(i => (
+                {/* {integrations.map(i => (
                     <NavLink
                         key={i.id}
                         to={`/settings/integrations/${i.id}`}
@@ -30,7 +30,11 @@ export default function SettingsSidebar() {
                     >
                         {i.label}
                     </NavLink>
-                ))}
+                ))} */}
+
+                <NavLink to="/settings/integrations" className="block py-2 text-sm">
+                    Integrations
+                </NavLink>
             </div>
 
             {/* User */}

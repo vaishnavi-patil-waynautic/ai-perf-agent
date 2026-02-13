@@ -36,6 +36,10 @@ import {
     HelpOutline,
 } from '@mui/icons-material';
 import type { AlertColor } from '@mui/material/Alert';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import { fetchCurrentUser, updateCurrentUser } from '../store/user.thunk';
+import { changePassword } from '@/pages/authentication/services/passwordService';
 
 
 export default function UserProfileSettings() {
@@ -45,19 +49,11 @@ export default function UserProfileSettings() {
         message: string;
         severity: AlertColor;
     };
+    const dispatch = useDispatch<any>();
 
-    // Dummy user data - would come from API
-    const [userData, setUserData] = useState({
-        name: 'John Anderson',
-        email: 'john.anderson@company.com',
-        phone: '+1 (555) 123-4567',
-        location: 'San Francisco, CA',
-        company: 'Tech Solutions Inc.',
-        role: 'Senior Developer',
-        joinDate: 'January 2023',
-        avatar: 'https://i.pravatar.cc/150?img=12',
-        bio: 'Passionate developer with 8+ years of experience in full-stack development.',
-    });
+    const user = useSelector((state: RootState) => state.user.profile);
+    const loadingUser = useSelector((state: RootState) => state.user.loading);
+
 
     const [settings, setSettings] = useState({
         emailNotifications: true,
@@ -77,7 +73,16 @@ export default function UserProfileSettings() {
         message: '',
         severity: 'success' as 'success' | 'info' | 'warning' | 'error',
     });
-    const [formData, setFormData] = useState({ ...userData });
+    const [formData, setFormData] = useState({
+        first_name: "",
+        last_name: "",
+        phone_no: "",
+        location: "",
+        company: "",
+        role: "",
+        bio: "",
+        email_notification: false,
+    });
     const [passwordData, setPasswordData] = useState({
         currentPassword: '',
         newPassword: '',
@@ -99,39 +104,105 @@ export default function UserProfileSettings() {
     };
 
     useEffect(() => {
-        fetchUserData();
+        dispatch(fetchCurrentUser());
     }, []);
 
+    useEffect(() => {
+        if (!user) return;
+
+        setFormData({
+            first_name: user.first_name || "",
+            last_name: user.last_name || "",
+            phone_no: user.phone_no || "",
+            location: user.location || "",
+            company: user.company || "",
+            role: user.role || "",
+            bio: user.bio || "",
+            email_notification: user.email_notification,
+        });
+    }, [user]);
+
+
+
     const handleSaveProfile = async () => {
-        setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            setUserData({ ...formData });
+        try {
+            setLoading(true);
+
+            await dispatch(updateCurrentUser(formData)).unwrap();
+
             setEditMode(false);
+            setSnackbar({
+                open: true,
+                message: "Profile updated successfully!",
+                severity: "success",
+            });
+        } catch (err: any) {
+            setSnackbar({
+                open: true,
+                message: err.message || "Failed to update profile",
+                severity: "error",
+            });
+        } finally {
             setLoading(false);
-            setSnackbar({ open: true, message: 'Profile updated successfully!', severity: 'success' });
-        }, 1000);
+        }
     };
+
 
     const handleChangePassword = async () => {
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
-            setSnackbar({ open: true, message: 'Passwords do not match!', severity: 'error' });
-            return;
-        }
-        if (passwordData.newPassword.length < 8) {
-            setSnackbar({ open: true, message: 'Password must be at least 8 characters!', severity: 'error' });
-            return;
-        }
+  // Frontend validation
+  if (passwordData.newPassword !== passwordData.confirmPassword) {
+    setSnackbar({
+      open: true,
+      message: "Passwords do not match",
+      severity: "error",
+    });
+    return;
+  }
 
-        setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            setPasswordDialog(false);
-            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-            setLoading(false);
-            setSnackbar({ open: true, message: 'Password changed successfully!', severity: 'success' });
-        }, 1000);
-    };
+  if (passwordData.newPassword.length < 8) {
+    setSnackbar({
+      open: true,
+      message: "Password must be at least 8 characters",
+      severity: "error",
+    });
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    await changePassword(
+      passwordData.currentPassword,
+      passwordData.newPassword,
+      passwordData.confirmPassword
+    );
+
+    setPasswordDialog(false);
+    setPasswordData({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+
+    setSnackbar({
+      open: true,
+      message: "Password changed successfully",
+      severity: "success",
+    });
+
+  } catch (err: any) {
+    console.error("Change password error:", err);
+
+    setSnackbar({
+      open: true,
+      message: err.message || "Failed to change password",
+      severity: "error",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     const handleSettingChange = (setting) => {
         setSettings({ ...settings, [setting]: !settings[setting] });
@@ -143,7 +214,7 @@ export default function UserProfileSettings() {
         setSnackbar({ open: true, message: 'Avatar upload functionality would trigger here', severity: 'info' });
     };
 
-    if (loading && !editMode && !passwordDialog) {
+    if (loadingUser && !user) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <CircularProgress />
@@ -171,7 +242,7 @@ export default function UserProfileSettings() {
                             <div className="flex items-end gap-4">
                                 <div className="relative">
                                     <Avatar
-                                        src={userData.avatar}
+                                        src={"../../../public/img/exgenix.png"}
                                         sx={{ width: 80, height: 80, border: '4px solid white', boxShadow: 2 }}
                                     />
                                     <IconButton
@@ -191,8 +262,9 @@ export default function UserProfileSettings() {
                                     </IconButton>
                                 </div>
                                 <div className="mb-2">
-                                    <h2 className="text-2xl font-bold text-gray-900">{userData.name}</h2>
-                                    <p className="text-gray-600">{userData.role}</p>
+                                    <h2 className="text-2xl font-bold text-gray-900">{user?.full_name || "—"}
+                                    </h2>
+                                    <p className="text-gray-600">{user?.role}</p>
                                     <div className="flex gap-2 mt-2">
                                         <Chip label="Verified" size="small" color="primary" icon={<Check />} />
                                         <Chip label="Premium" size="small" variant="outlined" color="primary" />
@@ -203,11 +275,21 @@ export default function UserProfileSettings() {
                                 variant={editMode ? "outlined" : "contained"}
                                 startIcon={editMode ? <Close /> : <Edit />}
                                 onClick={() => {
-                                    if (editMode) {
-                                        setFormData({ ...userData });
+                                    if (editMode && user) {
+                                        setFormData({
+                                            first_name: user.first_name || "",
+                                            last_name: user.last_name || "",
+                                            phone_no: user.phone_no || "",
+                                            location: user.location || "",
+                                            role: user.role || "",
+                                            company: user.company || "",
+                                            bio: user.bio || "",
+                                            email_notification: user.email_notification ?? false,
+                                        });
                                     }
                                     setEditMode(!editMode);
                                 }}
+
                                 sx={{ mt: { xs: 2, md: 0 } }}
                             >
                                 {editMode ? 'Cancel' : 'Edit Profile'}
@@ -218,23 +300,29 @@ export default function UserProfileSettings() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                             <TextField
                                 label="Full Name"
-                                value={editMode ? formData.name : userData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                value={
+                                    editMode
+                                        ? `${formData.first_name || ""} ${formData.last_name || ""}`.trim()
+                                        : user?.full_name || ""
+                                }
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    const parts = value.split(" ");
+
+                                    setFormData({
+                                        ...formData,
+                                        first_name: parts[0] || "",
+                                        last_name: parts.slice(1).join(" ") || "",
+                                    });
+                                }}
                                 disabled={!editMode}
                                 fullWidth
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Mail className="text-gray-400" fontSize="small" />
-                                        </InputAdornment>
-                                    ),
-                                }}
                             />
+
                             <TextField
                                 label="Email Address"
-                                value={editMode ? formData.email : userData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                disabled={!editMode}
+                                value={user?.email || ""}
+                                disabled   // always disabled
                                 fullWidth
                                 type="email"
                                 InputProps={{
@@ -245,10 +333,13 @@ export default function UserProfileSettings() {
                                     ),
                                 }}
                             />
+
                             <TextField
                                 label="Phone Number"
-                                value={editMode ? formData.phone : userData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                value={editMode ? formData.phone_no : user?.phone_no || ""}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, phone_no: e.target.value })
+                                }
                                 disabled={!editMode}
                                 fullWidth
                                 InputProps={{
@@ -259,11 +350,14 @@ export default function UserProfileSettings() {
                                     ),
                                 }}
                             />
+
                             <TextField
                                 label="Location"
-                                value={editMode ? formData.location : userData.location}
-                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                value={editMode ? `${formData.location}` : user?.location || ""}
                                 disabled={!editMode}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, location: e.target.value })
+                                }
                                 fullWidth
                                 InputProps={{
                                     startAdornment: (
@@ -275,7 +369,7 @@ export default function UserProfileSettings() {
                             />
                             <TextField
                                 label="Company"
-                                value={editMode ? formData.company : userData.company}
+                                value={editMode ? formData.company : user?.company}
                                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                                 disabled={!editMode}
                                 fullWidth
@@ -289,7 +383,7 @@ export default function UserProfileSettings() {
                             />
                             <TextField
                                 label="Role"
-                                value={editMode ? formData.role : userData.role}
+                                value={editMode ? formData.role : user?.role}
                                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                 disabled={!editMode}
                                 fullWidth
@@ -298,7 +392,7 @@ export default function UserProfileSettings() {
 
                         <TextField
                             label="Bio"
-                            value={editMode ? formData.bio : userData.bio}
+                            value={editMode ? formData.bio : user?.bio}
                             onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                             disabled={!editMode}
                             fullWidth
@@ -344,7 +438,7 @@ export default function UserProfileSettings() {
                             </Button>
                         </div>
 
-                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        {/* <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                             <div className="flex-1">
                                 <p className="font-semibold text-gray-900">Two-Factor Authentication</p>
                                 <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
@@ -368,7 +462,7 @@ export default function UserProfileSettings() {
                             >
                                 Delete
                             </Button>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
@@ -383,8 +477,16 @@ export default function UserProfileSettings() {
                         <FormControlLabel
                             control={
                                 <Switch
-                                    checked={settings.emailNotifications}
-                                    onChange={() => handleSettingChange('emailNotifications')}
+                                    checked={formData.email_notification}
+                                    onChange={async () => {
+                                        const newVal = !formData.email_notification;
+
+                                        setFormData({ ...formData, email_notification: newVal });
+
+                                        try {
+                                            await dispatch(updateCurrentUser({ email_notification: newVal })).unwrap();
+                                        } catch { }
+                                    }}
                                     color="primary"
                                 />
                             }
@@ -395,7 +497,7 @@ export default function UserProfileSettings() {
                                 </div>
                             }
                         />
-                        <Divider />
+                        {/* <Divider />
                         <FormControlLabel
                             control={
                                 <Switch
@@ -442,12 +544,12 @@ export default function UserProfileSettings() {
                                     <p className="text-sm text-gray-600">Toggle dark mode appearance</p>
                                 </div>
                             }
-                        />
+                        /> */}
                     </div>
                 </div>
 
                 {/* Additional Info */}
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 flex items-start gap-3">
+                {/* <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 flex items-start gap-3">
                     <HelpOutline className="text-blue-600 mt-1" />
                     <div>
                         <p className="font-semibold text-blue-900 mb-1">Need Help?</p>
@@ -462,7 +564,7 @@ export default function UserProfileSettings() {
                             </a>
                         </p>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {/* Change Password Dialog */}
@@ -547,35 +649,7 @@ export default function UserProfileSettings() {
                 </DialogActions>
             </Dialog>
 
-            {/* Delete Account Dialog */}
-            <Dialog
-                open={deleteDialog}
-                onClose={() => setDeleteDialog(false)}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle className="text-red-600">Delete Account</DialogTitle>
-                <DialogContent>
-                    <Alert severity="warning" sx={{ mb: 2 }}>
-                        This action cannot be undone. All your data will be permanently deleted.
-                    </Alert>
-                    <p className="text-gray-700">
-                        Are you sure you want to delete your account? Type your email address to confirm.
-                    </p>
-                    <TextField
-                        label="Email Address"
-                        fullWidth
-                        sx={{ mt: 2 }}
-                        placeholder={userData.email}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDeleteDialog(false)}>Cancel</Button>
-                    <Button variant="contained" color="error">
-                        Delete Account
-                    </Button>
-                </DialogActions>
-            </Dialog>
+
 
             {/* Snackbar for notifications */}
             <Snackbar

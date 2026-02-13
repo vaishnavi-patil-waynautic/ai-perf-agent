@@ -80,7 +80,7 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { ProjectState } from '../types/project.types';
-import { fetchProjectById, fetchProjects } from './project.thunks';
+import { createApplication, deleteApplication, fetchProjectById, fetchProjects, updateApplication } from './project.thunks';
 
 const initialState: ProjectState = {
   projects: [],
@@ -138,19 +138,43 @@ const projectSlice = createSlice({
 
       .addCase(fetchProjectById.fulfilled, (state, action) => {
 
-  const { project, applications } = action.payload;
+        const { project, applications } = action.payload;
 
-  state.loading = false;
+        state.loading = false;
 
-  state.selectedProject = project;
-  state.applications = applications;
-  state.selectedApp = applications[0] ?? null;
-})
+        state.selectedProject = project;
+        state.applications = applications;
+        state.selectedApp = applications[0] ?? null;
+      })
 
 
       .addCase(fetchProjectById.rejected, (state) => {
         state.loading = false;
+      })
+
+      // ➕ CREATE
+      .addCase(createApplication.fulfilled, (state, action) => {
+        console.log("[SLICE] Application Created:", action.payload);
+        state.applications.push(action.payload);
+      })
+
+      // ✏️ UPDATE
+      .addCase(updateApplication.fulfilled, (state, action) => {
+        console.log("[SLICE] Application Updated:", action.payload);
+
+        const index = state.applications.findIndex(a => a.id === action.payload.id);
+        if (index !== -1) {
+          state.applications[index] = action.payload;
+        }
+      })
+
+      // 🗑 DELETE
+      .addCase(deleteApplication.fulfilled, (state, action) => {
+        console.log("[SLICE] Application Deleted:", action.payload);
+
+        state.applications = state.applications.filter(a => a.id !== action.payload);
       });
+
   },
 });
 

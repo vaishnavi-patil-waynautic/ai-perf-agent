@@ -11,10 +11,10 @@ import { useEffect, useState } from "react";
 type Props = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: { name: string; description: string }) => void;
+  onSubmit: (data: { name: string; description?: string }) => void;
   initialData?: {
     name: string;
-    description: string;
+    description?: string | null;
   } | null;
 };
 

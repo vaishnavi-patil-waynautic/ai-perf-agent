@@ -9,7 +9,7 @@ export const HistoryRow = ({
 }: {
   item: JMXRecord;
   onDelete: (id: number) => void;
-  onDownload: (id: number) => void;
+  onDownload: (id: number, script_name: string) => void;
 }) => {
 
 
@@ -30,7 +30,7 @@ export const HistoryRow = ({
       </td>
       <td className="px-6 py-4 text-right">
         <button
-          onClick={() => onDownload(item.id)}
+          onClick={() => onDownload(item.id, item.name)}
           disabled={item.status !== "completed"}
           className={`p-1 rounded ${item.status === "completed"
               ? "text-blue-600 hover:bg-blue-50"

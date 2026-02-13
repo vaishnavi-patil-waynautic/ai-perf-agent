@@ -45,5 +45,14 @@ export const UploadSection: React.FC<Props> = ({
         {isGenerating ? "Generating..." : "Generate JMX"}
       </Button>
     </div>
+
+    <div
+          className="mt-3 p-3 text-blue-400 text-sm font-medium  transition text-center"
+        >
+          <p
+            onClick={() => window.open("https://chrome.google.com/webstore/detail/your-extension-id", "_blank")}
+            className="cursor-pointer hover:text-blue-600 hover:underline transition">Click here to create a HAR file using the Chrome plugin</p>
+
+        </div>
   </div>
 );

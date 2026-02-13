@@ -7,14 +7,15 @@ import DownloadIcon from '@mui/icons-material/Download';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AddIcon from '@mui/icons-material/Add';
 import { AppDispatch, RootState } from '../../../store/store';
-import { deleteNfrById, fetchNfrReport, fetchNfrList } from '../slices/nfr.thunks'
-import {resetWizard} from '../slices/nfrWizardSlice';
+import { deleteNfrById, fetchNfrReport, getNfrById, fetchNfrList } from '../slices/nfr.thunks'
+import { resetWizard } from '../slices/nfrWizardSlice';
 import { StatusBadge } from '@/components/StatusBadge';
 import PrimaryButton from '@/pages/autoanalysis/components/PrimaryButton';
 import { Activity, Download, EditIcon, Trash2, TrashIcon } from 'lucide-react';
 import InfoCard from '@/components/InfoCard';
 import { nfrService } from '../services/nfrService';
 import AppSnackbar, { SnackbarType } from '@/components/AppSnackbar';
+import { get } from 'http';
 
 const NFRPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const NFRPage: React.FC = () => {
   let count = 0;
   const pollingRef = useRef(null);
 
-    console.log("SELECTED PROJECT IN NFR : ",selectedProject);
+  console.log("SELECTED PROJECT IN NFR : ", selectedProject);
 
 
   const { strategies } = useSelector((state: RootState) => state.nfrList);
@@ -43,14 +44,19 @@ const NFRPage: React.FC = () => {
   useEffect(() => {
 
     const hasPending = (list) =>
-      list.some(s => s.status === 'pending' || s.status === 'draft');
+      list.some(s => s.status === 'in_process' || s.status === 'draft' || s.status === 'pending' );
 
     dispatch(resetWizard());
+
+    console.log("Fetching NFR by project id in Useeffect Before polling")
 
     const startPolling = async () => {
       try {
 
-        const strategies = await dispatch(fetchNfrList()).unwrap();
+        console.log("Fetching NFR by project id in Useeffect")
+
+        // const strategies = await dispatch(getNfrById(selectedProject.id)).unwrap();
+        const strategies = await dispatch(getNfrById(selectedProject.id)).unwrap();
 
         if (!hasPending(strategies)) return;
 
@@ -60,7 +66,7 @@ const NFRPage: React.FC = () => {
         pollingRef.current = setInterval(async () => {
 
           try {
-            const updated = await dispatch(fetchNfrList()).unwrap();
+            const updated = await dispatch(getNfrById(selectedProject.id)).unwrap();
 
             if (!hasPending(updated)) {
 
@@ -94,7 +100,7 @@ const NFRPage: React.FC = () => {
       }
     };
 
-  }, [dispatch]);
+  }, [dispatch, selectedProject]);
 
 
 
@@ -108,7 +114,6 @@ const NFRPage: React.FC = () => {
       </div>
     );
   }
-
 
 
 
@@ -541,18 +546,26 @@ const NFRPage: React.FC = () => {
       />
 
       <div className="space-y-4 w-full mx-auto">
-        {strategies.map((strategy) => (
-          <InfoCard key={strategy.id}
-            name={strategy.application_name == 'N/A' ? "Default Application" : strategy.application_name}
-            createdOn={strategy.created_on && strategy.created_on.replace("Z", "") || "N/A"}
-            createdBy={strategy.created_by_name || "N/A"}
-            status={strategy.status}
-            onDownload={() => handleDownload(strategy.id)}
-            onDelete={() => handleDelete(strategy.id)}
-            onView={() => navigate(`/nfr/result/${strategy.id}`)}
-          />
+        {(strategies?.length ?? 0) > 0 ? (
 
-        ))}
+          strategies?.map((strategy) => (
+            <InfoCard key={strategy.id}
+              name={strategy.display_name == 'N/A' ? "Default Application" : strategy.display_name}
+              createdOn={strategy.created_on && strategy.created_on.replace("Z", "") || "N/A"}
+              createdBy={strategy.created_by_name || "N/A"}
+              status={strategy.status}
+              onDownload={() => handleDownload(strategy.id)}
+              onDelete={() => handleDelete(strategy.id)}
+              onView={() => navigate(`/nfr/result/${strategy.id}`)}
+            />
+
+          ))) : (
+          <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-500 p-10">
+            <Activity size={64} className="mb-4 text-gray-300" />
+            <h2 className="text-xl font-medium mb-2">No NFR Generated</h2>
+            <p>Please generate the NFR document.</p>
+          </div>
+        )}
       </div>
 
       {/* </div> */}

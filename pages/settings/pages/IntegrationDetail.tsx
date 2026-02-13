@@ -1,100 +1,271 @@
+
+
+
 // import { useParams } from "react-router-dom";
+// import { useState } from "react";
 // import { useAppDispatch, useAppSelector } from "../store/hooks";
 // import { updateIntegration } from "../store/settings.store";
-// import { useState } from "react";
 // import IntegrationTokenDialog from "../components/IntegrationTokenDialog";
 
-// export default function IntegrationDetails() {
+// export default function IntegrationDetail() {
 //   const { integrationId } = useParams<{ integrationId: string }>();
 //   const dispatch = useAppDispatch();
 
-//   const integration = useAppSelector(
-//     state => state.settings.integrations[integrationId!]
+//   const integration = useAppSelector(state =>
+//     state.settings.integrations.find(i => i.type === integrationId)
 //   );
 
 //   const [open, setOpen] = useState(false);
 
-//   if (!integration) return <div>Invalid integration</div>;
+//   if (!integration) {
+//     return <div className="text-red-500">Invalid integration</div>;
+//   }
 
 //   return (
-//     <div className="max-w-3xl">
-//       <h1 className="text-xl font-semibold capitalize mb-4">
-//         {integrationId}
-//       </h1>
 
-//       <div className={`border rounded-lg p-6 ${
-//         integration.connected ? "bg-green-50 border-green-300" : "bg-yellow-50 border-yellow-300"
-//       }`}>
-//         {integration.connected ? (
-//           <>
-//             <p className="text-sm">
-//               Token: ****{integration.token.slice(-4)}
-//             </p>
-//             <button
-//               className="mt-4 text-blue-600"
-//               onClick={() => setOpen(true)}
-//             >
-//               Edit Token
-//             </button>
-//           </>
-//         ) : (
-//           <>
-//             <p className="text-sm text-yellow-700">Not connected</p>
-//             <button
-//               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
-//               onClick={() => setOpen(true)}
-//             >
-//               Connect
-//             </button>
-//           </>
-//         )}
+
+//     <div className="p-8 space-y-12 bg-gray-50 min-h-screen">
+
+//       <div className="max-w-2xl">
+//         {/* <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 6: Card with Icon</h2> */}
+//         <h1 className="text-2xl font-bold mb-6 text-gray-900">{integration.name}</h1>
+//         <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm">
+//           <div className="flex items-start gap-4">
+//             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+//               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+//               </svg>
+//             </div>
+//             <div className="flex-1">
+//               <div className="flex items-center gap-2 mb-3">
+//                 <h3 className="font-semibold text-gray-900">Connected</h3>
+//                 {/* <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Active</span> */}
+//               </div>
+
+//               <div className="flex items-start justify-between mb-3">
+//                 <div>
+//                   <p className="text-sm opacity-90 mb-1">Authentication Token</p>
+//                   <p className="text-xl font-mono font-semibold">****{integration.token?.slice(-4)}</p>
+//                 </div>
+//                 <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full" onClick={()=>{console.log("clicked")}}>Active</span>
+//               </div>
+
+//               <button className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+//                 Edit Token
+//               </button>
+//             </div>
+//           </div>
+//         </div>
 //       </div>
 
-//       <IntegrationTokenDialog
-//         open={open}
-//         onClose={() => setOpen(false)}
-//         onSubmit={(token) => {
-//           dispatch(updateIntegration({ id: integrationId!, token }));
-//         }}
-//       />
+
 //     </div>
 //   );
 // }
 
 
+// import { useState } from "react";
+// import { Edit2, Trash2, Plus, AlertTriangle, CheckCircle2 } from "lucide-react";
+// import IntegrationTokenDialog from "../components/IntegrationTokenDialog";
 
-// import { useParams } from "react-router-dom";
-// import { useAppSelector } from "../store/hooks";
+// /* ---------------- Dummy Data ---------------- */
 
-// export default function IntegrationDetailPage() {
-//   const { integrationId } = useParams<{ integrationId: string }>();
-//   const integrations = useAppSelector(state => state.settings.integrations);
+// type Status = "active" | "inactive" | "failed";
 
-//   const integration = integrations.find(i => i.type === integrationId);
+// type Integration = {
+//   id: string;
+//   name: string;
+//   token?: string;
+//   status: Status;
+//   error?: string;
+// };
 
-//   if (!integration) {
-//     return (
-//       <div className="text-red-600 font-medium">
-//         Invalid integration
-//       </div>
+// const initialIntegrations: Integration[] = [
+//   { id: "github", name: "GitHub", token: "ghp_xxx_1234", status: "active" },
+//   { id: "blazemeter", name: "BlazeMeter", status: "inactive" },
+//   { id: "ado", name: "Azure DevOps", token: "ado_xxx_9876", status: "active" },
+//   { id: "datadog", name: "Datadog", status: "failed", error: "Token expired. Authentication failed." },
+//   { id: "jira", name: "Jira", status: "inactive" },
+// ];
+
+// export default function IntegrationDetail() {
+//   const [integrations, setIntegrations] = useState(initialIntegrations);
+//   const [openToken, setOpenToken] = useState<string | null>(null);
+//   const [deleteTarget, setDeleteTarget] = useState<Integration | null>(null);
+
+//   /* ---------------- Actions ---------------- */
+
+//   const handleDelete = () => {
+//     if (!deleteTarget) return;
+
+//     setIntegrations(prev =>
+//       prev.map(i =>
+//         i.id === deleteTarget.id
+//           ? { ...i, status: "inactive", token: undefined }
+//           : i
+//       )
 //     );
-//   }
+
+//     setDeleteTarget(null);
+//   };
+
+//   const failed = integrations.find(i => i.status === "failed");
 
 //   return (
-//     <div>
-//       <h1 className="text-xl font-semibold mb-4">{integration.name}</h1>
+//     <div className="p-8 bg-gray-50 min-h-screen space-y-8">
 
-//       {integration.connected ? (
-//         <div className="bg-green-50 border border-green-300 p-4 rounded">
-//           <p className="text-sm">
-//             Token: ****{integration.token?.slice(-4)}
-//           </p>
-//           <button className="mt-3 text-blue-600">Edit Token</button>
+//       {/* Top Error Banner */}
+//       {failed && (
+//         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+//           <AlertTriangle size={18} />
+//           <span><b>{failed.name}:</b> {failed.error}</span>
 //         </div>
-//       ) : (
-//         <div className="bg-yellow-50 border border-yellow-300 p-4 rounded">
-//           <p className="text-sm text-yellow-800">Not integrated</p>
-//           <button className="mt-3 text-blue-600">Connect</button>
+//       )}
+
+//       <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
+
+//       {/* Tiles */}
+//       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+//         {integrations.map(integration => (
+//           <div
+//             key={integration.id}
+//             className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition p-6"
+//           >
+//             <div className="flex items-start gap-4">
+
+//               {/* Left Status Icon */}
+//               <div
+//                 className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0
+//                 ${
+//                   integration.status === "active"
+//                     ? "bg-green-100"
+//                     : integration.status === "inactive"
+//                     ? "bg-yellow-100"
+//                     : "bg-red-100"
+//                 }`}
+//               >
+//                 {integration.status === "active" && (
+//                   <CheckCircle2 className="text-green-600" size={20} />
+//                 )}
+//                 {integration.status === "inactive" && (
+//                   <Plus className="text-yellow-600" size={20} />
+//                 )}
+//                 {integration.status === "failed" && (
+//                   <AlertTriangle className="text-red-600" size={20} />
+//                 )}
+//               </div>
+
+//               {/* Content */}
+//               <div className="flex-1">
+
+//                 {/* Header */}
+//                 <div className="flex justify-between items-start mb-3">
+//                   <h3
+//                     className={`font-semibold ${
+//                       integration.status === "active"
+//                         ? "text-green-700"
+//                         : integration.status === "inactive"
+//                         ? "text-yellow-700"
+//                         : "text-red-700"
+//                     }`}
+//                   >
+//                     {integration.name}
+//                   </h3>
+
+//                   {integration.status === "active" && (
+//                     <div className="flex gap-1">
+//                       <button
+//                         onClick={() => setOpenToken(integration.id)}
+//                         className="p-1.5 rounded hover:bg-gray-100"
+//                       >
+//                         <Edit2 size={16} />
+//                       </button>
+//                       <button
+//                         onClick={() => setDeleteTarget(integration)}
+//                         className="p-1.5 rounded hover:bg-gray-100 text-red-600"
+//                       >
+//                         <Trash2 size={16} />
+//                       </button>
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 {/* Body */}
+//                 {integration.status === "active" && (
+//                   <>
+//                     <p className="text-sm text-gray-500 mb-1">Authentication Token</p>
+//                     <p className="text-lg font-mono font-semibold mb-3">
+//                       ****{integration.token?.slice(-4)}
+//                     </p>
+
+//                     <button
+//                       onClick={() => setOpenToken(integration.id)}
+//                       className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
+//                     >
+//                       Edit Token
+//                     </button>
+//                   </>
+//                 )}
+
+//                 {integration.status === "inactive" && (
+//                   <button
+//                     onClick={() => setOpenToken(integration.id)}
+//                     className="w-full py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition"
+//                   >
+//                     Add Token
+//                   </button>
+//                 )}
+
+//                 {integration.status === "failed" && (
+//                   <>
+//                     <p className="text-sm text-red-600 mb-3">{integration.error}</p>
+
+//                     <button
+//                       onClick={() => setOpenToken(integration.id)}
+//                       className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition"
+//                     >
+//                       Fix Connection
+//                     </button>
+//                   </>
+//                 )}
+//               </div>
+//             </div>
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* Token Dialog */}
+//       <IntegrationTokenDialog
+//         open={!!openToken}
+//         onClose={() => setOpenToken(null)}
+//         integrationId={openToken}
+//       />
+
+//       {/* Delete Confirmation */}
+//       {deleteTarget && (
+//         <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
+//           <div className="bg-white rounded-xl shadow-lg p-6 w-[360px]">
+//             <h3 className="font-semibold mb-2">Delete Token</h3>
+//             <p className="text-sm text-gray-600 mb-4">
+//               Remove token for <b>{deleteTarget.name}</b>?
+//             </p>
+
+//             <div className="flex justify-end gap-2">
+//               <button
+//                 onClick={() => setDeleteTarget(null)}
+//                 className="px-3 py-1.5 border rounded"
+//               >
+//                 Cancel
+//               </button>
+//               <button
+//                 onClick={handleDelete}
+//                 className="px-3 py-1.5 bg-red-600 text-white rounded"
+//               >
+//                 Delete
+//               </button>
+//             </div>
+//           </div>
 //         </div>
 //       )}
 //     </div>
@@ -102,273 +273,525 @@
 // }
 
 
-import { useParams } from "react-router-dom";
-import { useState } from "react";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { updateIntegration } from "../store/settings.store";
+// import { useState } from "react";
+// import { Edit2, Trash2, Plus, AlertTriangle, CheckCircle2, X } from "lucide-react";
+// import IntegrationTokenDialog from "../components/IntegrationTokenDialog";
+
+// /* ---------------- Dummy Data ---------------- */
+
+// type Status = "active" | "inactive" | "failed";
+
+// type Integration = {
+//   id: string;
+//   name: string;
+//   token?: string;
+//   status: Status;
+//   error?: string;
+// };
+
+// const initialIntegrations: Integration[] = [
+//   { id: "github", name: "GitHub", token: "ghp_xxx_1234", status: "active" },
+//   { id: "blazemeter", name: "BlazeMeter", status: "inactive" },
+//   { id: "ado", name: "Azure DevOps", token: "ado_xxx_9876", status: "active" },
+//   { id: "datadog", name: "Datadog", status: "failed", error: "Token expired. Authentication failed." },
+//   { id: "jira", name: "Jira", status: "inactive" },
+// ];
+
+// export default function IntegrationDetail() {
+//   const [integrations, setIntegrations] = useState(initialIntegrations);
+//   const [openToken, setOpenToken] = useState<string | null>(null);
+//   const [deleteTarget, setDeleteTarget] = useState<Integration | null>(null);
+
+//   /* ---------------- Actions ---------------- */
+
+//   const handleDelete = () => {
+//     if (!deleteTarget) return;
+
+//     setIntegrations(prev =>
+//       prev.map(i =>
+//         i.id === deleteTarget.id
+//           ? { ...i, status: "inactive", token: undefined }
+//           : i
+//       )
+//     );
+
+//     setDeleteTarget(null);
+//   };
+
+//   const failed = integrations.find(i => i.status === "failed");
+
+//   return (
+//     // <div className="p-8 bg-gray-50 min-h-screen space-y-8">
+
+//     //   {/* Top Error Banner */}
+//     //   {failed && (
+//     //     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+//     //       <AlertTriangle size={18} />
+//     //       <span><b>{failed.name}:</b> {failed.error}</span>
+//     //     </div>
+//     //   )}
+
+//     //   <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
+
+//     //   {/* Horizontal Scrollable Pills */}
+//     //   <div className="flex gap-4 overflow-x-auto pb-4">
+//     //     {integrations.map(integration => (
+//     //       <div
+//     //         key={integration.id}
+//     //         className={`
+//     //           relative flex-shrink-0 w-56 px-6 py-5 rounded-2xl border-2 
+//     //           ${
+//     //             integration.status === "active"
+//     //               ? "bg-green-600 border-green-600"
+//     //               : integration.status === "inactive"
+//     //               ? "bg-white border-yellow-500"
+//     //               : "bg-white border-yellow-500"
+//     //           }
+//     //         `}
+//     //       >
+//     //         {/* Close/Delete button for active integrations */}
+//     //         {integration.status === "active" && (
+//     //           <button
+//     //             onClick={() => setDeleteTarget(integration)}
+//     //             className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition"
+//     //           >
+//     //             <X size={16} className="text-white" />
+//     //           </button>
+//     //         )}
+
+//     //         {/* Not Configured button for inactive/failed */}
+//     //         {(integration.status === "inactive" || integration.status === "failed") && (
+//     //           <button
+//     //             onClick={() => setOpenToken(integration.id)}
+//     //             className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full bg-yellow-500 hover:bg-yellow-600 transition"
+//     //           >
+//     //             <X size={16} className="text-white" />
+//     //           </button>
+//     //         )}
+
+//     //         {/* Content */}
+//     //         <div className="flex items-center gap-3 mb-3">
+//     //           <h3
+//     //             className={`font-semibold text-base ${
+//     //               integration.status === "active"
+//     //                 ? "text-white"
+//     //                 : "text-gray-900"
+//     //             }`}
+//     //           >
+//     //             {integration.name}
+//     //           </h3>
+
+//     //           {integration.status === "active" && (
+//     //             <CheckCircle2 size={18} className="text-white" />
+//     //           )}
+//     //         </div>
+
+//     //         {/* Status Badge */}
+//     //         <div
+//     //           className={`
+//     //             inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+//     //             ${
+//     //               integration.status === "active"
+//     //                 ? "bg-white/20 text-white"
+//     //                 : "bg-yellow-100 text-yellow-800"
+//     //             }
+//     //           `}
+//     //         >
+//     //           {integration.status === "active" ? "Configured" : "Not Configured"}
+//     //         </div>
+//     //       </div>
+//     //     ))}
+//     //   </div>
+
+//     //   {/* Token Dialog */}
+//     //   <IntegrationTokenDialog
+//     //     open={!!openToken}
+//     //     onClose={() => setOpenToken(null)}
+//     //     initialToken={openToken}
+//     //     onSave={()=>{}}
+//     //   />
+
+//     //   {/* Delete Confirmation */}
+//     //   {deleteTarget && (
+//     //     <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
+//     //       <div className="bg-white rounded-xl shadow-lg p-6 w-[360px]">
+//     //         <h3 className="font-semibold mb-2">Delete Token</h3>
+//     //         <p className="text-sm text-gray-600 mb-4">
+//     //           Remove token for <b>{deleteTarget.name}</b>?
+//     //         </p>
+
+//     //         <div className="flex justify-end gap-2">
+//     //           <button
+//     //             onClick={() => setDeleteTarget(null)}
+//     //             className="px-3 py-1.5 border rounded"
+//     //           >
+//     //             Cancel
+//     //           </button>
+//     //           <button
+//     //             onClick={handleDelete}
+//     //             className="px-3 py-1.5 bg-red-600 text-white rounded"
+//     //           >
+//     //             Delete
+//     //           </button>
+//     //         </div>
+//     //       </div>
+//     //     </div>
+//     //   )}
+//     // </div>
+
+//   <div className="p-8 bg-gray-50 min-h-screen space-y-6">
+
+//     {/* Title */}
+//     <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
+
+//     {/* Error Banner BELOW TITLE */}
+//     {failed && (
+//       <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+//         <AlertTriangle size={18} />
+//         <span><b>{failed.name}:</b> {failed.error}</span>
+//       </div>
+//     )}
+
+//     {/* Horizontal Pills */}
+//     <div className="flex gap-4 overflow-x-auto pb-4">
+
+//       {integrations.map(integration => (
+//         <div
+//           key={integration.id}
+//           className={`
+//             relative flex-shrink-0 w-56 px-6 py-5 rounded-2xl border-2 transition
+//             ${
+//               integration.status === "active"
+//                 ? "bg-green-600 border-green-600"
+//                 : integration.status === "failed"
+//                 ? "bg-white border-red-500"
+//                 : "bg-white border-yellow-500"
+//             }
+//           `}
+//         >
+
+//           {/* ===== ACTIVE ICONS ===== */}
+//           {integration.status === "active" && (
+//             <div className="absolute top-3 right-3 flex gap-1">
+
+//               {/* Edit */}
+//               <button
+//                 onClick={() => setOpenToken(integration.id)}
+//                 className="w-7 h-7 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition"
+//               >
+//                 <Edit2 size={14} className="text-white" />
+//               </button>
+
+//               {/* Delete */}
+//               <button
+//                 onClick={() => setDeleteTarget(integration)}
+//                 className="w-7 h-7 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition"
+//               >
+//                 <Trash2 size={14} className="text-white" />
+//               </button>
+
+//             </div>
+//           )}
+
+//           {/* ===== ADD TOKEN BUTTON (Inactive + Failed) ===== */}
+//           {(integration.status === "inactive" || integration.status === "failed") && (
+//             <button
+//               onClick={() => setOpenToken(integration.id)}
+//               className={`
+//                 absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full transition
+//                 ${
+//                   integration.status === "failed"
+//                     ? "bg-red-500 hover:bg-red-600"
+//                     : "bg-yellow-500 hover:bg-yellow-600"
+//                 }
+//               `}
+//             >
+//               <Plus size={14} className="text-white" />
+//             </button>
+//           )}
+
+//           {/* ===== CONTENT ===== */}
+//           <div className="flex items-center gap-2 mb-3">
+
+//             <h3
+//               className={`font-semibold text-base ${
+//                 integration.status === "active"
+//                   ? "text-white"
+//                   : integration.status === "failed"
+//                   ? "text-red-600"
+//                   : "text-gray-900"
+//               }`}
+//             >
+//               {integration.name}
+//             </h3>
+
+//             {/* {integration.status === "active" && (
+//               <CheckCircle2 size={18} className="text-white" />
+//             )} */}
+//           </div>
+
+//           {/* ===== STATUS BADGE ===== */}
+//           <div
+//             className={`
+//               inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+//               ${
+//                 integration.status === "active"
+//                   ? "bg-white/20 text-white"
+//                   : integration.status === "failed"
+//                   ? "bg-red-100 text-red-700"
+//                   : "bg-yellow-100 text-yellow-800"
+//               }
+//             `}
+//           >
+//             {integration.status === "active"
+//               ? "Active"
+//               : integration.status === "failed"
+//               ? "Failed"
+//               : "Inactive"}
+//           </div>
+
+//           {/* ===== FAILED ERROR TEXT INSIDE TILE (optional) ===== */}
+//           {integration.status === "failed" && (
+//             <p className="text-xs text-red-600 mt-2">
+//               {integration.error}
+//             </p>
+//           )}
+
+//         </div>
+//       ))}
+
+//     </div>
+
+//     </div>
+
+//   );
+// }
+
+
+
+
+import { useEffect, useState } from "react";
+import { Edit2, Trash2, Plus, MoreVertical, AlertCircle } from "lucide-react";
 import IntegrationTokenDialog from "../components/IntegrationTokenDialog";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { deleteIntegration, fetchIntegrations } from "../store/integration.thunk";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import { Integration, IntegrationStatus } from "../types/settings.types";
+
+/* ---------------- Dummy Data ---------------- */
+
 
 export default function IntegrationDetail() {
-  const { integrationId } = useParams<{ integrationId: string }>();
-  const dispatch = useAppDispatch();
 
-  const integration = useAppSelector(state =>
-    state.settings.integrations.find(i => i.type === integrationId)
+   const dispatch = useDispatch<AppDispatch>();
+  const { selectedProject } = useSelector((state: RootState) => state.project);
+  
+const integrations = useSelector((state: RootState) => state.integration.list);
+
+  const [openToken, setOpenToken] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Integration | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [expandedError, setExpandedError] = useState<string | null>(null);
+
+  /* ---------------- Actions ---------------- */
+
+  useEffect(() => {
+  if (!selectedProject?.id) return;
+  dispatch(fetchIntegrations(selectedProject.id));
+}, [selectedProject?.id]);
+
+
+ const handleDelete = () => {
+  if (!deleteTarget || !deleteTarget.id || !selectedProject?.id) return;
+
+  dispatch(
+    deleteIntegration({
+      projectId: selectedProject.id,
+      id: Number(deleteTarget.id),
+    })
   );
 
-  const [open, setOpen] = useState(false);
+  setDeleteTarget(null);
+};
 
-  if (!integration) {
-    return <div className="text-red-500">Invalid integration</div>;
-  }
+
+  const getStatusColor = (status: IntegrationStatus) => {
+    switch (status) {
+      case "active":
+        return "text-green-600 bg-green-50";
+      case "failed":
+        return "text-red-600 bg-red-50";
+      default:
+        return "text-gray-500 bg-gray-50";
+    }
+  };
+
+  const getStatusDot = (status: IntegrationStatus) => {
+    switch (status) {
+      case "active":
+        return "bg-green-500";
+      case "failed":
+        return "bg-red-500";
+      default:
+        return "bg-gray-300";
+    }
+  };
+
+  const shortenText = (text: string, max: number) => {
+    if (!text) return "";
+    if (text.length <= max) return text;
+    return text.slice(0, max).trimEnd() + "...";
+  };
+
 
   return (
-    // <div className="max-w-2xl">
-    //   <h1 className="text-xl font-semibold mb-4">{integration.name}</h1>
 
-    //   {integration.connected ? (
-    //     <div className="bg-green-50 border border-green-300 p-4 rounded">
-    //       <p className="text-sm">
-    //         Token: ****{integration.token?.slice(-4)}
-    //       </p>
-    //       <button
-    //         className="mt-3 text-blue-600"
-    //         onClick={() => setOpen(true)}
-    //       >
-    //         Edit Token
-    //       </button>
-    //     </div>
-    //   ) : (
-    //     <div className="bg-yellow-50 border border-yellow-300 p-4 rounded">
-    //       <p className="text-sm text-yellow-800">Not integrated</p>
-    //       <button
-    //         className="mt-3 text-blue-600"
-    //         onClick={() => setOpen(true)}
-    //       >
-    //         Connect
-    //       </button>
-    //     </div>
-    //   )}
+    <div className="max-w-6xl mx-auto">
 
-    //   <IntegrationTokenDialog
-    //     open={open}
-    //     onClose={() => setOpen(false)}
-    //     initialToken={integration.token}
-    //     onSave={token =>
-    //       dispatch(
-    //         updateIntegration({
-    //           type: integration.type,
-    //           token,
-    //         })
-    //       )
-    //     }
-    //   />
-    // </div>
+      <h1 className="text-2xl font-semibold text-gray-900 mb-8">Integrations</h1>
 
+      {integrations.some(i => i.status === "failed") && (
+        <div className="mb-6 space-y-2">
+          {integrations
+            .filter(i => i.status === "failed")
+            .map(i => (
+              <div
+                key={i.id}
+                className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+              >
+                <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
 
-    <div className="p-8 space-y-12 bg-gray-50 min-h-screen">
-      {/* Variation 1: Modern Glass Card */}
-      {/* <div className="max-w-2xl">
-        <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 1: Modern Glass Card</h2>
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">{integration.name}</h1>
-        <div className="bg-white/70 backdrop-blur-sm border border-gray-200 p-6 rounded-2xl shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Token</p>
-              <p className="text-lg font-mono text-gray-900">****{integration.token?.slice(-4)}</p>
-            </div>
-            <button className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-              Edit Token
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Variation 2: Gradient Border Card 
-      <div className="max-w-2xl">
-        <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 2: Gradient Border Card</h2>
-        <h1 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">{integration.name}</h1>
-        <div className="relative bg-white p-6 rounded-xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 opacity-20"></div>
-          <div className="absolute inset-[1px] bg-white rounded-xl"></div>
-          <div className="relative">
-            <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Active Token</p>
-            <p className="text-base font-mono mb-4">****{integration.token?.slice(-4)}</p>
-            <button className="text-sm font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-2">
-              Edit Token →
-            </button>
-          </div>
-        </div>
-      </div>*/}
-
-      {/* Variation 3: Minimalist Shadow Card 
-      <div className="max-w-2xl">
-        <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 3: Minimalist Shadow Card</h2>
-        <h1 className="text-xl font-semibold mb-5 text-gray-900">{integration.name}</h1>
-        <div className="bg-white p-8 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-sm text-gray-600">Connected</span>
-          </div>
-          <p className="text-sm text-gray-500 mb-1">Token</p>
-          <p className="font-mono text-gray-900 mb-5">****{integration.token?.slice(-4)}</p>
-          <button className="text-sm text-blue-600 hover:underline">Edit Token</button>
-        </div>
-      </div>
-
-      {/* Variation 4: Bold Colored Card 
-      <div className="max-w-2xl">
-        <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 4: Bold Colored Card</h2>
-        <h1 className="text-2xl font-bold mb-6 text-gray-900">{integration.name}</h1>
-        <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-2xl shadow-xl text-white">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm opacity-90 mb-1">Authentication Token</p>
-              <p className="text-xl font-mono font-semibold">****{integration.token?.slice(-4)}</p>
-            </div>
-            <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-medium">Active</span>
-          </div>
-          <button className="mt-5 bg-white text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors">
-            Update Token
-          </button>
-        </div>
-      </div>
-
-      {/* Variation 5: Outlined Minimalist 
-      <div className="max-w-2xl">
-        <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 5: Outlined Minimalist</h2>
-        <h1 className="text-xl font-semibold mb-5 text-gray-800">{integration.name}</h1>
-        <div className="border-2 border-gray-300 p-5 rounded-lg bg-white hover:border-blue-500 transition-colors">
-          <div className="flex justify-between items-center">
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Token ID</p>
-              <p className="font-mono text-gray-900">****{integration.token?.slice(-4)}</p>
-            </div>
-            <button className="ml-4 px-4 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition-colors text-sm font-medium">
-              Edit
-            </button>
-          </div>
-        </div>
-      </div> */}
-
-      {/* Variation 6: Card with Icon */}
-      <div className="max-w-2xl">
-        {/* <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 6: Card with Icon</h2> */}
-        <h1 className="text-2xl font-bold mb-6 text-gray-900">{integration.name}</h1>
-        <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-3">
-                <h3 className="font-semibold text-gray-900">Connected</h3>
-                {/* <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Active</span> */}
-              </div>
-
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="text-sm opacity-90 mb-1">Authentication Token</p>
-                  <p className="text-xl font-mono font-semibold">****{integration.token?.slice(-4)}</p>
+                <div className="flex-1">
+                  <p className="font-semibold">{i.name}</p>
+                  <p className="text-sm opacity-90 break-words">{i.error}</p>
                 </div>
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full" onClick={()=>{console.log("clicked")}}>Active</span>
               </div>
-              {/* <p className="text-sm text-gray-600 mb-1">Token</p> */}
-              {/* <p className="font-mono text-sm text-gray-900 mb-3">****{integration.token?.slice(-4)}</p> */}
-              {/* <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                Edit Token
-              </button> */}
-              <button className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-                Edit Token
-              </button>
+            ))}
+        </div>
+      )}
+
+
+      <div
+        className="grid gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4  xl:grid-cols-5">
+
+        {integrations.map(integration => (
+          <div
+            key={integration.id ?? integration.type}
+            onMouseEnter={() => setHoveredCard(integration.id)}
+            onMouseLeave={() => setHoveredCard(null)}
+            className="relative bg-white rounded-xl shadow-sm hover:shadow-md 
+                 transition-all duration-200 border-l-4 border-transparent
+                 h-[150px] flex flex-col justify-between"
+            style={{
+              borderLeftColor:
+                integration.status === "active"
+                  ? "#22c55e"
+                  : integration.status === "failed"
+                    ? "#ef4444"
+                    : "#d1d5db"
+            }}
+          >
+            <div className="p-5 flex flex-col h-full">
+
+
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-2 flex-1">
+
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDot(integration.status)}`} />
+
+                  <h3 className="font-medium text-gray-900 text-base truncate">
+                    {integration.name}
+                  </h3>
+                </div>
+
+                {(hoveredCard === integration.id || integration.status !== "active") && (
+                  <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                    {integration.status === "active" ? (
+                      <>
+                        <button
+                          onClick={() => setOpenToken(String(integration.id))}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                          title="Edit token"
+                        >
+                          <Edit2 size={16} className="text-gray-600" />
+                        </button>
+
+                        <button
+                          onClick={() => setDeleteTarget(integration)}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                          title="Remove token"
+                        >
+                          <Trash2 size={16} className="text-gray-600" />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setOpenToken(String(integration.id))}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors"
+                        title="Configure"
+                      >
+                        <Plus size={16} className="text-white" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-3">
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${getStatusColor(integration.status)}`}>
+                  {integration.status === "active" ? "Active" : integration.status === "failed" ? "Failed" : "Inactive"}
+                </span>
+              </div>
+
+
+              {integration.status === "active" && integration.token && (
+                <p className="text-xs text-gray-400 mt-2 font-mono">
+                  {integration.token.substring(0, 12)}...
+                </p>
+              )}
             </div>
           </div>
-        </div>
+        ))}
       </div>
 
-      {/* Variation 7: Dark Mode Card */}
-      {/* <div className="max-w-2xl">
-        <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 7: Dark Mode Card</h2>
-        <h1 className="text-2xl font-bold mb-6 text-white">{integration.name}</h1>
-        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-2xl">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</span>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm text-green-400">Connected</span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-400 mb-2">API Token</p>
-          <p className="font-mono text-lg text-white mb-5">****{integration.token?.slice(-4)}</p>
-          <button className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-            Edit Token
-          </button>
-        </div>
-      </div> */}
 
-      {/* Variation 8: Soft Pastel Card */}
-      {/* <div className="max-w-2xl">
-        <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 8: Soft Pastel Card</h2>
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">{integration.name}</h1>
-        <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 p-6 rounded-2xl">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-            <span className="text-sm font-medium text-gray-700">Integration Active</span>
-          </div>
-          <div className="bg-white/60 backdrop-blur-sm p-4 rounded-lg mb-4">
-            <p className="text-xs text-gray-600 mb-1">Token</p>
-            <p className="font-mono text-gray-900">****{integration.token?.slice(-4)}</p>
-          </div>
-          <button className="text-sm font-semibold text-blue-600 hover:text-blue-700">
-            Manage Token →
-          </button>
-        </div>
-      </div> */}
 
-      {/* Variation 9: Split Two-Tone Card */}
-      {/* <div className="max-w-2xl">
-        <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 9: Split Two-Tone Card</h2>
-        <h1 className="text-2xl font-bold mb-6 text-gray-900">{integration.name}</h1>
-        <div className="flex rounded-xl overflow-hidden shadow-lg">
-          <div className="bg-blue-600 p-6 flex items-center justify-center w-1/3">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+
+      <IntegrationTokenDialog
+        open={!!openToken}
+        onClose={() => setOpenToken(null)}
+        initialToken={String(openToken)}
+        onSave={() => { }}
+      />
+
+      {
+        deleteTarget && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl p-6 w-[400px] border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Remove Integration</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Are you sure you want to remove the token for <span className="font-medium text-gray-900">{deleteTarget.name}</span>? This will deactivate the integration.
+              </p>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Remove
+                </button>
               </div>
-              <p className="text-xs text-white/80 font-medium">Connected</p>
             </div>
           </div>
-          <div className="bg-white p-6 flex-1">
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Token</p>
-            <p className="font-mono text-gray-900 mb-4">****{integration.token?.slice(-4)}</p>
-            <button className="text-sm font-medium text-blue-600 hover:underline">
-              Edit Token
-            </button>
-          </div>
-        </div>
-      </div> */}
-
-      {/* Variation 10: Neumorphic Card */}
-      {/* <div className="max-w-2xl">
-        <h2 className="text-sm font-medium text-gray-500 mb-6">Variation 10: Neumorphic Card</h2>
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">{integration.name}</h1>
-        <div className="bg-gray-100 p-8 rounded-3xl" style={{ boxShadow: '20px 20px 60px #bebebe, -20px -20px 60px #ffffff' }}>
-          <div className="bg-gray-100 p-5 rounded-2xl mb-5" style={{ boxShadow: 'inset 8px 8px 16px #bebebe, inset -8px -8px 16px #ffffff' }}>
-            <p className="text-xs text-gray-500 font-medium mb-2">API Token</p>
-            <p className="font-mono text-gray-900 text-lg">****{integration.token?.slice(-4)}</p>
-          </div>
-          <button
-            className="w-full py-3 bg-gray-100 rounded-xl text-blue-600 font-semibold transition-all"
-            style={{ boxShadow: '8px 8px 16px #bebebe, -8px -8px 16px #ffffff' }}
-          >
-            Edit Token
-          </button>
-        </div>
-      </div> */}
-    </div>
+        )
+      }
+    </div >
   );
 }

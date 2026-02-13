@@ -1,4 +1,4 @@
-import { Application, AppConfiguration, BuildResult, JmxScriptOption, AppDetails } from '../types';
+import { Application, AppConfiguration, BuildResult, JmxScriptOption, AppDetails, BuildReport, BuildReportResponse } from '../types';
 import { config } from "@/config/backendConfig";
 
 
@@ -31,7 +31,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // --- API Methods ---
 
 export const fetchApplications = async (projectId: number): Promise<Application[]> => {
-  const token = localStorage.getItem("access_token"); // or wherever you store it
+  const token = localStorage.getItem("access_token");
 
   const res = await fetch(
     `${API_BASE}/autoanalysis/projects/${projectId}/applications/`,
@@ -46,6 +46,8 @@ export const fetchApplications = async (projectId: number): Promise<Application[
   }
 
   const json = await res.json();
+
+  console.log("Autoanalysis RAW RESPONSE:", json);
 
   return json.data.applications;
 };
@@ -84,7 +86,10 @@ export const fetchAppDetails = async (
   const res = await fetch(
     `${API_BASE}/autoanalysis/projects/${projectId}/applications/${appId}/`,
     {
-      headers: headers,
+      headers: {
+        Accept: "application/json",
+    Authorization: `Bearer ${token}`,
+      },
     }
   );
 
@@ -97,29 +102,63 @@ export const fetchAppDetails = async (
 };
 
 
-export const updateEmailRecipients = async (emails: string[]): Promise<void> => {
-  await delay(500);
-  
+export const updateEmailRecipients = async (
+  projectId: number,
+  appId: number,
+  emails: string[]
+): Promise<void> => {
+
+  const token = localStorage.getItem("access_token");
+
+  console.log(" Update Recepient Payload : ", emails);
+
+  const res = await fetch(
+    `${API_BASE}/autoanalysis/projects/${projectId}/applications/${appId}/recipients/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        recipient_list: emails.join(","),
+      }),
+    }
+  );
+
+  console.log(" Update Recepient : ", res);
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    // 🔥 throw FULL backend error
+    const error: any = new Error("Recipient update failed");
+    error.data = json?.data;
+    throw error;
+  }
+
+  return json;
 };
 
-export const fetchBuildReport = async (buildId: string): Promise<string> => {
-  await delay(1200);
-  return `
-# Performance Report: ${buildId}
 
-## Summary
-The performance test **PASSED** with a throughput of 500 req/sec.
+export const fetchBuildReport = async (
+  projectId: string,
+  appId: string,
+  buildId: string
+): Promise<BuildReport> => {
 
-### Metrics
-| Metric | Value |
-| :--- | :--- |
-| **Response Time (Avg)** | 120ms |
-| **Error Rate** | 0.01% |
-| **90th Percentile** | 200ms |
+  const res = await fetch(
+    `${API_BASE}/autoanalysis/projects/${projectId}/applications/${appId}/builds/${buildId}/`,
+    {
+      headers: headers
+    }
+  );
 
-### Analysis
-The system stabilized after 2 minutes of ramp-up. The database connection pool remained healthy.
+  if (!res.ok) {
+    throw new Error("Failed to fetch report");
+  }
 
-![Chart](https://via.placeholder.com/600x200/1976d2/ffffff?text=Throughput+Graph+Mock)
-  `;
+  const json: BuildReportResponse = await res.json();
+
+  return json.data; // IMPORTAN
 };

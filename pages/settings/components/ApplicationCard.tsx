@@ -1,5 +1,5 @@
 import { Download, Edit, Trash2 } from "lucide-react";
-import { Application } from "../types/settings.types";
+import { Application } from "@/pages/project/types/project.types";
 import { on } from "events";
 
 export default function ApplicationCard({ app, onEdit, onDelete }: { app: Application, onEdit?: () => void, onDelete?: () => void }) {

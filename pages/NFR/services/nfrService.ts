@@ -4,12 +4,7 @@ import { config } from "@/config/backendConfig";
 const API_BASE = config.baseUrl;
 
 // Common headers
-const token = localStorage.getItem("access_token");
 
-const headers = {
-  Accept: "application/json",
-  Authorization: `Bearer ${token}`,
-};
 
 export const nfrService = {
   /**
@@ -17,6 +12,13 @@ export const nfrService = {
    */
   getAll: async () => {
     try {
+
+      const token = localStorage.getItem("access_token");
+
+const headers = {
+  Accept: "application/json",
+  Authorization: `Bearer ${token}`,
+};
 
       console.log(" Get all called---------------------");
       if (!token) throw new Error("Missing access token");
@@ -44,11 +46,60 @@ export const nfrService = {
     }
   },
 
+
+  getNfrListByProjectId: async (projectId: number) => {
+    try {
+
+      const token = localStorage.getItem("access_token");
+
+const headers = {
+  Accept: "application/json",
+  Authorization: `Bearer ${token}`,
+};
+
+      if (!token) throw new Error("Missing access token");
+
+
+      console.log("Fetching NFR by project id in Service")
+
+      const res = await fetch(
+        `${API_BASE}/autonfr/nfr-documents/?project_id=${projectId}`, 
+        {
+          method: "GET",
+          headers,
+        }
+      );
+
+      console.log("NFR get by project id response:", res);
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch NFR document");
+      }
+
+      const json = await res.json();
+
+      console.log("NFR get by project id response:", json);
+      
+      return json.data.nfr_documents;
+    } catch (err) {
+      console.error("NFR get error:", err);
+      throw err;
+    }
+  },
+
   /**
    * Delete NFR document by id
    */
   deleteById: async (nfrId: number) => {
     try {
+
+      const token = localStorage.getItem("access_token");
+
+const headers = {
+  Accept: "application/json",
+  Authorization: `Bearer ${token}`,
+};
+
       if (!token) throw new Error("Missing access token");
 
       const res = await fetch(
@@ -79,6 +130,14 @@ export const nfrService = {
    */
   downloadById: async (nfrId: number): Promise<Blob> => {
     try {
+
+      const token = localStorage.getItem("access_token");
+
+const headers = {
+  Accept: "application/json",
+  Authorization: `Bearer ${token}`,
+};
+
       if (!token) throw new Error("Missing access token");
 
       const response = await axios.get(
@@ -101,6 +160,14 @@ export const nfrService = {
    */
   getReportById: async (nfrId: number) => {
     try {
+
+      const token = localStorage.getItem("access_token");
+
+const headers = {
+  Accept: "application/json",
+  Authorization: `Bearer ${token}`,
+};
+
       if (!token) throw new Error("Missing access token");
 
       const res = await fetch(
@@ -147,6 +214,14 @@ export const nfrService = {
   files: File[]; // ✅ multiple files
 }) => {
   try {
+
+    const token = localStorage.getItem("access_token");
+
+const headers = {
+  Accept: "application/json",
+  Authorization: `Bearer ${token}`,
+};
+
     if (!token) throw new Error("Missing access token");
 
 

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from './store/store';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from './store/store';
 
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -24,6 +24,7 @@ import { DashboardPage } from './pages/autoanalysis/pages/DashboardPage';
 import { SettingsLayout, ApplicationSettings, IntegrationsSettings, UserProfileSettings, AISettings } from "./pages/settings";
 import IntegrationsList from './pages/settings/pages/IntegrationList';
 import IntegrationDetail from './pages/settings/pages/IntegrationDetail';
+import { fetchCurrentUser } from './pages/settings/store/user.thunk';
 
 
 // Protected Route Wrapper
@@ -39,10 +40,20 @@ const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
 };
 
 const AppLayout = ({ children }: { children?: React.ReactNode }) => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+
+  useEffect(() => {
+  const token = localStorage.getItem("access_token");
+  if (token) {
+    dispatch(fetchCurrentUser());
+  }
+}, []);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 font-sans overflow-hidden">
@@ -208,7 +219,7 @@ const App: React.FC = () => {
         />
 
         <Route
-          path="/autoanalysis/:id/result/:buildId"
+          path="/autoanalysis/projects/:projectId/apps/:appId/result/:buildId"
           element={
             <ProtectedRoute>
               <AppLayout>
@@ -233,7 +244,7 @@ const App: React.FC = () => {
 
           {/* Integrations */}
           <Route path="integrations">
-            <Route index element={<IntegrationsList />} />
+            <Route index element={<IntegrationDetail />} />
             <Route path=":integrationId" element={<IntegrationDetail />} />
           </Route>
 
@@ -259,3 +270,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+function dispatch(arg0: any) {
+  throw new Error('Function not implemented.');
+}

@@ -65,14 +65,14 @@ const NFRResultPage: React.FC = () => {
     }
   };
 
-  const handleDownload = async (id) => {
+  const handleDownload = async (id, application_name) => {
     try {
       const blob = await nfrService.downloadById(id);
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `nfr-${id}.txt`;
+      a.download = `NFR-${application_name}-${id}.txt`;
       document.body.appendChild(a);
       a.click();
 
@@ -112,14 +112,23 @@ const NFRResultPage: React.FC = () => {
           mt: 1,
         }}
       >
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <Typography variant="h4" className="font-bold text-gray-800">{selectedReport.application_name=='N/A' ? 'Default Application' : selectedReport.application_name}</Typography>
+        <div className="flex justify-between items-start mb-6 gap-3">
+          <div className="flex-1 min-w-[300px] max-w-full">
+    <Typography
+      variant="h4"
+      className="font-bold text-gray-800"
+      sx={{
+        whiteSpace: "normal",
+        wordBreak: "break-word",
+        lineHeight: 1.25
+      }}
+    >
+{selectedReport.display_name=='N/A' ? 'Default Application' : selectedReport.display_name}</Typography>
             <Typography variant="subtitle1" className="text-gray-500">ID: {selectedReport.id}</Typography>
           </div>
           <div className="flex gap-2">
             <Button variant="outlined" startIcon={<ContentCopyIcon />} onClick={handleCopy}>Copy</Button>
-            <Button variant="contained" startIcon={<DownloadIcon />} onClick={() => handleDownload(id)} className="bg-blue-600">Download PDF</Button>
+            <Button variant="contained" startIcon={<DownloadIcon />} onClick={() => handleDownload(id, selectedReport.application_name=='N/A' ? 'Default Application' : selectedReport.application_name)} className="bg-blue-600">Download</Button>
           </div>
         </div>
 

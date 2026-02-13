@@ -58,6 +58,13 @@ const nfrWizardSlice = createSlice({
       state.selectedApplicationId = action.payload;
     },
 
+    removeUploadedFile: (state, action) => {
+  state.uploadedFiles = state.uploadedFiles.filter(
+    (_, index) => index !== action.payload
+  );
+},
+
+
     // Reset everything
     resetWizard: () => initialState,
   },
@@ -70,6 +77,7 @@ export const {
   setAdditionalInstructions,
   setSelectedApplication,
   resetWizard,
+  removeUploadedFile 
 } = nfrWizardSlice.actions;
 
 export default nfrWizardSlice.reducer;

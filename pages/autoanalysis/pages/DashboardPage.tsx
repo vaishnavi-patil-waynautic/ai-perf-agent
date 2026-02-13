@@ -19,6 +19,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchBar from '../../../components/SearchBar';
 import InfoCard from '@/components/InfoCard';
 import { RootState } from '@/store/store';
+import { AddApplicationModal } from '../components/AddApplicationModal';
 
 
 export const DashboardPage: React.FC = () => {
@@ -26,24 +27,14 @@ export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   // @ts-ignore
   const { loading, applications } = useSelector((state) => state.autoAnalysis);
-  
+
   const { selectedProject } = useSelector((state: RootState) => state.project);
-
-    console.log("SELECTED PROJECT IN AUTOSCRIPT : ",selectedProject);
-
-  if (!selectedProject) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500 p-10">
-        <Activity size={64} className="mb-4 text-gray-300" />
-        <h2 className="text-xl font-medium mb-2">No Project Selected</h2>
-        <p>Please select a project from the top navigation bar to get started.</p>
-      </div>
-    );
-  }
-
+  
   const [openAdd, setOpenAdd] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [search, setSearch] = useState("");
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
+  const [selectedApplicationName, setSelectedApplicationName] = useState<string | null>(null);
 
   const filteredApplications = applications.filter((app: any) =>
     app.name.toLowerCase().includes(search.toLowerCase())
@@ -57,6 +48,27 @@ export const DashboardPage: React.FC = () => {
     message: ""
   });
 
+  console.log("SELECTED PROJECT IN AUTOSCRIPT : ", selectedProject);
+
+
+  useEffect(() => {
+    if (!selectedProject?.id) return;
+
+    dispatch(fetchApps(selectedProject.id));
+
+  }, [dispatch, selectedProject]);
+
+  if (!selectedProject) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-gray-500 p-10">
+        <Activity size={64} className="mb-4 text-gray-300" />
+        <h2 className="text-xl font-medium mb-2">No Project Selected</h2>
+        <p>Please select a project from the top navigation bar to get started.</p>
+      </div>
+    );
+  }
+
+
 
   const handleDelete = async (id: string) => {
     try {
@@ -69,12 +81,6 @@ export const DashboardPage: React.FC = () => {
       console.error(err);
     }
   };
-
-
-  useEffect(() => {
-    if (!selectedProject) return;
-    dispatch(fetchApps(selectedProject.id));
-  }, [dispatch]);
 
   return (
     <Box >
@@ -123,7 +129,7 @@ export const DashboardPage: React.FC = () => {
             </Tooltip>
 
             {/* Add application */}
-            <Tooltip title="Add application" arrow>
+            {/* <Tooltip title="Add application" arrow>
               <IconButton
                 onClick={() => setOpenAdd(true)}
                 sx={{
@@ -139,7 +145,7 @@ export const DashboardPage: React.FC = () => {
               >
                 <AddIcon />
               </IconButton>
-            </Tooltip>
+            </Tooltip> */}
           </Box>
 
 
@@ -393,20 +399,40 @@ export const DashboardPage: React.FC = () => {
         </div> */}
 
         <div className="space-y-4 w-full mx-auto">
-          {filteredApplications.map((app) => (
+          {filteredApplications.length>0 ? filteredApplications.map((app) => (
             <InfoCard
               name={app.name}
-              recentBuild={{ id: app.lastReportId, name: app.lastReportName, link: `/autoanalysis/${app.id}/reports/b1` }}
+              // recentBuild={{ id: app.latest_build, name: app.latest_build, link: `/autoanalysis/${app.id}/reports/b1` }}
+              recentBuild={{
+                id: app.latest_build,
+                name: app.latest_build,
+                link: `/autoanalysis/projects/${selectedProject.id}/apps/${app.id}/result/${app.latest_build}`,
+                state: {
+                  projectName: selectedProject.name,
+                  appName: app.name
+                }
+              }}
               status={app.config_status}
               onDelete={() => handleDelete(app.id)}
               onView={() => navigate(`/autoanalysis/${app.id}`)}
+              onUnconfigured={() => {
+  setSelectedApplicationId(app.id);
+  setSelectedApplicationName(app.name);
+  setOpenAdd(true);
+}}
             />
-          ))}
+          )) : (
+            <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-500 p-10">
+              <Activity size={64} className="mb-4 text-gray-300" />
+              <h2 className="text-xl font-medium mb-2">No Application Added</h2>
+              <p>Please Add an application.</p>
+            </div>
+          )}
         </div>
 
 
 
-        {/* <AddApplicationModal open={openAdd} onClose={() => setOpenAdd(false)} /> */}
+        <AddApplicationModal open={openAdd} onClose={() => setOpenAdd(false)} selectedApplicationId={selectedApplicationId} selectedApplicationName={selectedApplicationName} />
         <SettingsModal open={openSettings} onClose={() => setOpenSettings(false)} />
       </div>
 

@@ -1,52 +1,72 @@
 import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "../../../store/store";
-import {
-  addApplication,
-  updateApplication,
-  deleteApplication
-} from "../store/settings.store";
+import { AppDispatch, RootState } from "../../../store/store";
 import ApplicationCard from "../components/ApplicationCard";
 import AddApplicationDialog from "../components/AddApplicationDialog";
 import { useState } from "react";
-import { Application } from "../types/settings.types";
 import InfoCard from "@/components/InfoCard";
+import { createApplication, deleteApplication, updateApplication } from "@/pages/project/store/project.thunks";
+import { Application } from "@/pages/project/types/project.types";
 
 export default function ApplicationSettings() {
+
   const applications = useSelector(
-    (state: RootState) => state.settings.applications
+    (state: RootState) => state.project.applications
   );
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+  const { selectedProject } = useSelector((state: RootState) => state.project);
+  const user = useSelector((state: RootState) => state.user.profile);
 
   const [open, setOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<Application | null>(null);
 
-  const handleAdd = (data: { name: string; description: string }) => {
-    dispatch(
-      addApplication({
-        id: crypto.randomUUID(),
-        ...data
-      })
-    );
-  };
+  const handleAdd = async (data: { name: string; description: string }) => {
+    if (!selectedProject?.id) return;
 
-  const handleEdit = (data: { name: string; description: string }) => {
-    if (!editingApp) return;
-
-    dispatch(
-      updateApplication({
-        id: editingApp.id,
+    try {
+      await dispatch(createApplication({
+        projectId: selectedProject.id,
         name: data.name,
         description: data.description
-      })
-    );
+      })).unwrap();
 
-    setEditingApp(null);
+      console.log("[UI] Application created");
+
+    } catch (err) {
+      console.error("[UI] Create failed:", err);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    dispatch(deleteApplication(id));
+
+  const handleEdit = async (data: { name: string; description: string }) => {
+    if (!editingApp) return;
+
+    try {
+      await dispatch(updateApplication({
+        appId: editingApp.id,   // must be NUMBER
+        name: data.name,
+        description: data.description
+      })).unwrap();
+
+      console.log("[UI] Application updated");
+
+      setEditingApp(null);
+
+    } catch (err) {
+      console.error("[UI] Update failed:", err);
+    }
   };
+
+
+  const handleDelete = async (id: number) => {
+    try {
+      await dispatch(deleteApplication(id)).unwrap();
+      console.log("[UI] Application deleted");
+    } catch (err) {
+      console.error("[UI] Delete failed:", err);
+    }
+  };
+
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -59,6 +79,7 @@ export default function ApplicationSettings() {
             setEditingApp(null);
             setOpen(true);
           }}
+          disabled={!user?.is_staff}
           className="px-4 py-2 bg-blue-600 text-white rounded-md"
         >
           Add Application
@@ -81,11 +102,13 @@ export default function ApplicationSettings() {
             key={app.id}
             name={app.name}
             desc={app.description}
-            onEdit={() => {
-              setEditingApp(app);
-              setOpen(true);
-            }}
-            onDelete={() => handleDelete(app.id)}
+            {...(user?.is_staff && {
+              onEdit: () => {
+                setEditingApp(app);
+                setOpen(true);
+              },
+              onDelete: () => handleDelete(app.id),
+            })}
           />
 
         ))}

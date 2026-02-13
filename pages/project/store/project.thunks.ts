@@ -4,15 +4,6 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import { projectService } from '../services/project.service';
 import { Project, Application } from '../types/project.types';
 
-/**
- * Temporary dummy projects
- * Used until "getAllProjects" API is ready
- */
-// const DUMMY_PROJECTS: Project[] = [
-//   { id: 1, name: 'Waynautic-1', description: 'AI Tool' },
-//   { id: 2, name: 'Waynautic-2', description: 'AI Tool' },
-//   { id: 3, name: 'Waynautic-3', description: 'AI Tool' },
-// ];
 
 export const fetchProjects = createAsyncThunk(
   'project/fetchProjects',
@@ -21,29 +12,6 @@ export const fetchProjects = createAsyncThunk(
     return await projectService.getAllProjects();
   });
 
-/**
- * Load project + applications by projectId
- */
-// export const fetchProjectById = createAsyncThunk(
-
-//   'project/fetchProjectById',
-//   async (projectId: number) => {
-//     const res = await projectService.getProjectById(projectId);
-//     const data = res.data;
-
-
-//     console.log('Fetched project data:', data);
-
-//     return {
-//       project: {
-//         id: projectId,
-//         name: data.name,
-//         description: data.description,
-//       } as Project,
-//       applications: data.applications as Application[],
-//     };
-//   }
-// );
 
 
 export const fetchProjectById = createAsyncThunk(
@@ -63,3 +31,49 @@ export const fetchProjectById = createAsyncThunk(
   }
 );
 
+// ➕ CREATE
+export const createApplication = createAsyncThunk(
+  'project/createApplication',
+  async (
+    payload: { projectId: number; name: string; description?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      return await projectService.createApplication(
+        payload.projectId,
+        payload.name,
+        payload.description
+      );
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+// ✏️ UPDATE
+export const updateApplication = createAsyncThunk(
+  'project/updateApplication',
+  async (
+    payload: { appId: number; name?: string; description?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      return await projectService.updateApplication(payload.appId, payload);
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+// 🗑 DELETE
+export const deleteApplication = createAsyncThunk(
+  'project/deleteApplication',
+  async (appId: number, { rejectWithValue }) => {
+    try {
+      await projectService.deleteApplication(appId);
+      return appId;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  }
+);

@@ -6,7 +6,6 @@ import { config } from "@/config/backendConfig";
 
 
 const API_BASE = config.baseUrl;
-const token = localStorage.getItem("access_token");
 const headers = config.headers;
 
 
@@ -59,6 +58,8 @@ export const autoScriptService = {
     // await login();
     await getUserApplication(3);
 
+    const token = localStorage.getItem("access_token");
+
 
     if (!token) {
       const token = localStorage.getItem("access_token");
@@ -70,7 +71,10 @@ export const autoScriptService = {
       `${API_BASE}/autoscript/script/project/${projectId}`,
       {
         method: "GET",
-        headers: headers,
+        headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       }
     );
 
@@ -90,8 +94,10 @@ export const autoScriptService = {
     file1: File,
     file2: File,
     projectId: number,
-    applicationId?: number
+    applicationId?: number | null
   ) => {
+
+    const token = localStorage.getItem("access_token");
 
     if (!token) {
       throw new Error("Authentication token not found");
