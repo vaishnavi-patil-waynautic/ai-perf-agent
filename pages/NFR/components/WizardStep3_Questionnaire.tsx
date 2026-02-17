@@ -87,6 +87,9 @@ const WizardStep3_Questionnaire: React.FC = () => {
         answer: value,
       })
     );
+
+
+    console.log(" Output Data of questionaire : ", outputdata)
   };
 
 

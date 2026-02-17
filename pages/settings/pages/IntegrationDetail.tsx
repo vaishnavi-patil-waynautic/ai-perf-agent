@@ -761,7 +761,7 @@ const integrations = useSelector((state: RootState) => state.integration.list);
       <IntegrationTokenDialog
         open={!!openToken}
         onClose={() => setOpenToken(null)}
-        initialToken={String(openToken)}
+        initialToken={null}
         onSave={() => { }}
       />
 

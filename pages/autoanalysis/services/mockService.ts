@@ -30,6 +30,28 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // --- API Methods ---
 
+export const downloadScript = async (projectId: number, appId: number): Promise<Blob> => {
+  const token = localStorage.getItem("access_token");
+  if (!token) throw new Error("Missing access token");
+
+  const res = await fetch(
+    `${config.baseUrl}/autoanalysis/projects/${projectId}/applications/${appId}/download-script/`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Failed to download script");
+  }
+
+  return await res.blob();
+};
+
 export const fetchApplications = async (projectId: number): Promise<Application[]> => {
   const token = localStorage.getItem("access_token");
 
@@ -37,7 +59,10 @@ export const fetchApplications = async (projectId: number): Promise<Application[
     `${API_BASE}/autoanalysis/projects/${projectId}/applications/`,
     {
       method: "GET",
-      headers: headers,
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     }
   );
 
@@ -83,12 +108,14 @@ export const fetchAppDetails = async (
   appId: number
 ): Promise<AppDetails> => {
 
+  const token = localStorage.getItem("access_token");
+
   const res = await fetch(
     `${API_BASE}/autoanalysis/projects/${projectId}/applications/${appId}/`,
     {
       headers: {
         Accept: "application/json",
-    Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     }
   );
@@ -101,6 +128,43 @@ export const fetchAppDetails = async (
   return json.data;
 };
 
+
+
+export const getScriptsByAppId =
+  async (ApplicationId: number): Promise<[]> => {
+
+
+    const token = localStorage.getItem("access_token");
+
+
+    if (!token) {
+      const token = localStorage.getItem("access_token");
+      console.log("Using token:", token);
+      throw new Error("Missing access token");
+    }
+
+    const res = await fetch(
+      `${API_BASE}/autoscript/script/application/${ApplicationId}`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch Script by application id");
+    }
+
+    const json = await res.json();
+
+    console.log("AUTOSCRIPT RAW RESPONSE:", json);
+
+    // ✅ THIS is the actual array
+    return json.data.scripts;
+  }
 
 export const updateEmailRecipients = async (
   projectId: number,
@@ -117,7 +181,6 @@ export const updateEmailRecipients = async (
     {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
@@ -140,6 +203,35 @@ export const updateEmailRecipients = async (
   return json;
 };
 
+export const configureApplication = async (
+  projectId: number,
+  applicationId: number,
+  formData: FormData
+) => {
+  const res = await fetch(
+    `${API_BASE}/autoanalysis/projects/${projectId}/applications/${applicationId}/setup/`,
+    {
+      method: 'POST',
+
+      // ❌ DO NOT SET Content-Type FOR FORMDATA
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+
+      body: formData,
+    }
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || 'Configure application failed');
+  }
+
+  return res.json();
+};
+
+
+
 
 export const fetchBuildReport = async (
   projectId: string,
@@ -147,10 +239,15 @@ export const fetchBuildReport = async (
   buildId: string
 ): Promise<BuildReport> => {
 
+  const token = localStorage.getItem("access_token");
+
   const res = await fetch(
     `${API_BASE}/autoanalysis/projects/${projectId}/applications/${appId}/builds/${buildId}/`,
     {
-      headers: headers
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      }
     }
   );
 

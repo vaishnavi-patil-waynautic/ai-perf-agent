@@ -196,79 +196,134 @@ const headers = {
   /**
    * Generate NFR
    */
-  generate: async ({
-  projectId,
-  applicationId,
-  additionalInput,
-  env,
-  sla,
-  wlm,
-  files,
-}: {
-  projectId: number;
-  applicationId: number;
-  additionalInput?: string;
-  env: string;
-  sla: string;
-  wlm: string;
-  files: File[]; // ✅ multiple files
-}) => {
+//   generate: async ({
+//   Record<string, any>
+// }: {
+//   Record<string, any>// ✅ multiple files
+// }) => {
+//   try {
+
+//     const token = localStorage.getItem("access_token");
+
+// const headers = {
+//   Accept: "application/json",
+//   Authorization: `Bearer ${token}`,
+// };
+
+//     if (!token) throw new Error("Missing access token");
+
+
+//     console.log("Generating NFR with payload:", {
+//       projectId,
+//       applicationId, additionalInput, env, sla, wlm, files
+//     });
+
+//     const formData = new FormData();
+//     formData.append("projectId", projectId.toString());
+//     formData.append("applicationId", applicationId.toString());
+//     formData.append("env", env);
+//     formData.append("sla", sla);
+//     formData.append("wlm", wlm);
+
+//     if (additionalInput) {
+//       formData.append("additional_input", additionalInput);
+//     }
+
+//     // ✅ append multiple files
+//     files.forEach((file) => {
+//       formData.append("docs", file);
+//     });
+
+//     const res = await fetch(
+//       `${API_BASE}/autonfr/generate-nfr/`,
+//       {
+//         method: "POST",
+//         headers, // ❗ do NOT set Content-Type
+//         body: formData,
+//       }
+//     );
+
+//     if (!res.ok) {
+//       const error = await res.text();
+//       throw new Error(error || "NFR generation failed");
+//     }
+
+
+//     console.log("NFR generate response received", res);
+
+//     const json = await res.json();
+//     return json;
+//   } catch (err) {
+//     console.error("NFR generate error:", err);
+//     throw err;
+//   }
+// },
+
+generate: async (payload: Record<string, any>) => {
   try {
-
     const token = localStorage.getItem("access_token");
-
-const headers = {
-  Accept: "application/json",
-  Authorization: `Bearer ${token}`,
-};
-
     if (!token) throw new Error("Missing access token");
 
+    const headers = {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    };
 
-    console.log("Generating NFR with payload:", {
-      projectId,
-      applicationId, additionalInput, env, sla, wlm, files
-    });
+    console.log("Generating NFR with payload:", payload);
 
     const formData = new FormData();
-    formData.append("projectId", projectId.toString());
-    formData.append("applicationId", applicationId.toString());
-    formData.append("env", env);
-    formData.append("sla", sla);
-    formData.append("wlm", wlm);
 
-    if (additionalInput) {
-      formData.append("additional_input", additionalInput);
-    }
+    // 🔥 Dynamically append everything
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
 
-    // ✅ append multiple files
-    files.forEach((file) => {
-      formData.append("docs", file);
+      // Multiple files
+      if (Array.isArray(value) && value.length && value[0] instanceof File) {
+        value.forEach((file) => formData.append(key, file));
+      }
+      // Object → stringify
+      else if (typeof value === "object") {
+        formData.append(key, JSON.stringify(value));
+      }
+      // Primitive
+      else {
+        formData.append(key, String(value));
+      }
     });
 
-    const res = await fetch(
-      `${API_BASE}/autonfr/generate-nfr/`,
-      {
-        method: "POST",
-        headers, // ❗ do NOT set Content-Type
-        body: formData,
-      }
-    );
+    const res = await fetch(`${API_BASE}/autonfr/generate-nfr/`, {
+      method: "POST",
+      headers, // ❗ DO NOT set Content-Type manually
+      body: formData,
+    });
 
-    if (!res.ok) {
-      const error = await res.text();
-      throw new Error(error || "NFR generation failed");
+    const text = await res.text();
+    let json: any = null;
+
+    try {
+      json = text ? JSON.parse(text) : null;
+    } catch {
+      json = text;
     }
 
+    if (!res.ok) {
+      console.error("NFR generate failed:", json);
+      throw new Error(
+        json?.data?.error ||
+        json?.message ||
+        json?.detail ||
+        "NFR generation failed"
+      );
+    }
 
-    console.log("NFR generate response received", res);
-
-    const json = await res.json();
+    console.log("NFR generate success:", json);
     return json;
+
   } catch (err) {
     console.error("NFR generate error:", err);
     throw err;
   }
-},
+}
+
 
 };

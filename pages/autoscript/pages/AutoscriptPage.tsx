@@ -327,6 +327,227 @@
 
 // export default AutoScriptPage;
 
+// import React, { useEffect, useRef, useState } from "react";
+// import { UploadSection } from "../components/UploadSelection";
+// import { HistoryTable } from "../components/HistoryTable";
+// import { autoScriptService } from "../services/service";
+// import { JMXRecord } from "../types/type";
+// import { Activity } from "lucide-react";
+// import { RootState } from "@/store/store";
+// import { useSelector } from "react-redux";
+// import AppSnackbar, { SnackbarType } from "@/components/AppSnackbar";
+
+// const AutoScriptPage: React.FC = () => {
+//   const [file1, setFile1] = useState<File | null>(null);
+//   const [file2, setFile2] = useState<File | null>(null);
+//   const [history, setHistory] = useState<JMXRecord[]>([]);
+//   const [isGenerating, setIsGenerating] = useState(false);
+//   const [polling, setPolling] = useState(false);
+
+//   // 👇 layout toggle
+//   const [expandedView, setExpandedView] = useState(false);
+
+//   const { selectedProject, selectedApp } = useSelector(
+//     (state: RootState) => state.project
+//   );
+
+//   const fileRef1 = useRef<HTMLInputElement>(null);
+//   const fileRef2 = useRef<HTMLInputElement>(null);
+
+//   const [snackbar, setSnackbar] = useState<{
+//     open: boolean;
+//     message: string;
+//     type: SnackbarType;
+//   }>({ open: false, message: "", type: "success" });
+
+//   // ---------- DELETE ----------
+//   const handleDelete = async (id: number) => {
+//     try {
+//       await autoScriptService.deleteJmx(id);
+//       setHistory((h) => h.filter((x) => x.id !== id));
+//       setSnackbar({ open: true, message: "Deleted", type: "success" });
+//     } catch {
+//       setSnackbar({ open: true, message: "Delete failed", type: "error" });
+//     }
+//   };
+
+//   // ---------- DOWNLOAD ----------
+//   const handleDownload = async (id: number, name: string) => {
+//     try {
+//       const blob = await autoScriptService.downloadJmx(id);
+//       const url = URL.createObjectURL(blob);
+//       const a = document.createElement("a");
+//       a.href = url;
+//       a.download = `${name}.jmx`;
+//       a.click();
+//       URL.revokeObjectURL(url);
+//     } catch {
+//       setSnackbar({ open: true, message: "Download failed", type: "error" });
+//     }
+//   };
+
+//   // ---------- POLLING ----------
+//   useEffect(() => {
+//     if (!selectedProject?.id) return;
+
+//     let cancelled = false;
+//     let timeoutId: ReturnType<typeof setTimeout>;
+
+//     const fetchHistory = async () => {
+//       const data = await autoScriptService.getHistory(selectedProject.id);
+//       if (cancelled) return;
+
+//       setHistory(data);
+
+//       const running = data.some(
+//         (s) => s.status === "IN_PROGRESS" || s.status === "PROCESSING"
+//       );
+
+//       if (running) {
+//         timeoutId = setTimeout(fetchHistory, 4000);
+//       } else {
+//         setPolling(false);
+//       }
+//     };
+
+//     fetchHistory();
+
+//     return () => {
+//       cancelled = true;
+//       if (timeoutId) clearTimeout(timeoutId);
+//     };
+//   }, [selectedProject?.id, polling]);
+
+//   // ---------- GENERATE ----------
+//   const generate = async () => {
+//     if (!file1 || !file2) return;
+
+//     setIsGenerating(true);
+
+//     await autoScriptService.generate(
+//       file1,
+//       file2,
+//       selectedProject.id,
+//       selectedApp?.id
+//     );
+
+//     setPolling(true);
+//     setIsGenerating(false);
+
+//     setFile1(null);
+//     setFile2(null);
+
+//     if (fileRef1.current) fileRef1.current.value = "";
+//     if (fileRef2.current) fileRef2.current.value = "";
+//   };
+
+//   if (!selectedProject) {
+//     return (
+//       <div className="flex flex-col items-center justify-center h-full text-gray-500 p-10">
+//         <Activity size={64} className="mb-4 text-gray-300" />
+//         <h2>No Project Selected</h2>
+//       </div>
+//     );
+//   }
+
+//   // ===========================
+//   // 🔴 EXPANDED (ORIGINAL LAYOUT)
+//   // ===========================
+//   if (expandedView) {
+//     return (
+//       <div className="max-w-6xl m-auto p-8">
+
+//         <UploadSection
+//           file1={file1}
+//           file2={file2}
+//           onFile1={() => fileRef1.current?.click()}
+//           onFile2={() => fileRef2.current?.click()}
+//           onGenerate={generate}
+//           isGenerating={isGenerating}
+//         />
+
+//         <HistoryTable
+//           history={history}
+//           onDelete={handleDelete}
+//           onDownload={handleDownload}
+//           compact={false}
+//         />
+
+//         {/* BACK BUTTON */}
+//         <div className="text-center mt-4">
+//           <button
+//             className="text-blue-600 hover:underline"
+//             onClick={() => setExpandedView(false)}
+//           >
+//             Back to Compact View
+//           </button>
+//         </div>
+
+//         <input hidden ref={fileRef1} type="file" accept=".har"
+//           onChange={(e) => setFile1(e.target.files?.[0] || null)} />
+
+//         <input hidden ref={fileRef2} type="file" accept=".har"
+//           onChange={(e) => setFile2(e.target.files?.[0] || null)} />
+//       </div>
+//     );
+//   }
+
+//   // ===========================
+//   // 🟢 COMPACT SIDE-BY-SIDE VIEW
+//   // ===========================
+//   return (
+//     <div className="max-w-7xl m-auto p-8">
+
+//       <div className="grid grid-cols-12 gap-6">
+
+//         {/* LEFT — COMPACT HISTORY */}
+//         <div className="col-span-5">
+
+//           <HistoryTable
+//             history={history.slice(0, 4)}
+//             onDelete={handleDelete}
+//             onDownload={handleDownload}
+//             compact={true}
+//           />
+
+//           {/* VIEW MORE BELOW */}
+//           {history.length > 4 && (
+//             <div className="text-center mt-2">
+//               <button
+//                 className="text-blue-600 hover:underline"
+//                 onClick={() => setExpandedView(true)}
+//               >
+//                 View Full History
+//               </button>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* RIGHT — INPUT */}
+//         <div className="col-span-7">
+//           <UploadSection
+//             file1={file1}
+//             file2={file2}
+//             onFile1={() => fileRef1.current?.click()}
+//             onFile2={() => fileRef2.current?.click()}
+//             onGenerate={generate}
+//             isGenerating={isGenerating}
+//           />
+//         </div>
+
+//       </div>
+
+//       <input hidden ref={fileRef1} type="file" accept=".har"
+//         onChange={(e) => setFile1(e.target.files?.[0] || null)} />
+
+//       <input hidden ref={fileRef2} type="file" accept=".har"
+//         onChange={(e) => setFile2(e.target.files?.[0] || null)} />
+//     </div>
+//   );
+// };
+
+// export default AutoScriptPage;
+
 
 import React, { useEffect, useRef, useState } from "react";
 import { UploadSection } from "../components/UploadSelection";
@@ -344,54 +565,90 @@ const AutoScriptPage: React.FC = () => {
   const [history, setHistory] = useState<JMXRecord[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [polling, setPolling] = useState(false);
-  const [showFullHistory, setShowFullHistory] = useState(false);
 
-  const { selectedProject, selectedApp } = useSelector(
-    (state: RootState) => state.project
-  );
+  // 👇 layout toggle
+  const [showFullLayout, setShowFullLayout] = useState(false);
+
+  const { selectedProject } = useSelector((state: RootState) => state.project);
+  const selectedApp = useSelector(
+      (state: RootState) => state.project.selectedApp
+    );
 
   const fileRef1 = useRef<HTMLInputElement>(null);
   const fileRef2 = useRef<HTMLInputElement>(null);
+  const tableRef = useRef<HTMLDivElement | null>(null);
+  const applicationId = useSelector(
+    (state: RootState) => state.project.selectedApp
+  );
+
+
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     type: SnackbarType;
-  }>({ open: false, message: "", type: "success" });
+  }>({
+    open: false,
+    message: '',
+    type: 'success',
+  });
 
-  const compactHistory = showFullHistory ? history : history.slice(0, 4);
-
-  // ---------------- DELETE ----------------
   const handleDelete = async (id: number) => {
     try {
-      await autoScriptService.deleteJmx(id);
+      const res = await autoScriptService.deleteJmx(id);
 
-      setHistory((h) => h.filter((x) => x.id !== id));
+      console.log(res);
+
+      setHistory(h => h.filter(x => x.id !== id));
 
       setSnackbar({
         open: true,
         message: "Script deleted successfully",
-        type: "success",
+        type: 'success',
       });
     } catch (err) {
       console.error(err);
-      setSnackbar({
-        open: true,
-        message: "Failed to delete script",
-        type: "error",
-      });
-    }
+    } 
+    
+    
+    
+    const handleDelete = async (id: number) => {
+      try {
+        await autoScriptService.deleteJmx(id);
+
+        setHistory(h => h.filter(x => x.id !== id));
+
+        // ✅ Success snackbar
+        setSnackbar({
+          open: true,
+          message: 'Script deleted successfully',
+          type: 'success',
+        });
+
+      } catch (err) {
+        console.error(err);
+
+        // ❌ Error snackbar
+        setSnackbar({
+          open: true,
+          message: 'Failed to delete script',
+          type: 'error',
+        });
+      }
+    };
+
   };
 
-  // ---------------- DOWNLOAD ----------------
+
   const handleDownload = async (id: number, script_name: string) => {
     try {
       const blob = await autoScriptService.downloadJmx(id);
-      const url = window.URL.createObjectURL(blob);
 
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
+
       a.href = url;
-      a.download = `Script-${script_name}.jmx`;
+      a.download = `Script-${script_name}.jmx`; // filename
       document.body.appendChild(a);
       a.click();
 
@@ -401,74 +658,145 @@ const AutoScriptPage: React.FC = () => {
       setSnackbar({
         open: true,
         message: "Download started",
-        type: "success",
+        type: 'success',
       });
     } catch (error) {
       console.error(error);
       setSnackbar({
         open: true,
         message: "Download failed",
-        type: "error",
+        type: 'error',
       });
     }
   };
 
-  // ---------------- POLLING ----------------
+
+useEffect(() => {
+  if (!showFullLayout) return;
+
+  const scroll = () => {
+    if (!tableRef.current) return;
+
+    // Find actual scroll container (window OR parent with overflow)
+    const scrollParent = document.querySelector("#root") || window;
+
+    tableRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
+  // Wait for layout + paint (very important)
+  requestAnimationFrame(() => {
+    requestAnimationFrame(scroll);
+  });
+
+}, [showFullLayout]);
+
+  // // ---------------- POLLING ----------------
+  // useEffect(() => {
+  //   if (!selectedProject?.id) return;
+
+  //   let cancelled = false;
+  //   let timeoutId: ReturnType<typeof setTimeout>;
+
+  //   const fetchHistory = async () => {
+  //     const data = await autoScriptService.getHistory(selectedProject.id);
+  //     if (cancelled) return;
+
+  //     setHistory(data);
+
+  //     const running = data.some(
+  //       (s) => s.status === "IN_PROGRESS" || s.status === "PROCESSING"
+  //     );
+
+  //     if (running) {
+  //       timeoutId = setTimeout(fetchHistory, 4000);
+  //     } else {
+  //       setPolling(false);
+  //     }
+  //   };
+
+  //   fetchHistory();
+
+  //   return () => {
+  //     cancelled = true;
+  //     if (timeoutId) clearTimeout(timeoutId);
+  //   };
+  // }, [selectedProject?.id, polling]);
+
+
   useEffect(() => {
-    if (!selectedProject?.id) return;
 
-    let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout>;
+  if (!selectedProject?.id) return;
 
-    const fetchHistory = async () => {
-      try {
+  let cancelled = false;
+  let timeoutId: ReturnType<typeof setTimeout>;
+
+  const fetchHistory = async () => {
+
+    try {
+      const data = await autoScriptService.getHistory(selectedProject.id);
+
+      if (cancelled) return;
+
+      setHistory(data);
+
+      const stillRunning = data.some(
+        s => s.status === 'IN_PROGRESS' || s.status === 'PROCESSING'
+      );
+
+      if (stillRunning) {
+
+        timeoutId = setTimeout(fetchHistory, 5000);
+
+      } else {
+
+        // Only show message if polling was ACTIVE
+        if (polling) {
+          setSnackbar({
+            open: true,
+            message: "Script generation completed",
+            type: "success",
+          });
+        }
+
         const data = await autoScriptService.getHistory(selectedProject.id);
-        if (cancelled) return;
-
         setHistory(data);
 
-        const stillRunning = data.some(
-          (s) => s.status === "IN_PROGRESS" || s.status === "PROCESSING"
-        );
-
-        if (stillRunning) {
-          timeoutId = setTimeout(fetchHistory, 5000);
-        } else {
-          if (polling) {
-            setSnackbar({
-              open: true,
-              message: "Script generation completed",
-              type: "success",
-            });
-          }
-          setPolling(false);
-        }
-      } catch (error) {
-        console.error("Polling failed:", error);
         setPolling(false);
       }
-    };
 
-    fetchHistory();
+    } catch (error) {
 
-    return () => {
-      cancelled = true;
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [selectedProject?.id, polling]);
+      console.error("Polling failed:", error);
+      setPolling(false);
+    }
+  };
+
+  fetchHistory();
+
+  return () => {
+    cancelled = true;
+    if (timeoutId) clearTimeout(timeoutId);
+  };
+
+}, [selectedProject?.id, polling]);
 
   // ---------------- GENERATE ----------------
-  const generate = async () => {
+ const generate = async () => {
     if (!file1 || !file2) return;
 
     try {
       setIsGenerating(true);
 
+      console.log("Project : ", selectedProject.id, " application id : ", applicationId?.id);
+
       await autoScriptService.generate(
         file1,
         file2,
         selectedProject.id,
-        selectedApp?.id
+        applicationId?.id ?? undefined 
       );
 
       setSnackbar({
@@ -479,11 +807,13 @@ const AutoScriptPage: React.FC = () => {
 
       setPolling(true);
 
+      // Reset only after success
       setFile1(null);
       setFile2(null);
 
-      if (fileRef1.current) fileRef1.current.value = "";
-      if (fileRef2.current) fileRef2.current.value = "";
+      if (fileRef1.current) fileRef1.current.value = '';
+      if (fileRef2.current) fileRef2.current.value = '';
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -491,62 +821,104 @@ const AutoScriptPage: React.FC = () => {
     }
   };
 
-  // ---------------- NO PROJECT ----------------
   if (!selectedProject) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-500 p-10">
         <Activity size={64} className="mb-4 text-gray-300" />
-        <h2 className="text-xl font-medium mb-2">No Project Selected</h2>
-        <p>Please select a project from the top navigation bar.</p>
+        <h2>No Project Selected</h2>
       </div>
     );
   }
 
-  // ================== UI ==================
+  // ======================================================
+// 🔴 FULL ORIGINAL LAYOUT (Upload TOP, Table BOTTOM)
+// ======================================================
+if (showFullLayout) {
   return (
-    <div className="m-auto max-w-7xl p-8">
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold text-gray-800">
-          AutoScript Generator
-        </h1>
-        <p className="text-gray-500 mt-1">
-          Upload HAR files to generate JMX scripts automatically.
-        </p>
+    <div className="max-w-6xl m-auto p-8 min-h-screen">
+
+      <UploadSection
+        file1={file1}
+        file2={file2}
+        onFile1={() => fileRef1.current?.click()}
+        onFile2={() => fileRef2.current?.click()}
+        onGenerate={generate}
+        isGenerating={isGenerating}
+      />
+
+       <div ref={tableRef}>
+      <HistoryTable 
+        history={history}
+        onDelete={handleDelete}
+        onDownload={handleDownload}
+        compact={false}
+      />
       </div>
 
-      <AppSnackbar
+      {/* 🔽 SHOW LESS BUTTON */}
+      {/* 🔽 SHOW LESS BUTTON */}
+<div className="text-center mt-4">
+  <button
+    className="text-blue-600 hover:underline"
+    onClick={() => setShowFullLayout(false)}
+  >
+    Show Less
+  </button>
+</div>
+
+{/* 👇 IMPORTANT: allows scroll when table small */}
+<div style={{ height: 200 }} />
+
+  <AppSnackbar
         open={snackbar.open}
         message={snackbar.message}
         type={snackbar.type}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
       />
 
-      <div className="grid grid-cols-12 gap-6">
-        {/* LEFT — HISTORY */}
-        <div className="col-span-5 bg-white rounded-xl shadow p-4">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="font-semibold text-gray-700">Recent Scripts</h2>
 
-            {history.length > 4 && (
-              <button
-                className="text-sm text-blue-600 hover:underline"
-                onClick={() => setShowFullHistory((prev) => !prev)}
-              >
-                {showFullHistory ? "Show Less" : "View More"}
-              </button>
-            )}
-          </div>
+      <input hidden ref={fileRef1} type="file" accept=".har"
+        onChange={(e) => setFile1(e.target.files?.[0] || null)} />
+
+      <input hidden ref={fileRef2} type="file" accept=".har"
+        onChange={(e) => setFile2(e.target.files?.[0] || null)} />
+    </div>
+  );
+}
+
+
+  // ======================================================
+  // 🟢 DEFAULT COMPACT SIDE-BY-SIDE
+  // ======================================================
+  return (
+    <div className="max-w-7xl m-auto p-8">
+
+        <AppSnackbar
+        open={snackbar.open}
+        message={snackbar.message}
+        type={snackbar.type}
+        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+      />
+
+      <div className="grid grid-cols-12 gap-2">
+
+        {/* LEFT — HISTORY */}
+        <div className="col-span-4">
 
           <HistoryTable
-            history={compactHistory}
-            compact={!showFullHistory}
+            history={history.slice(0, 4)}
             onDelete={handleDelete}
             onDownload={handleDownload}
+            compact={true}
+            showViewMore={true}
+            onViewMore={() => setShowFullLayout(true)}
           />
+
         </div>
 
         {/* RIGHT — INPUT */}
-        <div className="col-span-7 bg-white rounded-xl shadow p-6">
+        <div className="col-span-8">
+
           <UploadSection
             file1={file1}
             file2={file2}
@@ -555,24 +927,16 @@ const AutoScriptPage: React.FC = () => {
             onGenerate={generate}
             isGenerating={isGenerating}
           />
+
         </div>
+
       </div>
 
-      <input
-        hidden
-        ref={fileRef1}
-        type="file"
-        accept=".har"
-        onChange={(e) => setFile1(e.target.files?.[0] || null)}
-      />
+      <input hidden ref={fileRef1} type="file" accept=".har"
+        onChange={(e) => setFile1(e.target.files?.[0] || null)} />
 
-      <input
-        hidden
-        ref={fileRef2}
-        type="file"
-        accept=".har"
-        onChange={(e) => setFile2(e.target.files?.[0] || null)}
-      />
+      <input hidden ref={fileRef2} type="file" accept=".har"
+        onChange={(e) => setFile2(e.target.files?.[0] || null)} />
     </div>
   );
 };

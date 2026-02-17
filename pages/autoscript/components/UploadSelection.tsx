@@ -23,7 +23,7 @@ export const UploadSection: React.FC<Props> = ({
   // applicationId,
   // changeApplicationId
 }) => (
-  <div className="bg-white p-8 rounded-lg border shadow-sm w-2/3 mx-auto">
+  <div className="bg-white p-8 rounded-lg border shadow-sm w-4/5 mx-auto mb-7">
 
     <div className="w-64 mb-7 mx-auto">
       <ApplicationSelect/>

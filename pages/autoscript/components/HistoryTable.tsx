@@ -50,15 +50,17 @@
 //     )}
 //   </div>
 // );
-
-import React from "react";
 import { JMXRecord } from "../types/type";
+import { HistoryRow } from "./HistoryRow";
 
 interface Props {
   history: JMXRecord[];
   onDelete: (id: number) => void;
-  onDownload: (id: number, name: string) => void;
+  onDownload: (id: number, script_name: string) => void;
   compact?: boolean;
+showViewMore?: boolean;
+onViewMore?: () => void;
+
 }
 
 export const HistoryTable: React.FC<Props> = ({
@@ -66,84 +68,59 @@ export const HistoryTable: React.FC<Props> = ({
   onDelete,
   onDownload,
   compact = false,
-}) => {
-  if (!history.length) {
-    return (
-      <div className="text-center text-gray-400 py-10">
-        No scripts generated yet
+  showViewMore = false,
+  onViewMore
+}) => (
+  <div className="bg-white border rounded-lg overflow-hidden shadow-sm">
+
+    <div className="px-6 py-4 bg-gray-50 font-semibold">
+      Generated JMX Scripts
+    </div>
+
+    {history.length === 0 ? (
+      <div className="p-8 text-center text-gray-400 italic">
+        No scripts generated yet.
       </div>
-    );
-  }
+    ) : (
+      <>
+        <table className="w-full text-sm">
+          {!compact && (
+            <thead>
+              <tr className="bg-gray-50 border-b">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">File Name</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Application</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Generated At</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                <th className="px-6 py-3 text-right"></th>
+              </tr>
+            </thead>
+          )}
 
-  // ---------------- COMPACT VIEW ----------------
-  if (compact) {
-    return (
-      <table className="w-full text-sm">
-        <tbody>
-          {history.map((row) => (
-            <tr key={row.id} className="border-b">
-              <td className="py-2 font-medium">{row.name}</td>
-              <td className="text-right space-x-3">
-                <button
-                  onClick={() => onDownload(row.id, row.name)}
-                  className="text-blue-600 hover:underline"
-                >
-                  Download
-                </button>
+          <tbody className="divide-y">
+            {history.map(item => (
+              <HistoryRow
+                key={item.id}
+                item={item}
+                onDelete={onDelete}
+                onDownload={onDownload}
+                compact={compact}
+              />
+            ))}
+          </tbody>
+        </table>
 
-                <button
-                  onClick={() => onDelete(row.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  }
-
-  // ---------------- FULL VIEW ----------------
-  return (
-    <table className="w-full text-sm border">
-      <thead className="bg-gray-100">
-        <tr>
-          <th className="p-2 text-left">Script Name</th>
-          <th className="p-2 text-left">Status</th>
-          <th className="p-2 text-left">Created</th>
-          <th className="p-2 text-right">Actions</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {history.map((row) => (
-          <tr key={row.id} className="border-t">
-            <td className="p-2">{row.name}</td>
-            <td className="p-2">{row.status}</td>
-            <td className="p-2">
-              {new Date(row.created_on).toLocaleString()}
-            </td>
-            <td className="p-2 text-right space-x-3">
-              <button
-                onClick={() => onDownload(row.id, row.name)}
-                className="text-blue-600 hover:underline"
-              >
-                Download
-              </button>
-
-              <button
-                onClick={() => onDelete(row.id)}
-                className="text-red-600 hover:underline"
-              >
-                Delete
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-};
-
+        {/* 🔵 VIEW MORE BELOW ROWS */}
+        {compact && showViewMore && (
+  <div className="text-center py-3 ">
+    <button
+      className="text-blue-600 hover:underline"
+      onClick={onViewMore}
+    >
+      View Full History
+    </button>
+  </div>
+)}
+      </>
+    )}
+  </div>
+);

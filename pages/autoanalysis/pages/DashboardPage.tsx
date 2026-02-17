@@ -18,12 +18,15 @@ import { Activity, CheckCircle, EditIcon, Trash2, TrashIcon } from 'lucide-react
 import AddIcon from '@mui/icons-material/Add';
 import SearchBar from '../../../components/SearchBar';
 import InfoCard from '@/components/InfoCard';
-import { RootState } from '@/store/store';
+import { AppDispatch, RootState } from '@/store/store';
 import { AddApplicationModal } from '../components/AddApplicationModal';
+import AddApplicationDialog from '@/pages/settings/components/AddApplicationDialog';
+import { createApplication, updateApplication } from '@/pages/project/store/project.thunks';
+import { Application } from '@/pages/project/types/project.types';
 
 
 export const DashboardPage: React.FC = () => {
-  const dispatch = useDispatch<any>();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   // @ts-ignore
   const { loading, applications } = useSelector((state) => state.autoAnalysis);
@@ -35,10 +38,13 @@ export const DashboardPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [selectedApplicationName, setSelectedApplicationName] = useState<string | null>(null);
+  const user = useSelector((state: RootState) => state.user.profile);
 
   const filteredApplications = applications.filter((app: any) =>
     app.name.toLowerCase().includes(search.toLowerCase())
   );
+  const [editingApp, setEditingApp] = useState<Application | null>(null);
+  const [open, setOpen] = useState(false);
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -57,6 +63,46 @@ export const DashboardPage: React.FC = () => {
     dispatch(fetchApps(selectedProject.id));
 
   }, [dispatch, selectedProject]);
+
+
+  const handleAdd = async (data: { name: string; description: string }) => {
+      if (!selectedProject?.id) return;
+  
+      try {
+        await dispatch(createApplication({
+          projectId: selectedProject.id,
+          name: data.name,
+          description: data.description
+        })).unwrap();
+  
+        console.log("[UI] Application created");
+
+        dispatch(fetchApps(selectedProject.id));
+  
+      } catch (err) {
+        console.error("[UI] Create failed:", err);
+      }
+    };
+  
+  
+    const handleEdit = async (data: { name: string; description: string }) => {
+      if (!editingApp) return;
+  
+      try {
+        await dispatch(updateApplication({
+          appId: editingApp.id,   // must be NUMBER
+          name: data.name,
+          description: data.description
+        })).unwrap();
+  
+        console.log("[UI] Application updated");
+  
+        setEditingApp(null);
+  
+      } catch (err) {
+        console.error("[UI] Update failed:", err);
+      }
+    };
 
   if (!selectedProject) {
     return (
@@ -82,8 +128,20 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+
   return (
     <Box >
+
+
+      <AddApplicationDialog
+        open={open}
+        initialData={editingApp}
+        onClose={() => {
+          setOpen(false);
+          setEditingApp(null);
+        }}
+        onSubmit={editingApp ? handleEdit : handleAdd}
+      />
 
 
       <Snackbar
@@ -146,6 +204,24 @@ export const DashboardPage: React.FC = () => {
                 <AddIcon />
               </IconButton>
             </Tooltip> */}
+
+
+            {user?.is_staff && (
+  <button
+    onClick={() => {
+      setEditingApp(null);   // create mode
+      setOpen(true);         // open dialog
+    }}
+    className="
+      px-4 py-2 rounded-md text-white bg-blue-600
+      hover:bg-blue-700 transition
+      flex items-center gap-2
+    "
+  >
+    + Add Application
+  </button>
+)}
+
           </Box>
 
 
@@ -413,7 +489,7 @@ export const DashboardPage: React.FC = () => {
                 }
               }}
               status={app.config_status}
-              onDelete={() => handleDelete(app.id)}
+              // onDelete={() => handleDelete(app.id)}
               onView={() => navigate(`/autoanalysis/${app.id}`)}
               onUnconfigured={() => {
   setSelectedApplicationId(app.id);

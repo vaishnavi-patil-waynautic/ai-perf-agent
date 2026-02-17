@@ -8,54 +8,25 @@ import { config } from "@/config/backendConfig";
 const API_BASE = config.baseUrl;
 const headers = config.headers;
 
+const getheaders = () => {
+
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      const token = localStorage.getItem("access_token");
+      console.log("Using token:", token);
+      throw new Error("Missing access token");
+    }
+
+
+
+}
+
 
 export const autoScriptService = {
-  // getHistory: async (): Promise<JMXRecord[]> => {
-  //   // return [];
-  //   // return await autoScriptApi.getHistory();
 
-  //   //get all the scripts by id
-  //   // return all the records
-  //   //else error 
+  getHistory: async (projectId: number): Promise<JMXRecord[]> => {
 
-  //   await login();
-
-  //   await getUserApplication(3);
-
-
-  //   const projectId = 1;
-  //   const token = localStorage.getItem("access_token");
-
-  //   console.log("Using token:", token);
-
-
-  //   const res = await fetch(
-  //     `http://127.0.0.1:8000/api/v1/autoscript/script/project/${projectId}`,
-  //     {
-  //       method: "GET",
-  //       headers: {
-  //         Accept: "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     }
-  //   );
-
-  //   console.log("Raw Response:", res);
-
-  //   if (!res.ok) {
-  //     throw new Error("Failed to fetch autoscript history");
-  //   }
-
-  //   console.log("Response:", res);
-
-  //   return res.json();
-
-  // },
-
-
-  getHistory: async ( projectId: number ): Promise<JMXRecord[]> => {
-    // TEMP: ensure logged in (should be done elsewhere)
-    // await login();
     await getUserApplication(3);
 
     const token = localStorage.getItem("access_token");
@@ -72,9 +43,9 @@ export const autoScriptService = {
       {
         method: "GET",
         headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
 
@@ -88,8 +59,9 @@ export const autoScriptService = {
 
     // ✅ THIS is the actual array
     return json.data.scripts as JMXRecord[];
-  }
-  ,
+  },
+
+
   generate: async (
     file1: File,
     file2: File,
@@ -116,7 +88,10 @@ export const autoScriptService = {
 
     const response = await fetch(`${API_BASE}/autoscript/generate/`, {
       method: "POST",
-      headers, // DO NOT set Content-Type for FormData
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      }, // DO NOT set Content-Type for FormData
       body: formData,
     });
 
@@ -138,31 +113,43 @@ export const autoScriptService = {
   },
 
   deleteJmx: async (id: number) => {
+
+    const token = localStorage.getItem("access_token");
+
     const response = await axios.delete(
       `${API_BASE}/autoscript/script/${id}`,
-      { headers: headers }
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
 
     return response.data;
   },
 
   downloadJmx: async (id: number) => {
+    const token = localStorage.getItem("access_token");
+
     const response = await axios.get(
       `${API_BASE}/autoscript/script/${id}/download/`,
       {
-        headers: headers,
-        responseType: "blob", // IMPORTANT for file download
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
       }
     );
 
-    return response.data; // Blob
+    return response.data; 
   },
 
   getStatus: async (id: number) => {
-    // call status api by id
-    // return status
-    //else error message
 
     return "IN_PROGRESS";
-  }
+  },
+
+
 };

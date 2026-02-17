@@ -31,24 +31,24 @@ const WizardStep4_Generate: React.FC = () => {
         type: 'success',
     });
 
-    const buildGenerateNfrPayload = (
-        wizardState: WizardState,
-        projectId: number,
-        applicationId: number
-    ) => {
-        const answer = (id: string) =>
-            wizardState.questionnaireResponses.find(q => q.questionId === id)?.answer ?? '';
+    // const buildGenerateNfrPayload = (
+    //     wizardState: WizardState,
+    //     projectId: number,
+    //     applicationId: number
+    // ) => {
+    //     const answer = (id: string) =>
+    //         wizardState.questionnaireResponses.find(q => q.questionId === id)?.answer ?? '';
 
-        return {
-            projectId,
-            applicationId,
-            env: answer('environment'),
-            sla: answer('sla'),
-            wlm: answer('wlm'),
-            additionalInput: wizardState.additionalInstructions,
-            files: wizardState.uploadedFiles,
-        };
-    };
+    //     return {
+    //         projectId,
+    //         applicationId,
+    //         env: answer('environment'),
+    //         sla: answer('sla'),
+    //         wlm: answer('wlm'),
+    //         additionalInput: wizardState.additionalInstructions,
+    //         files: wizardState.uploadedFiles,
+    //     };
+    // };
 
 
     // const handleGenerate = async () => {
@@ -80,6 +80,32 @@ const WizardStep4_Generate: React.FC = () => {
     //     }
     // };
 
+ const buildGenerateNfrPayload = (
+  wizardState: WizardState,
+  projectId: number,
+  applicationId: number
+) => {
+  return {
+    projectId,
+    applicationId,
+
+    // Selected Jira / ADO items
+    selectedItemIds: wizardState.selectedItemIds ?? [],
+
+    // Dynamic questionnaire → send ALL Q&A
+    questionnaire: wizardState.questionnaireResponses.map(q => ({
+      questionId: q.questionId,
+      answer: q.answer ?? "",
+    })),
+
+    // Additional instructions
+    additionalInput: wizardState.additionalInstructions ?? "",
+
+    // Files (keep raw for FormData usage later)
+    files: wizardState.uploadedFiles ?? [],
+  };
+};
+
 
     const handleGenerate = async () => {
         if (!selectedApp?.id || !selectedProject?.id) {
@@ -94,6 +120,8 @@ const WizardStep4_Generate: React.FC = () => {
             selectedProject.id,
             selectedApp.id
         );
+
+        console.log("Wizard payload : ", payload)
 
         const result = await dispatch(generateNfr(payload));
 

@@ -1,17 +1,13 @@
 import { config } from "../../../config/backendConfig";
 
-interface LoginResponse {
-  user: any;
-  access: string;
-  refresh: string;
-}
-
-export const login = async (
+export const signup = async (
   email: string,
+  firstName : string,
+  lastName : string,
   password: string
 ): Promise<{ user: any; access: string }> => {
 
-  const res = await fetch(`${config.baseUrl}/users/login/`, {
+  const res = await fetch(`${config.baseUrl}/users/signup/`, {
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -22,6 +18,8 @@ export const login = async (
     },
     body: JSON.stringify({
       email,
+      firstName,
+      lastName,
       password,
     }),
   });
@@ -29,27 +27,14 @@ export const login = async (
   if (!res.ok) {
     const errorData = await res.json().catch(() => null);
     console.error(errorData)
-    throw new Error(errorData?.message || errorData?.data?.error?.password || errorData?.data?.error || "Login failed");
+    throw new Error(errorData?.message || errorData?.data?.error || "Login failed");
   }
 
   getUserInfo();
 
   const data = await res.json();
 
-  // backend returns: { data: { access, refresh, user } }
-  const { access, refresh, user }: LoginResponse = data.data;
-
-  if (!access || !refresh || !user) {
-    throw new Error("Invalid login response");
-  }
-
-  // Persist auth data
-  localStorage.setItem("access_token", access);
-  localStorage.setItem("refresh_token", refresh);
-  localStorage.setItem("user", JSON.stringify(user));
-
-  // IMPORTANT: return BOTH user + token
-  return { user, access };
+  return ;
 };
 
 const getUserInfo = () =>{

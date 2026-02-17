@@ -45,7 +45,7 @@ const InfoCard: React.FC<InfoCardProps> = ({
   const navigate = useNavigate();
   // Only enable buttons for these statuses
   const isDisabled =
-    status && !["Completed", 'completed', "configured", "unconfigured"].includes(status);
+    status && !["Completed", 'completed', "configured", "partially_configured"].includes(status);
 
 
   const handleRecentBuildClick = () => {
@@ -114,7 +114,6 @@ const InfoCard: React.FC<InfoCardProps> = ({
         {onDelete && (
           <button
             onClick={onDelete}
-            disabled={isDisabled}
             className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 disabled:opacity-50"
             title="Delete"
           >
@@ -122,7 +121,7 @@ const InfoCard: React.FC<InfoCardProps> = ({
           </button>
         )}
 
-        {onView && status!="not_configured" && (
+        { onView && !(status=="not_configured" || status=="failed") && (
           <button
             onClick={onView}
             disabled={isDisabled}

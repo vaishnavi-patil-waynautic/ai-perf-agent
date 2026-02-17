@@ -11,11 +11,12 @@ import { deleteNfrById, fetchNfrReport, getNfrById, fetchNfrList } from '../slic
 import { resetWizard } from '../slices/nfrWizardSlice';
 import { StatusBadge } from '@/components/StatusBadge';
 import PrimaryButton from '@/pages/autoanalysis/components/PrimaryButton';
-import { Activity, Download, EditIcon, Trash2, TrashIcon } from 'lucide-react';
+import { Activity, Box, Download, EditIcon, Trash2, TrashIcon } from 'lucide-react';
 import InfoCard from '@/components/InfoCard';
 import { nfrService } from '../services/nfrService';
 import AppSnackbar, { SnackbarType } from '@/components/AppSnackbar';
 import { get } from 'http';
+import SearchBar from '@/components/SearchBar';
 
 const NFRPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const NFRPage: React.FC = () => {
   // const [polling, setPolling] = useState(false);
   let count = 0;
   const pollingRef = useRef(null);
+  const [search, setSearch] = useState("");
 
   console.log("SELECTED PROJECT IN NFR : ", selectedProject);
 
@@ -41,10 +43,15 @@ const NFRPage: React.FC = () => {
     type: 'success',
   });
 
+
+  const filteredStrategies = strategies.filter((app: any) =>
+    app.display_name.toLowerCase().includes(search.toLowerCase())
+  );
+
   useEffect(() => {
 
     const hasPending = (list) =>
-      list.some(s => s.status === 'in_process' || s.status === 'draft' || s.status === 'pending' );
+      list.some(s => s.status === 'in_process' || s.status === 'draft' || s.status === 'pending');
 
     dispatch(resetWizard());
 
@@ -263,24 +270,110 @@ const NFRPage: React.FC = () => {
           Generate Performance Test Strategy
         </Button> */}
 
+        {/* sx={{
+            //   borderRadius: 2,
+            //   color: "primary.main",
+            //   bgcolor: "rgba(25, 118, 210, 0.08)",
+            //   transition: "all 0.15s ease",
+            //   "&:hover": {
+            //     bgcolor: "rgba(25, 118, 210, 0.15)",
+            //     transform: "translateY(-1px)"
+            //   }
+            // }} */}
 
-        <Tooltip title="Generate Performance Test Strategy" arrow>
-          <IconButton
+
+        {/* <Tooltip title="Generate Performance Test Strategy" arrow>
+          <Button
             onClick={() => navigate('/nfr/wizard')}
-            sx={{
-              borderRadius: 2,
-              color: "primary.main",
-              bgcolor: "rgba(25, 118, 210, 0.08)",
-              transition: "all 0.15s ease",
-              "&:hover": {
-                bgcolor: "rgba(25, 118, 210, 0.15)",
-                transform: "translateY(-1px)"
-              }
-            }}
+          
+            className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 disabled:opacity-50"
           >
-            <AddIcon />
-          </IconButton>
-        </Tooltip>
+            <AddIcon /> 
+          </Button>
+        </Tooltip> */}
+
+        {/* <Box className="flex items-center gap-2"> */}
+          {/* Search tooltip */}
+          {/* <Tooltip title="Search applications" arrow>
+         
+              <SearchBar
+                value={search}
+                onChange={setSearch}
+                placeholder="Search applications..."
+                onSearch={(value) => {
+                  console.log("Searching:", value);
+                }}
+              />
+          </Tooltip>
+
+          <Tooltip title="Generate Performance Test Strategy" arrow>
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={() => navigate("/nfr/wizard")}
+              sx={{
+                textTransform: "none",
+                fontWeight: 500,
+                borderRadius: "6px",
+                padding: "6px 14px",
+                fontSize: 14
+              }}
+            >
+              Generate Performance Test Strategy
+            </Button>
+          </Tooltip> */}
+
+
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", justifyContent: "flex-end" }}>
+
+  {/* Search */}
+  <Tooltip title="Search applications" arrow>
+    <div style={{ width: 280 }}>
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search applications..."
+        onSearch={(value) => {
+          console.log("Searching:", value);
+        }}
+      />
+    </div>
+  </Tooltip>
+
+  {/* Button */}
+  <Tooltip title="Generate Performance Test Strategy" arrow>
+    <button
+      onClick={() => navigate("/nfr/wizard")}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        background: "#1976d2",
+        color: "white",
+        border: "none",
+        borderRadius: 6,
+        padding: "6px 14px",
+        fontSize: 14,
+        fontWeight: 500,
+        cursor: "pointer",
+        whiteSpace: "nowrap"
+      }}
+    >
+      <AddIcon style={{ fontSize: 18 }} />
+      Generate Performance Test Strategy
+    </button>
+  </Tooltip>
+
+</div>
+
+
+
+
+
+        {/* </Box> */}
+
 
 
       </div>
@@ -546,9 +639,9 @@ const NFRPage: React.FC = () => {
       />
 
       <div className="space-y-4 w-full mx-auto">
-        {(strategies?.length ?? 0) > 0 ? (
+        {(filteredStrategies?.length ?? 0) > 0 ? (
 
-          strategies?.map((strategy) => (
+          filteredStrategies?.map((strategy) => (
             <InfoCard key={strategy.id}
               name={strategy.display_name == 'N/A' ? "Default Application" : strategy.display_name}
               createdOn={strategy.created_on && strategy.created_on.replace("Z", "") || "N/A"}

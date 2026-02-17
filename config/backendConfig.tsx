@@ -8,6 +8,7 @@ const getAuthHeaders = () => {
     Accept: "application/json",
     Authorization: `Bearer ${token}`,
   };
+  
 };
 
 export const config = {

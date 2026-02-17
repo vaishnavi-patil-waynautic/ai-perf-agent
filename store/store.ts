@@ -7,6 +7,7 @@ import nfrWizardReducer from '../pages/NFR/slices/nfrWizardSlice';
 import { autoAnalysisReducer } from '../pages/autoanalysis';
 import IntegrationSlice from "../pages/settings/store/integration.slice";
 import userReducer from "../pages/settings/store/user.slice"
+import chatReducer from "../pages/aichat/store/slices/chat.slice"
 
 
 
@@ -19,7 +20,8 @@ export const store = configureStore({
     nfrWizard: nfrWizardReducer,
     autoAnalysis: autoAnalysisReducer,
     integration: IntegrationSlice,
-    user: userReducer
+    user: userReducer,
+    chat: chatReducer
   },
 });
 

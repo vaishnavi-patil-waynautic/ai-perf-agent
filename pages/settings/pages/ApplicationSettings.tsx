@@ -80,7 +80,12 @@ export default function ApplicationSettings() {
             setOpen(true);
           }}
           disabled={!user?.is_staff}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md"
+          className={`
+    px-4 py-2 rounded-md text-white transition
+    ${user?.is_staff
+              ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"}
+  `}
         >
           Add Application
         </button>

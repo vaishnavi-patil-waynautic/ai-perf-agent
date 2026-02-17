@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchIntegrations, deleteIntegration } from "./integration.thunk";
-import { Integration, IntegrationType } from "../types/settings.types";
+import { fetchIntegrations, deleteIntegration, fetchIntegrationDetail } from "./integration.thunk";
+import { Integration, IntegrationDetail, IntegrationType } from "../types/settings.types";
 
 const ALL_TYPES: IntegrationType[] = [
   "github",
@@ -13,6 +13,7 @@ const ALL_TYPES: IntegrationType[] = [
 interface State {
   list: Integration[];
   loading: boolean;
+  selected?: IntegrationDetail;
 }
 
 const initialState: State = {
@@ -22,6 +23,7 @@ const initialState: State = {
     name: type.toUpperCase(),
     status: "inactive",
   })),
+  selected: undefined,
   loading: false,
 };
 
@@ -71,6 +73,17 @@ const IntegrationSlice = createSlice({
           item.id = null;
           item.status = "inactive";
         }
+      })
+
+      .addCase(fetchIntegrationDetail.pending, state => {
+        state.loading = true;
+      })
+      .addCase(fetchIntegrationDetail.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selected = action.payload;
+      })
+      .addCase(fetchIntegrationDetail.rejected, state => {
+        state.loading = false;
       });
   },
 });

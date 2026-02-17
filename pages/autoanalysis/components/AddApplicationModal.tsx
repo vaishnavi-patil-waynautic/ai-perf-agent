@@ -4,9 +4,9 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   TextField, MenuItem, LinearProgress, Box, Typography, Alert
 } from '@mui/material';
-// import { fetchJmx, addApp } from '../store/autoAnalysisSlice';
 import { AppDispatch } from '../../../store/store'; // Assume global store type location
 import { fetchJmx } from '../store/autoAnalysisSlice';
+import { configureApplication } from '../services/mockService';
 
 interface Props {
   open: boolean;
@@ -14,14 +14,6 @@ interface Props {
   selectedApplicationId: string | null;
   selectedApplicationName: string | null;
 }
-
-// const fetchJmx = async () => {
-//   return [
-//     { id: 'jmx1', name: 'checkout_flow_v2.jmx' },
-//     { id: 'jmx2', name: 'login_stress_test.jmx' },
-//     { id: 'jmx3', name: 'search_load.jmx' },
-//   ];
-// };
 
 const addApp = async (data: any) => {
   return {
@@ -48,32 +40,62 @@ export const AddApplicationModal: React.FC<Props> = ({ open, onClose, selectedAp
     jmxScriptId: '',
     users: 10,
     duration: 30,
-    throughput: 100
+    throughput: 100,
+    githubRepo: ''
   });
 
   useEffect(() => {
     if (open) {
       // fetchjmx
-      dispatch(fetchJmx());
+      dispatch(fetchJmx(Number(selectedApplicationId)));
     }
   }, [open, dispatch]);
   const progressRef = useRef(null);
 
-  const handleStart = async () => {
+ const handleStart = async () => {
+  try {
     setStep('processing');
-    setProgress(0);
+    setProgress(20);
 
-    let val = 0;
-  progressRef.current = setInterval(() => {
-    val += 10;
-    setProgress(val);
+    const payload = new FormData();
 
-    if (val >= 100) {
-      clearInterval(progressRef.current);
-      setStep('success');
+    // REQUIRED
+    payload.append('users', String(formData.users));
+    payload.append('duration', String(formData.duration));
+    payload.append('ramp_up', '1');
+    payload.append('auto_execute', 'false');
+
+    if (formData.githubRepo) {
+      payload.append('github_repo_url', formData.githubRepo);
     }
-  }, 400);
-  };
+
+    // Either script_id OR script_file
+    if (formData.jmxSource === 'auto' && formData.jmxScriptId) {
+      payload.append('script_id', formData.jmxScriptId);
+    } else if (formData.jmxSource === 'file' && formData.jmxFile) {
+      payload.append('script_file', formData.jmxFile);
+    } else {
+      throw new Error('Provide script_id or upload JMX file');
+    }
+
+    setProgress(50);
+
+    await configureApplication(
+      Number(1),                      // project id (replace if dynamic)
+      Number(selectedApplicationId),  // application id
+      payload
+    );
+
+    setProgress(100);
+    setStep('success');
+
+  } catch (err: any) {
+    console.error(err);
+    setStep('form');
+    alert(err.message || 'Configuration failed');
+  }
+};
+
 
   const handleClose = () => {
     setStep('form');
@@ -167,331 +189,373 @@ export const AddApplicationModal: React.FC<Props> = ({ open, onClose, selectedAp
 
   return (
 
-//     <Dialog
-//   open={open}
-//   onClose={handleClose}
-//   maxWidth={step === 'form' ? 'xs' : 'md'} // wider while loading
-//   fullWidth
-//   PaperProps={{
-//     sx: {
-//       borderRadius: 3,
-//       px: 3,
-//       py: 3,
-//       minHeight: step === 'form' ? 500 : 200,
-//       display: 'flex',
-//       flexDirection: 'column',
-//       justifyContent: step === 'processing' ? 'center' : 'flex-start',
-//       alignItems: step === 'processing' ? 'center' : 'stretch',
-//     },
-//   }}
+    //     <Dialog
+    //   open={open}
+    //   onClose={handleClose}
+    //   maxWidth={step === 'form' ? 'xs' : 'md'} // wider while loading
+    //   fullWidth
+    //   PaperProps={{
+    //     sx: {
+    //       borderRadius: 3,
+    //       px: 3,
+    //       py: 3,
+    //       minHeight: step === 'form' ? 500 : 200,
+    //       display: 'flex',
+    //       flexDirection: 'column',
+    //       justifyContent: step === 'processing' ? 'center' : 'flex-start',
+    //       alignItems: step === 'processing' ? 'center' : 'stretch',
+    //     },
+    //   }}
 
-//   scroll="paper" 
-// >
-//   {/* <DialogTitle
-//     sx={{
-//       pt: 2.5,
-//       pb: 1,
-//       fontWeight: 700,
-//       fontSize: '1.5rem', // bigger title
-//       color: 'text.primary',
-//       textAlign: step === 'success' ? 'center' : 'left', // center on success
-//     }}
-//   >
-//     Add New Application
-//   </DialogTitle> */}
+    //   scroll="paper" 
+    // >
+    //   {/* <DialogTitle
+    //     sx={{
+    //       pt: 2.5,
+    //       pb: 1,
+    //       fontWeight: 700,
+    //       fontSize: '1.5rem', // bigger title
+    //       color: 'text.primary',
+    //       textAlign: step === 'success' ? 'center' : 'left', // center on success
+    //     }}
+    //   >
+    //     Add New Application
+    //   </DialogTitle> */}
 
-//   <DialogTitle
-//   sx={{
-//     pt: 2.5,
-//     fontWeight: 700,
-//     fontSize: '1.5rem',
-//     color: 'text.primary',
-//     textAlign: step === 'success' ? 'center' : 'left',
-//   }}
-// >
-//   {step === 'success' ? 'Application Configured Successfully!' : 'Add New Application'}
-// </DialogTitle>
-
-
-//   <DialogContent sx={{  pt: 1, display: 'flex', flexDirection: 'column', alignItems: step === 'form' ? 'stretch' : 'center' }}>
-//     {step === 'form' && (
-//       <Box className="flex flex-col gap-6 mt-1">
-//         {/* <TextField
-//           label="Application Name"
-//           fullWidth
-//           size="small"
-//           value={formData.appName}
-//           onChange={(e) => setFormData({ ...formData, appName: e.target.value })}
-//           sx={{
-//             '& .MuiOutlinedInput-root': { borderRadius: 2, boxShadow: 1 },
-//           }}
-//         /> */}
-
-//         <TextField
-//   label="Application Name"
-//   fullWidth
-//   size="small"
-//   margin="normal"  // add this line for correct spacing
-//   value={formData.appName}
-//   onChange={(e) => setFormData({ ...formData, appName: e.target.value })}
-// />
+    //   <DialogTitle
+    //   sx={{
+    //     pt: 2.5,
+    //     fontWeight: 700,
+    //     fontSize: '1.5rem',
+    //     color: 'text.primary',
+    //     textAlign: step === 'success' ? 'center' : 'left',
+    //   }}
+    // >
+    //   {step === 'success' ? 'Application Configured Successfully!' : 'Add New Application'}
+    // </DialogTitle>
 
 
-//         <TextField
-//           select
-//           label="JMX Source"
-//           fullWidth
-//           size="small"
-//           value={formData.jmxSource}
-//           onChange={(e) => setFormData({ ...formData, jmxSource: e.target.value })}
-//           sx={{ borderRadius: 2, boxShadow: 1 }}
-//         >
-//           <MenuItem value="file">Upload JMX File</MenuItem>
-//           <MenuItem value="auto">Select from Autoscripting</MenuItem>
-//         </TextField>
+    //   <DialogContent sx={{  pt: 1, display: 'flex', flexDirection: 'column', alignItems: step === 'form' ? 'stretch' : 'center' }}>
+    //     {step === 'form' && (
+    //       <Box className="flex flex-col gap-6 mt-1">
+    //         {/* <TextField
+    //           label="Application Name"
+    //           fullWidth
+    //           size="small"
+    //           value={formData.appName}
+    //           onChange={(e) => setFormData({ ...formData, appName: e.target.value })}
+    //           sx={{
+    //             '& .MuiOutlinedInput-root': { borderRadius: 2, boxShadow: 1 },
+    //           }}
+    //         /> */}
 
-//         {formData.jmxSource === 'auto' ? (
-//           <TextField
-//             select
-//             label="Select Script"
-//             fullWidth
-//             size="small"
-//             value={formData.jmxScriptId}
-//             onChange={(e) => setFormData({ ...formData, jmxScriptId: e.target.value })}
-//             sx={{ borderRadius: 2, boxShadow: 1 }}
-//           >
-//             {jmxOptions.map((opt: any) => (
-//               <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
-//             ))}
-//           </TextField>
-//         ) : (
-//           <Button
-//             variant="outlined"
-//             component="label"
-//             fullWidth
-//             sx={{
-//               borderRadius: 2,
-//               textTransform: 'none',
-//               boxShadow: 1,
-//               py: 1.5,
-//               bgcolor: 'background.paper',
-//               '&:hover': { bgcolor: 'primary.light' },
-//             }}
-//           >
-//             Upload JMX
-//             <input
-//               type="file"
-//               hidden
-//               onChange={(e) => setFormData({ ...formData, jmxFile: e.target.files?.[0] || null })}
-//             />
-//           </Button>
-//         )}
-
-//         <TextField label="Concurrent Users" type="number" size="small" fullWidth value={formData.users} />
-//         <TextField label="Duration (min)" type="number" size="small" fullWidth value={formData.duration} />
-//         <TextField label="Throughput (hits/s)" type="number" size="small" fullWidth value={formData.throughput} />
-//       </Box>
-//     )}
-
-//     {step === 'processing' && (
-//       <Box className="text-center w-full">
-//         <Typography variant="h6" className="mb-4 text-gray-700 text-center">
-//           Configuring Integrations & Generating CI/CD Pipelines...
-//         </Typography>
-//         <LinearProgress
-//           variant="determinate"
-//           value={progress}
-//           sx={{ height: 8, borderRadius: 4, bgcolor: '#e0e0e0', '& .MuiLinearProgress-bar': { bgcolor: 'primary.main' } }}
-//         />
-//         <Typography variant="caption" className="mt-2 block text-gray-500 text-center">{progress}% Complete</Typography>
-//       </Box>
-//     )}
-
-//     {step === 'success' && (
-//       <Alert severity="success" sx={{ mt: 2, borderRadius: 2, boxShadow: 1, textAlign: 'center' }}>
-//         Service configured successfully. Test scenario and CI/CD integration generated.
-//       </Alert>
-//     )}
-//   </DialogContent>
-
-//   <DialogActions
-//     sx={{
-//       px: 3,
-//       pb: 2,
-//       justifyContent: step === 'success' ? 'center' : 'space-between', // center Done button
-//     }}
-//   >
-//     {step === 'form' && (
-//       <>
-//         <Button
-//           onClick={handleClose}
-//           variant="outlined"
-//           sx={{
-//             textTransform: 'none',
-//             borderColor: '#c1c1c1',
-//             color: '#6b6b6b',
-//             '&:hover': { borderColor: '#a0a0a0', bgcolor: '#f5f5f5' },
-//           }}
-//         >
-//           Cancel
-//         </Button>
-//         <Button
-//           variant="contained"
-//           onClick={handleStart}
-//           disabled={!formData.appName}
-//           sx={{ textTransform: 'none' }}
-//         >
-//           Start Configuration
-//         </Button>
-//       </>
-//     )}
-//     {step === 'success' && (
-//       <Button variant="contained" onClick={handleClose} sx={{ textTransform: 'none' }}>
-//         Done
-//       </Button>
-//     )}
-//   </DialogActions>
-// </Dialog>
+    //         <TextField
+    //   label="Application Name"
+    //   fullWidth
+    //   size="small"
+    //   margin="normal"  // add this line for correct spacing
+    //   value={formData.appName}
+    //   onChange={(e) => setFormData({ ...formData, appName: e.target.value })}
+    // />
 
 
+    //         <TextField
+    //           select
+    //           label="JMX Source"
+    //           fullWidth
+    //           size="small"
+    //           value={formData.jmxSource}
+    //           onChange={(e) => setFormData({ ...formData, jmxSource: e.target.value })}
+    //           sx={{ borderRadius: 2, boxShadow: 1 }}
+    //         >
+    //           <MenuItem value="file">Upload JMX File</MenuItem>
+    //           <MenuItem value="auto">Select from Autoscripting</MenuItem>
+    //         </TextField>
 
-<Dialog
-  open={open}
-  onClose={onClose}
-  maxWidth={step === 'form' ? 'sm' : 'md'} // Wider during the loading state
-  fullWidth
-  PaperProps={{
-    sx: {
-      borderRadius: 3,
-      px: 3,
-      py: 3,
-      minHeight: step === 'form' ? 500 : 200,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: step === 'processing' ? 'center' : 'flex-start',
-      alignItems: step === 'processing' ? 'center' : 'stretch',
-    },
-  }}
-  scroll="paper"
->
-  <DialogTitle
-    sx={{
-      pt: 2.5,
-      fontWeight: 700,
-      fontSize: '1.5rem',
-      color: '#1d4ed8',
-      textAlign: step === 'success' ? 'center' : 'left',
-    }}
-  >
-    {step === 'success' ? 'Application Configured Successfully!' : 'Configure Application'}
-  </DialogTitle>
+    //         {formData.jmxSource === 'auto' ? (
+    //           <TextField
+    //             select
+    //             label="Select Script"
+    //             fullWidth
+    //             size="small"
+    //             value={formData.jmxScriptId}
+    //             onChange={(e) => setFormData({ ...formData, jmxScriptId: e.target.value })}
+    //             sx={{ borderRadius: 2, boxShadow: 1 }}
+    //           >
+    //             {jmxOptions.map((opt: any) => (
+    //               <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
+    //             ))}
+    //           </TextField>
+    //         ) : (
+    //           <Button
+    //             variant="outlined"
+    //             component="label"
+    //             fullWidth
+    //             sx={{
+    //               borderRadius: 2,
+    //               textTransform: 'none',
+    //               boxShadow: 1,
+    //               py: 1.5,
+    //               bgcolor: 'background.paper',
+    //               '&:hover': { bgcolor: 'primary.light' },
+    //             }}
+    //           >
+    //             Upload JMX
+    //             <input
+    //               type="file"
+    //               hidden
+    //               onChange={(e) => setFormData({ ...formData, jmxFile: e.target.files?.[0] || null })}
+    //             />
+    //           </Button>
+    //         )}
 
-  <DialogContent sx={{ pt: 1, display: 'flex', flexDirection: 'column', alignItems: step === 'form' ? 'stretch' : 'center' }}>
-    {step === 'form' && (
-      <Box className="flex flex-col gap-6 mt-1">
+    //         <TextField label="Concurrent Users" type="number" size="small" fullWidth value={formData.users} />
+    //         <TextField label="Duration (min)" type="number" size="small" fullWidth value={formData.duration} />
+    //         <TextField label="Throughput (hits/s)" type="number" size="small" fullWidth value={formData.throughput} />
+    //       </Box>
+    //     )}
 
-        <TextField
-          label="Application Name"
-          fullWidth
-          size="small"
-          margin="normal"
-          value={selectedApplicationName}
-          disabled
-          sx={{
-            '& .MuiOutlinedInput-root': { borderRadius: 2, boxShadow: 1 },
-          }}
-        />
+    //     {step === 'processing' && (
+    //       <Box className="text-center w-full">
+    //         <Typography variant="h6" className="mb-4 text-gray-700 text-center">
+    //           Configuring Integrations & Generating CI/CD Pipelines...
+    //         </Typography>
+    //         <LinearProgress
+    //           variant="determinate"
+    //           value={progress}
+    //           sx={{ height: 8, borderRadius: 4, bgcolor: '#e0e0e0', '& .MuiLinearProgress-bar': { bgcolor: 'primary.main' } }}
+    //         />
+    //         <Typography variant="caption" className="mt-2 block text-gray-500 text-center">{progress}% Complete</Typography>
+    //       </Box>
+    //     )}
 
-        <TextField
-          select
-          label="JMX Source"
-          fullWidth
-          size="small"
-          value={formData.jmxSource}
-          onChange={(e) => setFormData({ ...formData, jmxSource: e.target.value })}
-          sx={{ borderRadius: 2, boxShadow: 1 }}
-        >
-          <MenuItem value="file">Upload JMX File</MenuItem>
-          <MenuItem value="auto">Select from Autoscripting</MenuItem>
-        </TextField>
+    //     {step === 'success' && (
+    //       <Alert severity="success" sx={{ mt: 2, borderRadius: 2, boxShadow: 1, textAlign: 'center' }}>
+    //         Service configured successfully. Test scenario and CI/CD integration generated.
+    //       </Alert>
+    //     )}
+    //   </DialogContent>
 
-        {formData.jmxSource === 'auto' ? (
-          <TextField
-            select
-            label="Select Script"
-            fullWidth
-            size="small"
-            value={formData.jmxScriptId}
-            onChange={(e) => setFormData({ ...formData, jmxScriptId: e.target.value })}
-            sx={{ borderRadius: 2, boxShadow: 1 }}
-          >
-            {jmxOptions.map((opt: any) => (
-              <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
-            ))}
-          </TextField>
-        ) : (
-          <Button
-            variant="outlined"
-            component="label"
-            fullWidth
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none',
-              boxShadow: 1,
-              py: 1.5,
-              bgcolor: 'background.paper',
-              '&:hover': { bgcolor: 'primary.light' },
-            }}
-          >
-            Upload JMX
-            <input
-              type="file"
-              hidden
-              onChange={(e) => setFormData({ ...formData, jmxFile: e.target.files?.[0] || null })}
+    //   <DialogActions
+    //     sx={{
+    //       px: 3,
+    //       pb: 2,
+    //       justifyContent: step === 'success' ? 'center' : 'space-between', // center Done button
+    //     }}
+    //   >
+    //     {step === 'form' && (
+    //       <>
+    //         <Button
+    //           onClick={handleClose}
+    //           variant="outlined"
+    //           sx={{
+    //             textTransform: 'none',
+    //             borderColor: '#c1c1c1',
+    //             color: '#6b6b6b',
+    //             '&:hover': { borderColor: '#a0a0a0', bgcolor: '#f5f5f5' },
+    //           }}
+    //         >
+    //           Cancel
+    //         </Button>
+    //         <Button
+    //           variant="contained"
+    //           onClick={handleStart}
+    //           disabled={!formData.appName}
+    //           sx={{ textTransform: 'none' }}
+    //         >
+    //           Start Configuration
+    //         </Button>
+    //       </>
+    //     )}
+    //     {step === 'success' && (
+    //       <Button variant="contained" onClick={handleClose} sx={{ textTransform: 'none' }}>
+    //         Done
+    //       </Button>
+    //     )}
+    //   </DialogActions>
+    // </Dialog>
+
+
+
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth={step === 'form' ? 'sm' : 'md'} // Wider during the loading state
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          px: 3,
+          py: 3,
+          minHeight: step === 'form' ? 500 : 200,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: step === 'processing' ? 'center' : 'flex-start',
+          alignItems: step === 'processing' ? 'center' : 'stretch',
+        },
+      }}
+      scroll="paper"
+    >
+      <DialogTitle
+        sx={{
+          pt: 2.5,
+          fontWeight: 700,
+          fontSize: '1.5rem',
+          color: '#1d4ed8',
+          textAlign: step === 'success' ? 'center' : 'left',
+        }}
+      >
+        {step === 'success' ? 'Application Configured Successfully!' : 'Configure Application'}
+      </DialogTitle>
+
+      <DialogContent sx={{ pt: 1, display: 'flex', flexDirection: 'column', alignItems: step === 'form' ? 'stretch' : 'center' }}>
+        {step === 'form' && (
+          <Box className="flex flex-col gap-6 mt-1">
+
+            <TextField
+              label="Application Name"
+              fullWidth
+              size="small"
+              margin="normal"
+              value={selectedApplicationName}
+              disabled
+              sx={{
+                '& .MuiOutlinedInput-root': { borderRadius: 2, boxShadow: 1 },
+              }}
             />
-          </Button>
+
+            <TextField
+              select
+              label="JMX Source"
+              fullWidth
+              size="small"
+              value={formData.jmxSource}
+              onChange={(e) => setFormData({ ...formData, jmxSource: e.target.value })}
+              sx={{ borderRadius: 2, boxShadow: 1 }}
+            >
+              <MenuItem value="file">Upload JMX File</MenuItem>
+              <MenuItem value="auto">Select from Autoscripting</MenuItem>
+            </TextField>
+
+            {formData.jmxSource === 'auto' ? (
+              <TextField
+                select
+                label="Select Script"
+                fullWidth
+                size="small"
+                value={formData.jmxScriptId}
+                onChange={(e) => setFormData({ ...formData, jmxScriptId: e.target.value })}
+                sx={{ borderRadius: 2, boxShadow: 1 }}
+              >
+                {jmxOptions.map((opt: any) => (
+                  <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
+                ))}
+              </TextField>
+            ) : (
+              <Button
+                variant="outlined"
+                component="label"
+                fullWidth
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  boxShadow: 1,
+                  py: 1.5,
+                  bgcolor: 'background.paper',
+                  '&:hover': { bgcolor: 'primary.light' },
+                }}
+              >
+                Upload JMX
+                <input
+                  type="file"
+                  hidden
+                  onChange={(e) => setFormData({ ...formData, jmxFile: e.target.files?.[0] || null })}
+                />
+              </Button>
+            )}
+
+            <TextField
+              label="GitHub Repository URL"
+              fullWidth
+              size="small"
+              value={formData.githubRepo || ''}
+              onChange={(e) =>
+                setFormData({ ...formData, githubRepo: e.target.value })
+              }
+              sx={{ borderRadius: 2, boxShadow: 1 }}
+            />
+
+
+            <TextField
+  label="Concurrent Users"
+  type="number"
+  size="small"
+  fullWidth
+  value={formData.users}
+  onChange={(e) =>
+    setFormData({ ...formData, users: Number(e.target.value) })
+  }
+/>
+
+<TextField
+  label="Duration (min)"
+  type="number"
+  size="small"
+  fullWidth
+  value={formData.duration}
+  onChange={(e) =>
+    setFormData({ ...formData, duration: Number(e.target.value) })
+  }
+/>
+
+<TextField
+  label="Throughput (hits/s)"
+  type="number"
+  size="small"
+  fullWidth
+  value={formData.throughput}
+  onChange={(e) =>
+    setFormData({ ...formData, throughput: Number(e.target.value) })
+  }
+/>
+
+          </Box>
         )}
 
-        <TextField label="Concurrent Users" type="number" size="small" fullWidth value={formData.users} />
-        <TextField label="Duration (min)" type="number" size="small" fullWidth value={formData.duration} />
-        <TextField label="Throughput (hits/s)" type="number" size="small" fullWidth value={formData.throughput} />
-      </Box>
-    )}
+        {step === 'processing' && (
+          <Box className="text-center w-full">
+            <Typography variant="h6" className="mb-4 text-gray-700 text-center">
+              Configuring Integrations & Generating CI/CD Pipelines...
+            </Typography>
+            <LinearProgress
+              variant="determinate"
+              value={progress}
+              sx={{ height: 8, borderRadius: 4, bgcolor: '#e0e0e0', '& .MuiLinearProgress-bar': { bgcolor: 'primary.main' } }}
+            />
+            <Typography variant="caption" className="mt-2 block text-gray-500 text-center">{progress}% Complete</Typography>
+          </Box>
+        )}
 
-    {step === 'processing' && (
-      <Box className="text-center w-full">
-        <Typography variant="h6" className="mb-4 text-gray-700 text-center">
-          Configuring Integrations & Generating CI/CD Pipelines...
-        </Typography>
-        <LinearProgress
-          variant="determinate"
-          value={progress}
-          sx={{ height: 8, borderRadius: 4, bgcolor: '#e0e0e0', '& .MuiLinearProgress-bar': { bgcolor: 'primary.main' } }}
-        />
-        <Typography variant="caption" className="mt-2 block text-gray-500 text-center">{progress}% Complete</Typography>
-      </Box>
-    )}
+        {step === 'success' && (
+          <Alert severity="success" sx={{ mt: 2, borderRadius: 2, boxShadow: 1, textAlign: 'center' }}>
+            Service configured successfully. Test scenario and CI/CD integration generated.
+          </Alert>
+        )}
+      </DialogContent>
 
-    {step === 'success' && (
-      <Alert severity="success" sx={{ mt: 2, borderRadius: 2, boxShadow: 1, textAlign: 'center' }}>
-        Service configured successfully. Test scenario and CI/CD integration generated.
-      </Alert>
-    )}
-  </DialogContent>
-
-  <DialogActions
-    sx={{
-      px: 3,
-      pb: 2,
-      justifyContent: step === 'success' ? 'center' : 'space-between',
-    }}
-  >
-    {step === 'form' && (
-      <>
-        <Button onClick={onClose} color="inherit" sx={{ color: 'grey.700', fontWeight: '600' }}>
+      <DialogActions
+        sx={{
+          px: 3,
+          pb: 2,
+          justifyContent: step === 'success' ? 'center' : 'space-between',
+        }}
+      >
+        {step === 'form' && (
+          <>
+            <Button onClick={onClose} color="inherit" sx={{ color: 'grey.700', fontWeight: '600' }}>
               Cancel
             </Button>
-        {/* <Button
+            {/* <Button
           variant="contained"
           onClick={handleStart}
           disabled={!formData.appName}
@@ -499,37 +563,39 @@ export const AddApplicationModal: React.FC<Props> = ({ open, onClose, selectedAp
         >
           Start Configuration
         </Button> */}
-        <Button
-  variant="contained"
-  onClick={handleStart}
-  disableElevation
-  sx={{ px: 4, py: 1.2, textTransform: 'none', bgcolor: '#1d4ed8',      // blue-700
-    '&:hover': {
-      bgcolor: '#1e40af'     // blue-800
-    } }}
-  className='bg-blue-700'
->
-  Start Configuration
-</Button>
-      </>
-    )}
-    {step === 'processing' && (
-    <Button
-      variant="outlined"
-      color="error"
-      onClick={handleClose}
-      sx={{ textTransform: 'none' }}
-    >
-      Close
-    </Button>
-  )}
-    {step === 'success' && (
-      <Button variant="contained" onClick={handleClose} sx={{ textTransform: 'none' }}>
-        Done
-      </Button>
-    )}
-  </DialogActions>
-</Dialog>
+            <Button
+              variant="contained"
+              onClick={handleStart}
+              disableElevation
+              sx={{
+                px: 4, py: 1.2, textTransform: 'none', bgcolor: '#1d4ed8',      // blue-700
+                '&:hover': {
+                  bgcolor: '#1e40af'     // blue-800
+                }
+              }}
+              className='bg-blue-700'
+            >
+              Start Configuration
+            </Button>
+          </>
+        )}
+        {step === 'processing' && (
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleClose}
+            sx={{ textTransform: 'none' }}
+          >
+            Close
+          </Button>
+        )}
+        {step === 'success' && (
+          <Button variant="contained" onClick={handleClose} sx={{ textTransform: 'none' }}>
+            Done
+          </Button>
+        )}
+      </DialogActions>
+    </Dialog>
 
 
   );

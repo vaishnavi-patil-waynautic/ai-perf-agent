@@ -56,3 +56,34 @@ export interface User {
   date_joined: string;
 }
 
+
+export type IntegrationDetail = {
+  id: number;
+  project: number;
+  project_name: string;
+  integration_type: string;
+  integration_type_display: string;
+  name: string;
+
+  url: string | null;
+  token: string;
+  api_key: string | null;
+  api_secret: string;
+  ado_pat: string;
+  application_key: string;
+  username: string | null;
+
+  is_active: boolean;
+  is_verified: boolean;
+  last_verified_on: string | null;
+  notes: string;
+};
+
+export type IntegrationDetailResponse = {
+  status: string;
+  data: {
+    integration: IntegrationDetail;
+  };
+};
+
+

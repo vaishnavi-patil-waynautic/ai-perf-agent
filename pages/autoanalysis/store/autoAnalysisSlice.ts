@@ -77,8 +77,32 @@ export const fetchConfig = createAsyncThunk<
 );
 
 
+  
 
-export const fetchJmx = createAsyncThunk('autoAnalysis/fetchJmx', api.fetchJmxOptions);
+
+
+export const fetchJmx = 
+createAsyncThunk<
+[],
+number
+>('autoAnalysis/fetchJmx',
+
+  async (appId , thunkAPI) => {
+
+    console.log("THUNK STARTED:",  appId);
+
+    try {
+      const result = await api.getScriptsByAppId(appId);
+
+      console.log("THUNK RESULT:", result);
+
+      return result;
+
+    } catch (err: any) {
+      console.log("THUNK ERROR:", err);
+      return thunkAPI.rejectWithValue(err.message);
+    }
+  });
 
 const autoAnalysisSlice = createSlice({
   name: 'autoAnalysis',

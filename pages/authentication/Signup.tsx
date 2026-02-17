@@ -1,24 +1,22 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authApi } from '../../services/api';
+import { signup } from './services/signupService';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
     setLoading(true);
-    await authApi.signup(email);
+    await signup(email, firstName, lastName, password);
     setLoading(false);
     navigate('/login');
   };
@@ -39,6 +37,22 @@ const Signup: React.FC = () => {
             onChange={(e) => setEmail(e.target.value)} 
             required
           />
+
+          <Input 
+            label="First Name" 
+            type="text" 
+            value={firstName} 
+            onChange={(e) => setFirstName(e.target.value)} 
+            required
+          />
+
+          <Input 
+            label="Last Name" 
+            type="text" 
+            value={lastName} 
+            onChange={(e) => setLastName(e.target.value)} 
+            required
+          />
           <Input 
             label="Password" 
             type="password" 
@@ -46,13 +60,13 @@ const Signup: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)} 
             required
           />
-          <Input 
+          {/* <Input 
             label="Confirm Password" 
             type="password" 
             value={confirmPassword} 
             onChange={(e) => setConfirmPassword(e.target.value)} 
             required
-          />
+          /> */}
 
           <Button type="submit" fullWidth disabled={loading} className="mt-4">
             {loading ? 'Creating...' : 'Sign Up'}
