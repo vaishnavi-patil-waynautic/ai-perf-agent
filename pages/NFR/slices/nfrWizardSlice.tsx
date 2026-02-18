@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { WizardState } from '../types/nfrTypes';
-
+import { ExternalItem, WizardState } from '../types/nfrTypes';
+import { fetchAdoItems } from './nfr.thunks';
 
 
 
@@ -8,9 +8,14 @@ const initialState: WizardState = {
   selectedItemIds: [],
   uploadedFiles: [],
   questionnaireResponses: [],
-  additionalInstructions: '',
+  additionalInstructions: "",
   selectedApplicationId: null,
+
+  externalItems: [],
+  loadingItems: false,
 };
+
+
 
 const nfrWizardSlice = createSlice({
   name: 'nfrWizard',
@@ -68,6 +73,21 @@ const nfrWizardSlice = createSlice({
     // Reset everything
     resetWizard: () => initialState,
   },
+
+  extraReducers: builder => {
+  builder
+    .addCase(fetchAdoItems.pending, state => {
+      state.loadingItems = true;
+    })
+    .addCase(fetchAdoItems.fulfilled, (state, action) => {
+      state.loadingItems = false;
+      state.externalItems = action.payload;
+    })
+    .addCase(fetchAdoItems.rejected, state => {
+      state.loadingItems = false;
+    });
+}
+
 });
 
 export const {

@@ -40,6 +40,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { fetchCurrentUser, updateCurrentUser } from '../store/user.thunk';
 import { changePassword } from '@/pages/authentication/services/passwordService';
+import { showSnackbar } from '@/store/snackbarStore';
 
 
 export default function UserProfileSettings() {
@@ -124,47 +125,130 @@ export default function UserProfileSettings() {
 
 
 
+    // const handleSaveProfile = async () => {
+    //     try {
+    //         setLoading(true);
+
+    //         await dispatch(updateCurrentUser(formData)).unwrap();
+
+    //         setEditMode(false);
+    //         setSnackbar({
+    //             open: true,
+    //             message: "Profile updated successfully!",
+    //             severity: "success",
+    //         });
+    //     } catch (err: any) {
+    //         setSnackbar({
+    //             open: true,
+    //             message: err.message || "Failed to update profile",
+    //             severity: "error",
+    //         });
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
     const handleSaveProfile = async () => {
-        try {
-            setLoading(true);
+  try {
+    setLoading(true);
 
-            await dispatch(updateCurrentUser(formData)).unwrap();
+    await dispatch(updateCurrentUser(formData)).unwrap();
 
-            setEditMode(false);
-            setSnackbar({
-                open: true,
-                message: "Profile updated successfully!",
-                severity: "success",
-            });
-        } catch (err: any) {
-            setSnackbar({
-                open: true,
-                message: err.message || "Failed to update profile",
-                severity: "error",
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+    setEditMode(false);
+
+    dispatch(
+      showSnackbar({
+        message: "Profile updated successfully!",
+        type: "success",
+      })
+    );
+  } catch (err: any) {
+    dispatch(
+      showSnackbar({
+        message: err?.message || "Failed to update profile",
+        type: "error",
+      })
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
 
-    const handleChangePassword = async () => {
+//     const handleChangePassword = async () => {
+//   // Frontend validation
+//   if (passwordData.newPassword !== passwordData.confirmPassword) {
+//     setSnackbar({
+//       open: true,
+//       message: "Passwords do not match",
+//       severity: "error",
+//     });
+//     return;
+//   }
+
+//   if (passwordData.newPassword.length < 8) {
+//     setSnackbar({
+//       open: true,
+//       message: "Password must be at least 8 characters",
+//       severity: "error",
+//     });
+//     return;
+//   }
+
+//   try {
+//     setLoading(true);
+
+//     await changePassword(
+//       passwordData.currentPassword,
+//       passwordData.newPassword,
+//       passwordData.confirmPassword
+//     );
+
+//     setPasswordDialog(false);
+//     setPasswordData({
+//       currentPassword: "",
+//       newPassword: "",
+//       confirmPassword: "",
+//     });
+
+//     setSnackbar({
+//       open: true,
+//       message: "Password changed successfully",
+//       severity: "success",
+//     });
+
+//   } catch (err: any) {
+//     console.error("Change password error:", err);
+
+//     setSnackbar({
+//       open: true,
+//       message: err.message || "Failed to change password",
+//       severity: "error",
+//     });
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+const handleChangePassword = async () => {
   // Frontend validation
   if (passwordData.newPassword !== passwordData.confirmPassword) {
-    setSnackbar({
-      open: true,
-      message: "Passwords do not match",
-      severity: "error",
-    });
+    dispatch(
+      showSnackbar({
+        message: "Passwords do not match",
+        type: "error",
+      })
+    );
     return;
   }
 
   if (passwordData.newPassword.length < 8) {
-    setSnackbar({
-      open: true,
-      message: "Password must be at least 8 characters",
-      severity: "error",
-    });
+    dispatch(
+      showSnackbar({
+        message: "Password must be at least 8 characters",
+        type: "error",
+      })
+    );
     return;
   }
 
@@ -184,25 +268,25 @@ export default function UserProfileSettings() {
       confirmPassword: "",
     });
 
-    setSnackbar({
-      open: true,
-      message: "Password changed successfully",
-      severity: "success",
-    });
-
+    dispatch(
+      showSnackbar({
+        message: "Password changed successfully",
+        type: "success",
+      })
+    );
   } catch (err: any) {
     console.error("Change password error:", err);
 
-    setSnackbar({
-      open: true,
-      message: err.message || "Failed to change password",
-      severity: "error",
-    });
+    dispatch(
+      showSnackbar({
+        message: err?.message || "Failed to change password",
+        type: "error",
+      })
+    );
   } finally {
     setLoading(false);
   }
 };
-
 
     const handleSettingChange = (setting) => {
         setSettings({ ...settings, [setting]: !settings[setting] });

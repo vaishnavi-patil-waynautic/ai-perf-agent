@@ -6,6 +6,7 @@ import { useState } from "react";
 import InfoCard from "@/components/InfoCard";
 import { createApplication, deleteApplication, updateApplication } from "@/pages/project/store/project.thunks";
 import { Application } from "@/pages/project/types/project.types";
+import { showSnackbar } from "@/store/snackbarStore";
 
 export default function ApplicationSettings() {
 
@@ -20,52 +21,137 @@ export default function ApplicationSettings() {
   const [open, setOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<Application | null>(null);
 
-  const handleAdd = async (data: { name: string; description: string }) => {
-    if (!selectedProject?.id) return;
+  // const handleAdd = async (data: { name: string; description: string }) => {
+  //   if (!selectedProject?.id) return;
 
-    try {
-      await dispatch(createApplication({
+  //   try {
+  //     await dispatch(createApplication({
+  //       projectId: selectedProject.id,
+  //       name: data.name,
+  //       description: data.description
+  //     })).unwrap();
+
+  //     console.log("[UI] Application created");
+
+  //   } catch (err) {
+  //     console.error("[UI] Create failed:", err);
+  //   }
+  // };
+
+  const handleAdd = async (data: { name: string; description: string }) => {
+  if (!selectedProject?.id) return;
+
+  try {
+    await dispatch(
+      createApplication({
         projectId: selectedProject.id,
         name: data.name,
-        description: data.description
-      })).unwrap();
+        description: data.description,
+      })
+    ).unwrap();
 
-      console.log("[UI] Application created");
+    dispatch(
+      showSnackbar({
+        message: "Application created successfully",
+        type: "success",
+      })
+    );
+  } catch (err: any) {
+    console.error("[UI] Create failed:", err);
 
-    } catch (err) {
-      console.error("[UI] Create failed:", err);
-    }
-  };
+    dispatch(
+      showSnackbar({
+        message: err?.message || "Failed to create application",
+        type: "error",
+      })
+    );
+  }
+};
 
 
-  const handleEdit = async (data: { name: string; description: string }) => {
-    if (!editingApp) return;
 
-    try {
-      await dispatch(updateApplication({
-        appId: editingApp.id,   // must be NUMBER
+  // const handleEdit = async (data: { name: string; description: string }) => {
+  //   if (!editingApp) return;
+
+  //   try {
+  //     await dispatch(updateApplication({
+  //       appId: editingApp.id,   // must be NUMBER
+  //       name: data.name,
+  //       description: data.description
+  //     })).unwrap();
+
+  //     console.log("[UI] Application updated");
+
+  //     setEditingApp(null);
+
+  //   } catch (err) {
+  //     console.error("[UI] Update failed:", err);
+  //   }
+  // };
+
+
+  // const handleDelete = async (id: number) => {
+  //   try {
+  //     await dispatch(deleteApplication(id)).unwrap();
+  //     console.log("[UI] Application deleted");
+  //   } catch (err) {
+  //     console.error("[UI] Delete failed:", err);
+  //   }
+  // };
+const handleEdit = async (data: { name: string; description: string }) => {
+  if (!editingApp) return;
+
+  try {
+    await dispatch(
+      updateApplication({
+        appId: editingApp.id,
         name: data.name,
-        description: data.description
-      })).unwrap();
+        description: data.description,
+      })
+    ).unwrap();
 
-      console.log("[UI] Application updated");
+    setEditingApp(null);
 
-      setEditingApp(null);
+    dispatch(
+      showSnackbar({
+        message: "Application updated successfully",
+        type: "success",
+      })
+    );
+  } catch (err: any) {
+    console.error("[UI] Update failed:", err);
 
-    } catch (err) {
-      console.error("[UI] Update failed:", err);
-    }
-  };
+    dispatch(
+      showSnackbar({
+        message: err?.message || "Failed to update application",
+        type: "error",
+      })
+    );
+  }
+};
 
 
-  const handleDelete = async (id: number) => {
-    try {
-      await dispatch(deleteApplication(id)).unwrap();
-      console.log("[UI] Application deleted");
-    } catch (err) {
-      console.error("[UI] Delete failed:", err);
-    }
-  };
+const handleDelete = async (id: number) => {
+  try {
+    await dispatch(deleteApplication(id)).unwrap();
+
+    dispatch(
+      showSnackbar({
+        message: "Application deleted successfully",
+        type: "success",
+      })
+    );
+  } catch (err: any) {
+    console.error("[UI] Delete failed:", err);
+
+    dispatch(
+      showSnackbar({
+        message: err?.message || "Failed to delete application",
+        type: "error",
+      })
+    );
+  }
+};
 
 
   return (

@@ -558,8 +558,12 @@ import { Activity } from "lucide-react";
 import { RootState } from "@/store/store";
 import { useSelector } from "react-redux";
 import AppSnackbar, { SnackbarType } from "@/components/AppSnackbar";
+import { useDispatch } from "react-redux";
+import { showSnackbar } from "../../../store/snackbarStore"; // adjust path
+
 
 const AutoScriptPage: React.FC = () => {
+  const dispatch = useDispatch();
   const [file1, setFile1] = useState<File | null>(null);
   const [file2, setFile2] = useState<File | null>(null);
   const [history, setHistory] = useState<JMXRecord[]>([]);
@@ -593,82 +597,142 @@ const AutoScriptPage: React.FC = () => {
     type: 'success',
   });
 
+  // const handleDelete = async (id: number) => {
+  //   try {
+  //     const res = await autoScriptService.deleteJmx(id);
+
+  //     console.log(res);
+
+  //     setHistory(h => h.filter(x => x.id !== id));
+
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Script deleted successfully",
+  //       type: 'success',
+  //     });
+  //   } catch (err) {
+  //     console.error(err);
+  //   } 
+    
+    
+    
+  //   const handleDelete = async (id: number) => {
+  //     try {
+  //       await autoScriptService.deleteJmx(id);
+
+  //       setHistory(h => h.filter(x => x.id !== id));
+
+  //       // ✅ Success snackbar
+  //       setSnackbar({
+  //         open: true,
+  //         message: 'Script deleted successfully',
+  //         type: 'success',
+  //       });
+
+  //     } catch (err) {
+  //       console.error(err);
+
+  //       // ❌ Error snackbar
+  //       setSnackbar({
+  //         open: true,
+  //         message: 'Failed to delete script',
+  //         type: 'error',
+  //       });
+  //     }
+  //   };
+
+  // };
+
+
+  // const handleDownload = async (id: number, script_name: string) => {
+  //   try {
+  //     const blob = await autoScriptService.downloadJmx(id);
+
+  //     const url = window.URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+
+  //     a.href = url;
+  //     a.download = `Script-${script_name}.jmx`; // filename
+  //     document.body.appendChild(a);
+  //     a.click();
+
+  //     a.remove();
+  //     window.URL.revokeObjectURL(url);
+
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Download started",
+  //       type: 'success',
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Download failed",
+  //       type: 'error',
+  //     });
+  //   }
+  // };
+
+
   const handleDelete = async (id: number) => {
-    try {
-      const res = await autoScriptService.deleteJmx(id);
+  try {
+    await autoScriptService.deleteJmx(id);
 
-      console.log(res);
+    setHistory(h => h.filter(x => x.id !== id));
 
-      setHistory(h => h.filter(x => x.id !== id));
-
-      setSnackbar({
-        open: true,
+    dispatch(
+      showSnackbar({
         message: "Script deleted successfully",
-        type: 'success',
-      });
-    } catch (err) {
-      console.error(err);
-    } 
-    
-    
-    
-    const handleDelete = async (id: number) => {
-      try {
-        await autoScriptService.deleteJmx(id);
+        type: "success",
+      })
+    );
+  } catch (err) {
+    console.error(err);
 
-        setHistory(h => h.filter(x => x.id !== id));
+    dispatch(
+      showSnackbar({
+        message: "Failed to delete script",
+        type: "error",
+      })
+    );
+  }
+};
 
-        // ✅ Success snackbar
-        setSnackbar({
-          open: true,
-          message: 'Script deleted successfully',
-          type: 'success',
-        });
+const handleDownload = async (id: number, script_name: string) => {
+  try {
+    const blob = await autoScriptService.downloadJmx(id);
 
-      } catch (err) {
-        console.error(err);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
 
-        // ❌ Error snackbar
-        setSnackbar({
-          open: true,
-          message: 'Failed to delete script',
-          type: 'error',
-        });
-      }
-    };
+    a.href = url;
+    a.download = `Script-${script_name}.jmx`;
 
-  };
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
 
-
-  const handleDownload = async (id: number, script_name: string) => {
-    try {
-      const blob = await autoScriptService.downloadJmx(id);
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-
-      a.href = url;
-      a.download = `Script-${script_name}.jmx`; // filename
-      document.body.appendChild(a);
-      a.click();
-
-      a.remove();
-      window.URL.revokeObjectURL(url);
-
-      setSnackbar({
-        open: true,
+    dispatch(
+      showSnackbar({
         message: "Download started",
-        type: 'success',
-      });
-    } catch (error) {
-      console.error(error);
-      setSnackbar({
-        open: true,
-        message: "Download failed",
-        type: 'error',
-      });
-    }
-  };
+        type: "success",
+      })
+    );
+  } catch (error) {
+    console.error("Dowload JMX Error : ",error);
+
+    dispatch(
+      showSnackbar({
+        message: error?.message || "Download failed",
+        type: "error",
+      })
+    );
+  }
+};
+
+
 
 
 useEffect(() => {
@@ -753,13 +817,23 @@ useEffect(() => {
       } else {
 
         // Only show message if polling was ACTIVE
+        // if (polling) {
+        //   setSnackbar({
+        //     open: true,
+        //     message: "Script generation completed",
+        //     type: "success",
+        //   });
+        // }
+
         if (polling) {
-          setSnackbar({
-            open: true,
-            message: "Script generation completed",
-            type: "success",
-          });
-        }
+  dispatch(
+    showSnackbar({
+      message: "Script generation completed",
+      type: "success",
+    })
+  );
+}
+
 
         const data = await autoScriptService.getHistory(selectedProject.id);
         setHistory(data);
@@ -768,10 +842,16 @@ useEffect(() => {
       }
 
     } catch (error) {
+  console.error("Polling failed:", error);
+  dispatch(
+    showSnackbar({
+      message: "Polling failed",
+      type: "error",
+    })
+  );
+  setPolling(false);
+}
 
-      console.error("Polling failed:", error);
-      setPolling(false);
-    }
   };
 
   fetchHistory();
@@ -784,42 +864,84 @@ useEffect(() => {
 }, [selectedProject?.id, polling]);
 
   // ---------------- GENERATE ----------------
- const generate = async () => {
-    if (!file1 || !file2) return;
+//  const generate = async () => {
+//     if (!file1 || !file2) return;
 
-    try {
-      setIsGenerating(true);
+//     try {
+//       setIsGenerating(true);
 
-      console.log("Project : ", selectedProject.id, " application id : ", applicationId?.id);
+//       console.log("Project : ", selectedProject.id, " application id : ", applicationId?.id);
 
-      await autoScriptService.generate(
-        file1,
-        file2,
-        selectedProject.id,
-        applicationId?.id ?? undefined 
-      );
+//       await autoScriptService.generate(
+//         file1,
+//         file2,
+//         selectedProject.id,
+//         applicationId?.id ?? undefined 
+//       );
 
-      setSnackbar({
-        open: true,
+//       setSnackbar({
+//         open: true,
+//         message: "Script generation started",
+//         type: "success",
+//       });
+
+//       setPolling(true);
+
+//       // Reset only after success
+//       setFile1(null);
+//       setFile2(null);
+
+//       if (fileRef1.current) fileRef1.current.value = '';
+//       if (fileRef2.current) fileRef2.current.value = '';
+
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       setIsGenerating(false);
+//     }
+//   };
+
+const generate = async () => {
+  if (!file1 || !file2) return;
+
+  try {
+    setIsGenerating(true);
+
+    await autoScriptService.generate(
+      file1,
+      file2,
+      selectedProject.id,
+      applicationId?.id ?? undefined
+    );
+
+    dispatch(
+      showSnackbar({
         message: "Script generation started",
         type: "success",
-      });
+      })
+    );
 
-      setPolling(true);
+    setPolling(true);
 
-      // Reset only after success
-      setFile1(null);
-      setFile2(null);
+    setFile1(null);
+    setFile2(null);
 
-      if (fileRef1.current) fileRef1.current.value = '';
-      if (fileRef2.current) fileRef2.current.value = '';
+    if (fileRef1.current) fileRef1.current.value = "";
+    if (fileRef2.current) fileRef2.current.value = "";
+  } catch (err) {
+    console.error(err);
 
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+    dispatch(
+      showSnackbar({
+        message: "Script generation failed",
+        type: "error",
+      })
+    );
+  } finally {
+    setIsGenerating(false);
+  }
+};
+
 
   if (!selectedProject) {
     return (
@@ -867,7 +989,7 @@ if (showFullLayout) {
 </div>
 
 {/* 👇 IMPORTANT: allows scroll when table small */}
-<div style={{ height: 200 }} />
+<div style={{ height: 300 }} />
 
   <AppSnackbar
         open={snackbar.open}
@@ -900,7 +1022,7 @@ if (showFullLayout) {
         onClose={() => setSnackbar(s => ({ ...s, open: false }))}
       />
 
-      <div className="grid grid-cols-12 gap-2">
+      <div className="grid grid-cols-12 gap-1">
 
         {/* LEFT — HISTORY */}
         <div className="col-span-4">

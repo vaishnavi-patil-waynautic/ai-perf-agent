@@ -26,6 +26,7 @@ type InfoCardProps = {
   onView?: () => void;
   onEdit?: () => void;
   onUnconfigured?: () => void;
+  onProgress?: () => void;
 };
 
 const InfoCard: React.FC<InfoCardProps> = ({
@@ -40,6 +41,7 @@ const InfoCard: React.FC<InfoCardProps> = ({
   onView,
   onEdit,
   onUnconfigured,
+  onProgress
 }) => {
 
   const navigate = useNavigate();
@@ -138,6 +140,16 @@ const InfoCard: React.FC<InfoCardProps> = ({
             className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 disabled:opacity-50"
           >
             {status=="not_configured" ? "Configure" : "Reconfigure" }
+          </button>
+        )}
+
+
+        {onProgress && (status=="in_process") && (
+          <button
+            onClick={onProgress}
+            className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            Show Progress
           </button>
         )}
 

@@ -146,7 +146,7 @@
 
 
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -156,12 +156,13 @@ import {
     Collapse
 } from '@mui/material';
 import { CheckCircle, Cancel, ArrowBack, Delete, ExpandMore, ExpandLess, Add } from '@mui/icons-material';
-import { fetchConfig } from '../store/autoAnalysisSlice';
+import { fetchConfig, updateRecipientsLocal } from '../store/autoAnalysisSlice';
 import { updateEmailRecipients, downloadScript } from '../services/mockService';
 import Grid from "@mui/material/Grid";
 import Close from '@mui/icons-material/Close';
 import { RootState } from '@/store/store';
 import AppSnackbar, { SnackbarType } from '@/components/AppSnackbar';
+import { showSnackbar } from '@/store/snackbarStore';
 
 // ✅ FIX: Use MUI Grid v2
 
@@ -833,6 +834,8 @@ export const ConfigDetailsPage: React.FC = () => {
     const [openExecution, setOpenExecution] = useState(false);
     const [openPerf, setOpenPerf] = useState(false);
     const [openEmails, setOpenEmails] = useState(false);
+    
+    const prevAppRef = useRef<typeof currentApp | null>(null);
 
 
     const [snackbar, setSnackbar] = useState({
@@ -850,117 +853,229 @@ export const ConfigDetailsPage: React.FC = () => {
         }));
     }, [id, selectedProject?.id]);
 
+
+useEffect(() => {
+    if (!currentApp) return;
+
+    const prev = prevAppRef.current;
+
+    if (prev?.config?.recipient_list !== currentApp.config.recipient_list) {
+        console.log("Email list changed");
+    }
+
+    if (prev?.builds?.[0]?.build_number !== currentApp.builds?.[0]?.build_number) {
+        console.log("New build arrived");
+    }
+
+    prevAppRef.current = currentApp;
+
+}, [currentApp]);
+
+
+
+    // useEffect(() => {
+    //     if (!currentApp) return;
+
+    //     console.log("currentApp changed → update UI / derived state");
+        
+
+    // }, [currentApp]);   // ✔ allowed here (NO dispatch inside)
+
+
     if (!currentApp || !currentApp.config) {
         return <Box p={4}>Loading Configuration...</Box>;
     }
 
+    // const handleDownloadScript = async () => {
+    //     try {
+    //         if (!selectedProject?.id || !currentApp?.config?.application_id) return;
 
-    useEffect(() => {
-        if (!currentApp) return;
+    //         const blob = await downloadScript(
+    //             selectedProject.id,
+    //             currentApp.config.application_id
+    //         );
 
-        console.log("currentApp changed → update UI / derived state");
+    //         const url = window.URL.createObjectURL(blob);
+    //         const a = document.createElement("a");
+    //         a.href = url;
+    //         a.download = `script-${currentApp.config.application_name}.jmx`;
+    //         document.body.appendChild(a);
+    //         a.click();
 
-    }, [currentApp]);   // ✔ allowed here (NO dispatch inside)
+    //         a.remove();
+    //         window.URL.revokeObjectURL(url);
 
+    //         setSnackbar({
+    //             open: true,
+    //             message: "Script downloaded successfully",
+    //             type: "success",
+    //         });
+    //     } catch (err: any) {
+    //         console.error(err);
+    //         setSnackbar({
+    //             open: true,
+    //             message: err.message || "Download failed",
+    //             type: "error"
+    //         });
+    //     }
+    // };
+
+    // const handleAddEmail = () => {
+    //     if (!emailInput.trim()) return;
+
+    //     console.log("Update Recipient Before:", currentApp.config.recipient_list);
+
+    //     const existingEmails =
+    //         currentApp.config?.recipient_list
+    //             ?.split(",")
+    //             .map(e => e.trim())
+    //             .filter(Boolean) ?? [];
+
+    //     const newEmails = [...existingEmails, emailInput.trim()];
+
+    //     console.log("Update Recipient After:", newEmails);
+
+
+
+    //     try {
+    //         updateEmailRecipients(
+    //             selectedProject.id,
+    //             currentApp.config.application_id,
+    //             newEmails
+    //         );
+
+    //         setSnackbar({
+    //             open: true,
+    //             message: "Recipients updated successfully",
+    //             type: "success"
+    //         });
+
+    //         dispatch(updateRecipientsLocal(newEmails));
+
+    //     } catch (err: any) {
+
+
+    //         console.log("Entered Catch ", err?.data?.error?.recipient_list?.[0], " ||| ", err?.message)
+
+    //         // 🔥 Extract backend error safely
+    //         const msg =
+    //             err?.data?.error?.recipient_list?.[0] ||
+    //             err?.message ||
+    //             "Failed to update recipients";
+
+    //         setSnackbar({
+    //             open: true,
+    //             message: msg,
+    //             type: "error"
+    //         });
+    //     }
+
+
+    //     setEmailInput("");
+    // };
+
+
+
+    // const handleRemoveEmail = async (email: string) => {
+    //     if (!selectedProject?.id || !currentApp?.config?.application_id) return;
+
+    //     console.log("Update Recipient Before:", currentApp.config.recipient_list);
+
+    //     const existingEmails =
+    //         currentApp.config?.recipient_list
+    //             ?.split(",")
+    //             .map(e => e.trim())
+    //             .filter(Boolean) ?? [];
+
+    //     // remove selected email
+    //     const updatedEmails = existingEmails.filter(e => e !== email);
+
+    //     console.log("Update Recipient After:", updatedEmails);
+
+    //     try {
+    //         await updateEmailRecipients(
+    //             selectedProject.id,
+    //             currentApp.config.application_id,
+    //             updatedEmails
+    //         );
+
+    //         setSnackbar({
+    //             open: true,
+    //             message: "Recipient removed successfully",
+    //             type: "success",
+    //         });
+
+    //         // refresh config
+    //         dispatch(
+    //             fetchConfig({
+    //                 projectId: selectedProject.id,
+    //                 appId: Number(id),
+    //             })
+    //         );
+    //     } catch (err: any) {
+    //         console.log(
+    //             "Entered Catch ",
+    //             err?.data?.error?.recipient_list?.[0],
+    //             " ||| ",
+    //             err?.message
+    //         );
+
+    //         const msg =
+    //             err?.data?.error?.recipient_list?.[0] ||
+    //             err?.message ||
+    //             "Failed to update recipients";
+
+    //         setSnackbar({
+    //             open: true,
+    //             message: msg,
+    //             type: "error",
+    //         });
+    //     }
+    // };
 
 
     const handleDownloadScript = async () => {
-        try {
-            if (!selectedProject?.id || !currentApp?.config?.application_id) return;
+  try {
+    if (!selectedProject?.id || !currentApp?.config?.application_id) return;
 
-            const blob = await downloadScript(
-                selectedProject.id,
-                currentApp.config.application_id
-            );
+    const blob = await downloadScript(
+      selectedProject.id,
+      currentApp.config.application_id
+    );
 
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `script-${currentApp.config.application_name}.jmx`;
-            document.body.appendChild(a);
-            a.click();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
 
-            a.remove();
-            window.URL.revokeObjectURL(url);
+    a.href = url;
+    a.download = `script-${currentApp.config.application_name}.jmx`;
 
-            setSnackbar({
-                open: true,
-                message: "Script downloaded successfully",
-                type: "success",
-            });
-        } catch (err: any) {
-            console.error(err);
-            setSnackbar({
-                open: true,
-                message: err.message || "Download failed",
-                type: "error"
-            });
-        }
-    };
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
 
-    const handleAddEmail = () => {
-        if (!emailInput.trim()) return;
+    dispatch(
+      showSnackbar({
+        message: "Script downloaded successfully",
+        type: "success",
+      })
+    );
+  } catch (err: any) {
+    console.error(err);
 
-        console.log("Update Recipient Before:", currentApp.config.recipient_list);
-
-        const existingEmails =
-            currentApp.config?.recipient_list
-                ?.split(",")
-                .map(e => e.trim())
-                .filter(Boolean) ?? [];
-
-        const newEmails = [...existingEmails, emailInput.trim()];
-
-        console.log("Update Recipient After:", newEmails);
+    dispatch(
+      showSnackbar({
+        message: err?.message || "Download failed",
+        type: "error",
+      })
+    );
+  }
+};
 
 
-
-        try {
-            updateEmailRecipients(
-                selectedProject.id,
-                currentApp.config.application_id,
-                newEmails
-            );
-
-            setSnackbar({
-                open: true,
-                message: "Recipients updated successfully",
-                type: "success"
-            });
-
-            dispatch(fetchConfig({
-            projectId: selectedProject.id,
-            appId: Number(id)
-        }));
-
-        } catch (err: any) {
-
-
-            console.log("Entered Catch ", err?.data?.error?.recipient_list?.[0], " ||| ", err?.message  )
-
-            // 🔥 Extract backend error safely
-            const msg =
-                err?.data?.error?.recipient_list?.[0] ||
-                err?.message ||
-                "Failed to update recipients";
-
-            setSnackbar({
-                open: true,
-                message: msg,
-                type: "error"
-            });
-        }
-
-
-        setEmailInput("");
-    };
-
-
-
-    const handleRemoveEmail = async (email: string) => {
+const handleAddEmail = async () => {
+  if (!emailInput.trim()) return;
   if (!selectedProject?.id || !currentApp?.config?.application_id) return;
-
-  console.log("Update Recipient Before:", currentApp.config.recipient_list);
 
   const existingEmails =
     currentApp.config?.recipient_list
@@ -968,10 +1083,50 @@ export const ConfigDetailsPage: React.FC = () => {
       .map(e => e.trim())
       .filter(Boolean) ?? [];
 
-  // remove selected email
-  const updatedEmails = existingEmails.filter(e => e !== email);
+  const newEmails = [...existingEmails, emailInput.trim()];
 
-  console.log("Update Recipient After:", updatedEmails);
+  try {
+    await updateEmailRecipients(
+      selectedProject.id,
+      currentApp.config.application_id,
+      newEmails
+    );
+
+    dispatch(updateRecipientsLocal(newEmails));
+
+    dispatch(
+      showSnackbar({
+        message: "Recipients updated successfully",
+        type: "success",
+      })
+    );
+  } catch (err: any) {
+    const msg =
+      err?.data?.error?.recipient_list?.[0] ||
+      err?.message ||
+      "Failed to update recipients";
+
+    dispatch(
+      showSnackbar({
+        message: msg,
+        type: "error",
+      })
+    );
+  }
+
+  setEmailInput("");
+};
+
+const handleRemoveEmail = async (email: string) => {
+  if (!selectedProject?.id || !currentApp?.config?.application_id) return;
+
+  const existingEmails =
+    currentApp.config?.recipient_list
+      ?.split(",")
+      .map(e => e.trim())
+      .filter(Boolean) ?? [];
+
+  const updatedEmails = existingEmails.filter(e => e !== email);
 
   try {
     await updateEmailRecipients(
@@ -980,39 +1135,36 @@ export const ConfigDetailsPage: React.FC = () => {
       updatedEmails
     );
 
-    setSnackbar({
-      open: true,
-      message: "Recipient removed successfully",
-      type: "success",
-    });
-
-    // refresh config
     dispatch(
       fetchConfig({
         projectId: selectedProject.id,
         appId: Number(id),
       })
     );
-  } catch (err: any) {
-    console.log(
-      "Entered Catch ",
-      err?.data?.error?.recipient_list?.[0],
-      " ||| ",
-      err?.message
-    );
 
+    dispatch(
+      showSnackbar({
+        message: "Recipient removed successfully",
+        type: "success",
+      })
+    );
+  } catch (err: any) {
     const msg =
       err?.data?.error?.recipient_list?.[0] ||
       err?.message ||
       "Failed to update recipients";
 
-    setSnackbar({
-      open: true,
-      message: msg,
-      type: "error",
-    });
+    dispatch(
+      showSnackbar({
+        message: msg,
+        type: "error",
+      })
+    );
   }
 };
+
+
+
 
 
 
@@ -1048,12 +1200,12 @@ export const ConfigDetailsPage: React.FC = () => {
                 Back to Dashboard
             </Button>
 
-              <AppSnackbar
-        open={snackbar.open}
-        message={snackbar.message}
-        type={snackbar.type}
-        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-      />
+            <AppSnackbar
+                open={snackbar.open}
+                message={snackbar.message}
+                type={snackbar.type}
+                onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+            />
 
             <Paper sx={{ p: 6 }}>
 
@@ -1318,46 +1470,9 @@ export const ConfigDetailsPage: React.FC = () => {
                         </List>
 
 
-                        {/* // <List>
-                        //     {currentApp.builds?.length > 0 ? (
-                        //         <>
-                        //             <ListItemButton>
-                        //                 <ListItemText
-                        //                     primary={currentApp.builds[0].build_number}
-                        //                     secondary={currentApp.builds[0].test_timing}
-                        //                 />
-                        //             </ListItemButton>
-
-                        //             {currentApp.builds.length > 1 && (
-                        //                 <>
-                        //                     <ListItemButton onClick={() => setCollapsed(!collapsed)}>
-                        //                         <ListItemText primary="Older Builds" />
-                        //                         {collapsed ? <ExpandMore /> : <ExpandLess />}
-                        //                     </ListItemButton>
-
-                        //                     <Collapse in={!collapsed}>
-                        //                         {currentApp.builds.slice(1).map((b) => (
-                        //                             <ListItemButton key={b.build_number}>
-                        //                                 <ListItemText
-                        //                                     primary={b.build_number}
-                        //                                     secondary={b.test_timing}
-                        //                                 />
-                        //                             </ListItemButton>
-                        //                         ))}
-                        //                     </Collapse>
-                        //                 </>
-                        //             )}
-                        //         </>
-                        //     ) : (
-                        //         <Typography>No build found</Typography>
-                        //     )}
-                        // </List> */}
-
-
                     </Collapse>
                 </div>
 
-                {/* ================= Execution Strategy ================= */}
                 <div className='border-b py-6'>
                     <SectionHeader
                         title="Execution Strategy"
@@ -1389,7 +1504,6 @@ export const ConfigDetailsPage: React.FC = () => {
 
                 </div>
 
-                {/* ================= Performance Strategy ================= */}
                 {currentApp.config.nfrLink && (
                     <div className='border-b py-6'>
                         <SectionHeader
@@ -1406,7 +1520,6 @@ export const ConfigDetailsPage: React.FC = () => {
                     </div>
                 )}
 
-                {/* ================= Email Recipients ================= */}
                 <div className='py-6'>
                     <SectionHeader
                         title="Email Recipients"
@@ -1416,66 +1529,50 @@ export const ConfigDetailsPage: React.FC = () => {
 
                     <Collapse in={openEmails}>
 
-                    {/* Show input + add button when toggled */}
-                            {(
-                                <Box className="flex gap-2 mb-4 mt-4 px-3">
-                                    <TextField
-                                        size="small"
-                                        fullWidth
-                                        placeholder="email@example.com"
-                                        value={emailInput}
-                                        onChange={(e) => setEmailInput(e.target.value)}
-                                    />
-                                    <Button
-                                        variant="outlined"
-                                        onClick={() => {
-                                            handleAddEmail();
-                                            setEmailInput(""); // optional: clear input after adding
-                                        }}
-                                    >
-                                        Add
-                                    </Button>
-                                </Box>
-                            )}
-
-                        {/* <Box display="flex" gap={2} mt={2}>
-                            <TextField
-                                size="small"
-                                fullWidth
-                                placeholder="email@example.com"
-                                value={emailInput}
-                                onClick={() => {
-                                            handleAddEmail();
-                                            setEmailInput(""); // optional: clear input after adding
-                                            setShowEmailInput(false); // hide input after adding
-                                        }}
-                            />
-                            <Button variant="outlined">Add</Button>
-                        </Box> */}
-
-                             {currentApp.config?.recipient_list ? (
-
-                                <List dense>
-                                    {currentApp.config.recipient_list.split(",").map((email: string) => (
-                                        <ListItem key={email}>
-                                            <ListItemText primary={email} />
-                                            <IconButton size="small" onClick={() => handleRemoveEmail(email)}>
-                                                <Delete fontSize="small" />
-                                            </IconButton>
-                                        </ListItem>
-                                    ))}
-                                </List>
-
-                            ) : (
-
-                                <Typography
-                                    variant="body2"
-                                    sx={{ color: "text.disabled", pl: 1 }}
+                        {(
+                            <Box className="flex gap-2 mb-4 mt-4 px-3">
+                                <TextField
+                                    size="small"
+                                    fullWidth
+                                    placeholder="email@example.com"
+                                    value={emailInput}
+                                    onChange={(e) => setEmailInput(e.target.value)}
+                                />
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => {
+                                        handleAddEmail();
+                                        setEmailInput(""); // optional: clear input after adding
+                                    }}
                                 >
-                                    No email recipient configured for this application
-                                </Typography>
+                                    Add
+                                </Button>
+                            </Box>
+                        )}
 
-                            )}
+                        {currentApp.config?.recipient_list ? (
+
+                            <List dense>
+                                {currentApp.config.recipient_list.split(",").map((email: string) => (
+                                    <ListItem key={email}>
+                                        <ListItemText primary={email} />
+                                        <IconButton size="small" onClick={() => handleRemoveEmail(email)}>
+                                            <Delete fontSize="small" />
+                                        </IconButton>
+                                    </ListItem>
+                                ))}
+                            </List>
+
+                        ) : (
+
+                            <Typography
+                                variant="body2"
+                                sx={{ color: "text.disabled", pl: 1 }}
+                            >
+                                No email recipient configured for this application
+                            </Typography>
+
+                        )}
 
                     </Collapse>
                 </div>

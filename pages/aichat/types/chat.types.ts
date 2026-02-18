@@ -1,14 +1,37 @@
-export type MessageType = 'text' | 'image' | 'diagram';
+export type MessageType = 'text' | 'image' | 'diagram'  | 'visualization';
 export type MessageSender = 'user' | 'bot';
+
+export interface VisualizationData {
+  type: 'bar' | 'line' | 'area' | 'table';
+  x_axis: string;
+  y_axes: string[];
+  group_by: string;
+}
+
+export interface ApiResult {
+  [key: string]: string | number;
+}
+
+export interface ChatMessageData {
+  query?: string;
+  summary?: string;
+  visualization?: VisualizationData;
+  results?: ApiResult[];
+  execution_time_ms?: number;
+  application_used?: string;
+  table_used?: string;
+  detection_method?: string;
+}
 
 export interface ChatMessage {
   id: string;
-  sender: MessageSender;
+  sender: 'user' | 'bot';
   type: MessageType;
-  content: string; // Text content or Image URL
+  content: string;
   timestamp: Date;
   liked?: boolean;
   disliked?: boolean;
+  data?: ChatMessageData;  // ← add this
 }
 
 export interface AIModel {

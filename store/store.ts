@@ -8,6 +8,7 @@ import { autoAnalysisReducer } from '../pages/autoanalysis';
 import IntegrationSlice from "../pages/settings/store/integration.slice";
 import userReducer from "../pages/settings/store/user.slice"
 import chatReducer from "../pages/aichat/store/slices/chat.slice"
+import appSnackbarReducer from "./snackbarStore"
 
 
 
@@ -21,7 +22,8 @@ export const store = configureStore({
     autoAnalysis: autoAnalysisReducer,
     integration: IntegrationSlice,
     user: userReducer,
-    chat: chatReducer
+    chat: chatReducer,
+    appSnackbar : appSnackbarReducer
   },
 });
 

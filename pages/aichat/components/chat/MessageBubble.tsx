@@ -10,6 +10,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { ChatMessage } from '../../types/chat.types';
 import { useAppDispatch } from '../../store/hooks';
 import { toggleMessageReaction } from '../../store/slices/chat.slice';
+import ChatResponseCard from './ChatResponseCard';
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -64,6 +65,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
               </pre>
             </div>
           )}
+
+
+{/* ✅ Add this */}
+{message.type === 'visualization' && message.data && (
+  <ChatResponseCard data={message.data} />
+)}
         </div>
 
         {/* Action Buttons - Only for bot messages */}

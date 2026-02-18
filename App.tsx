@@ -25,6 +25,7 @@ import { SettingsLayout, ApplicationSettings, IntegrationsSettings, UserProfileS
 import IntegrationsList from './pages/settings/pages/IntegrationList';
 import IntegrationDetail from './pages/settings/pages/IntegrationDetail';
 import { fetchCurrentUser } from './pages/settings/store/user.thunk';
+import GlobalAppSnackbar from './components/GlobalAppSnackbar';
 
 
 // Protected Route Wrapper
@@ -263,6 +264,8 @@ const App: React.FC = () => {
         
         
       </Routes>
+
+      <GlobalAppSnackbar />
 
 
     </Router>

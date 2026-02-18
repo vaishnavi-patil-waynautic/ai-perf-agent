@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { nfrService } from "../services/nfrService";
+import { ExternalItem } from "../types/nfrTypes";
 // import { NFRStrategy } from "../types/nfrTypes";
 
 /**
@@ -28,6 +29,25 @@ export const getNfrById = createAsyncThunk(
     }
   }
 );
+
+
+export const fetchAdoItems = createAsyncThunk<
+  ExternalItem[],
+  number
+>("nfr/fetchAdoItems", async (ProjectId) => {
+  const data = await nfrService.fetchAdoItems(ProjectId);
+
+  // 🔹 Map backend → ExternalItem
+  return data.map((item: any) => ({
+    id: String(item.id),
+    title: item.title,
+    type: item.work_item_type,
+    url: item.link,
+    description: item.description ?? "",
+    source: "ADO",
+    tags: item.tags ?? [],
+  }));
+});
 
 /**
  * Delete NFR by ID

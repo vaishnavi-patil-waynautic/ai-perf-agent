@@ -11,6 +11,7 @@ import { fetchNfrReport } from '../slices/nfr.thunks';
 import { nfrService } from '../services/nfrService';
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { showSnackbar } from '@/store/snackbarStore';
 
 const NFRResultPage: React.FC = () => {
   //   const { id } = useParams();
@@ -59,29 +60,75 @@ const NFRResultPage: React.FC = () => {
   }
 
   const handleCopy = () => {
-    if (selectedReport.nfr_content) {
-      navigator.clipboard.writeText(selectedReport.nfr_content);
-      setToastOpen(true);
-    }
-  };
+  if (!selectedReport?.nfr_content) return;
 
-  const handleDownload = async (id, application_name) => {
-    try {
-      const blob = await nfrService.downloadById(id);
+  navigator.clipboard.writeText(selectedReport.nfr_content);
 
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `NFR-${application_name}-${id}.txt`;
-      document.body.appendChild(a);
-      a.click();
+  dispatch(
+    showSnackbar({
+      message: "Copied to clipboard",
+      type: "success",
+    })
+  );
+};
 
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
 
-    }
-  };
+const handleDownload = async (id, application_name) => {
+  try {
+    const blob = await nfrService.downloadById(id);
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = `NFR-${application_name}-${id}.txt`;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+
+    dispatch(
+      showSnackbar({
+        message: "Download started",
+        type: "success",
+      })
+    );
+  } catch (err) {
+    dispatch(
+      showSnackbar({
+        message: "Download failed",
+        type: "error",
+      })
+    );
+  }
+};
+
+
+  // const handleCopy = () => {
+  //   if (selectedReport.nfr_content) {
+  //     navigator.clipboard.writeText(selectedReport.nfr_content);
+  //     setToastOpen(true);
+  //   }
+  // };
+
+  // const handleDownload = async (id, application_name) => {
+  //   try {
+  //     const blob = await nfrService.downloadById(id);
+
+  //     const url = window.URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = `NFR-${application_name}-${id}.txt`;
+  //     document.body.appendChild(a);
+  //     a.click();
+
+  //     a.remove();
+  //     window.URL.revokeObjectURL(url);
+  //   } catch (err) {
+
+  //   }
+  // };
 
 
   return (

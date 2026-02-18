@@ -1,19 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, MenuItem, Select, TextField, Checkbox, Table, TableBody, TableCell, TableHead, TableRow, Chip } from '@mui/material';
+import { Button, MenuItem, Select, TextField, Checkbox, Table, TableBody, TableCell, TableHead, TableRow, Chip, TableContainer } from '@mui/material';
 import { fetchJiraItems } from '../services/jiraService';
 import { fetchADOItems } from '../services/adoService';
 import { ExternalItem } from '../types/nfrTypes';
 import { toggleItemId } from '../slices/nfrWizardSlice';
 import { RootState } from '../../../store/store';
+import { useAppDispatch, useAppSelector } from '@/pages/settings/store/hooks';
+import { fetchAdoItems } from '../slices/nfr.thunks';
 
 const WizardStep1_Fetch: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+const { externalItems, loadingItems } = useAppSelector(s => s.nfrWizard);
   const selectedItems = useSelector((state: RootState) => state.nfrWizard.selectedItemIds);
+    const { selectedProject } = useSelector((state: RootState) => state.project);
 
   const [items, setItems] = useState<ExternalItem[]>([]);
-  const [source, setSource] = useState<'Jira' | 'ADO'>('Jira');
+  const [source, setSource] = useState<'ADO'>('ADO');
   const [filterType, setFilterType] = useState<string>('All');
+
 
   const [expandedRows, setExpandedRows] = React.useState<Record<string, boolean>>({});
 
@@ -24,12 +29,16 @@ const WizardStep1_Fetch: React.FC = () => {
     }));
   };
 
+  useEffect(() => {
+  dispatch(fetchAdoItems(selectedProject.id));
+}, []);
 
   const handleFetch = async () => {
     // Determine which service to call based on dummy logic
     // In real app, you might mix both
-    const data = await fetchJiraItems(filterType === 'All' ? undefined : filterType);
-    setItems(data);
+   const data = await dispatch(fetchAdoItems(selectedProject.id)).unwrap();
+setItems(data);
+
   };
 
   //   return (
@@ -113,7 +122,7 @@ const WizardStep1_Fetch: React.FC = () => {
               '& .MuiMenuItem-root': { fontSize: '0.75rem' },
             }}
           >
-            <MenuItem value="Jira" sx={{ fontSize: '0.75rem' }}>Jira</MenuItem>
+            {/* <MenuItem value="Jira" sx={{ fontSize: '0.75rem' }}>Jira</MenuItem> */}
             <MenuItem value="ADO" sx={{ fontSize: '0.75rem' }}>Azure DevOps</MenuItem>
           </Select>
         </div>
@@ -149,7 +158,7 @@ const WizardStep1_Fetch: React.FC = () => {
       </div>
 
       {/* === TABLE === */}
-      <div className="border rounded-md overflow-hidden">
+      {/* <div className="border rounded-md overflow-hidden">
         <Table
           size="small"
           sx={{
@@ -159,7 +168,30 @@ const WizardStep1_Fetch: React.FC = () => {
               paddingBottom: '4px',
             },
           }}
-        >
+        > */}
+
+        <div
+  className="border rounded-md overflow-hidden"
+  style={{ height: 420 }}   // 👈 FIXED HEIGHT (adjust as needed)
+>
+  <TableContainer
+    sx={{
+      height: "100%",
+      overflowY: "auto",
+    }}
+  >
+    <Table
+      stickyHeader   // 👈 makes header fixed
+      size="small"
+      sx={{
+        '& th, & td': {
+          fontSize: '0.75rem',
+          paddingTop: '4px',
+          paddingBottom: '4px',
+        },
+      }}
+    >
+
           <TableHead
             className="bg-gray-100"
             sx={{
@@ -227,7 +259,7 @@ const WizardStep1_Fetch: React.FC = () => {
                     {/* JIRA ID (link) */}
                     <TableCell>
                       <a
-                        href={item.jiraUrl}
+                        href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline"
@@ -239,7 +271,7 @@ const WizardStep1_Fetch: React.FC = () => {
                     {/* Title (link) */}
                     <TableCell>
                       <a
-                        href={item.jiraUrl}
+                        href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline"
@@ -290,7 +322,9 @@ const WizardStep1_Fetch: React.FC = () => {
               })
             )}
           </TableBody>
+
         </Table>
+        </TableContainer>
       </div>
     </div>
   );

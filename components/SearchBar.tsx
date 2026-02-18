@@ -1,128 +1,150 @@
-// // components/SearchBar.jsx
 // import React from "react";
-// import { TextField, Button } from "@mui/material";
+// import { TextField, IconButton, ClickAwayListener } from "@mui/material";
+// import SearchIcon from "@mui/icons-material/Search";
 
 // export default function SearchBar({
-//   value,
-//   onChange,
-//   onSearch,
-//   placeholder = "Search...",
-//   debounceMs = 0,
-//   fullWidth = true,
+//     value,
+//     onChange,
+//     onSearch,
+//     placeholder = "Search...",
+//     debounceMs = 0,
 // }) {
-//   const debounceRef = React.useRef(null);
+//     const [open, setOpen] = React.useState(false);
+//     const debounceRef = React.useRef(null);
 
-//   const handleChange = (e) => {
-//     const newValue = e.target.value;
-//     onChange(newValue);
+//     const handleChange = (e) => {
+//         const val = e.target.value;
+//         onChange(val);
 
-//     if (debounceMs > 0 && onSearch) {
-//       clearTimeout(debounceRef.current);
-//       debounceRef.current = setTimeout(() => {
-//         onSearch(newValue);
-//       }, debounceMs);
-//     }
-//   };
+//         if (debounceMs > 0 && onSearch) {
+//             clearTimeout(debounceRef.current);
+//             debounceRef.current = setTimeout(() => {
+//                 onSearch(val);
+//             }, debounceMs);
+//         }
+//     };
 
-//   const handleKeyDown = (e) => {
-//     if (e.key === "Enter") {
-//       onSearch?.(value);
-//     }
-//   };
+//     const handleKeyDown = (e) => {
+//         if (e.key === "Enter") {
+//             onSearch?.(value);
+//             setOpen(false);
+//         }
+//     };
 
-//   return (
-//     <div className="flex items-center gap-2 w-full">
-//       <TextField
-//         value={value}
-//         onChange={handleChange}
-//         onKeyDown={handleKeyDown}
-//         placeholder={placeholder}
-//         size="small"
-//         fullWidth={fullWidth}
-//         className="bg-white"
-//       />
+//     const handleClose = () => {
+//         if (!value) setOpen(false);
+//     };
 
-//       {/* <Button
-//         variant="contained"
-//         onClick={() => onSearch?.(value)}
-//         className="!normal-case !px-4"
-//       >
-//         Search
-//       </Button> */}
-//     </div>
-//   );
+//     return (
+//         <ClickAwayListener onClickAway={handleClose}>
+//             <div className="flex items-center">
+//                 {!open && (
+//                     <IconButton
+//                         size="small"
+//                         onClick={() => setOpen(true)}
+//                         className="!p-1"
+//                     >
+//                         <SearchIcon fontSize="small" />
+//                     </IconButton>
+//                 )}
+
+//                 {open && (
+//                     <TextField
+//                         autoFocus
+//                         size="small"
+//                         value={value}
+//                         placeholder={placeholder}
+//                         onChange={handleChange}
+//                         onKeyDown={handleKeyDown}
+//                         onBlur={handleClose}
+//                         className="w-56 bg-white"
+//                         inputProps={{
+//                             className: "text-xs py-0.5"
+//                         }}
+//                     />
+//                 )}
+
+//             </div>
+//         </ClickAwayListener>
+//     );
 // }
 
 
-// components/SearchBar.jsx
 import React from "react";
-import { TextField, IconButton, ClickAwayListener } from "@mui/material";
+import { TextField, IconButton, ClickAwayListener, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
 export default function SearchBar({
-    value,
-    onChange,
-    onSearch,
-    placeholder = "Search...",
-    debounceMs = 0,
+  value,
+  onChange,
+  onSearch,
+  placeholder = "Search...",
+  debounceMs = 0,
 }) {
-    const [open, setOpen] = React.useState(false);
-    const debounceRef = React.useRef(null);
+  const [open, setOpen] = React.useState(false);
+  const debounceRef = React.useRef(null);
 
-    const handleChange = (e) => {
-        const val = e.target.value;
-        onChange(val);
+  const handleChange = (e) => {
+    const val = e.target.value;
+    onChange(val);
 
-        if (debounceMs > 0 && onSearch) {
-            clearTimeout(debounceRef.current);
-            debounceRef.current = setTimeout(() => {
-                onSearch(val);
-            }, debounceMs);
-        }
-    };
+    if (debounceMs > 0 && onSearch) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => onSearch(val), debounceMs);
+    }
+  };
 
-    const handleKeyDown = (e) => {
-        if (e.key === "Enter") {
-            onSearch?.(value);
-            setOpen(false);
-        }
-    };
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      onSearch?.(value);
+      setOpen(false);
+    }
+  };
 
-    const handleClose = () => {
-        if (!value) setOpen(false);
-    };
+  const handleClose = () => {
+    if (!value) setOpen(false);
+  };
 
-    return (
-        <ClickAwayListener onClickAway={handleClose}>
-            <div className="flex items-center">
-                {!open && (
-                    <IconButton
-                        size="small"
-                        onClick={() => setOpen(true)}
-                        className="!p-1"
-                    >
-                        <SearchIcon fontSize="small" />
-                    </IconButton>
-                )}
-
-                {open && (
-                    <TextField
-                        autoFocus
-                        size="small"
-                        value={value}
-                        placeholder={placeholder}
-                        onChange={handleChange}
-                        onKeyDown={handleKeyDown}
-                        onBlur={handleClose}
-                        className="w-40 bg-white"
-                        inputProps={{
-                            className: "text-xs py-0.5"
-                        }}
-                    />
-                )}
-
-            </div>
-        </ClickAwayListener>
-    );
+  return (
+    <ClickAwayListener onClickAway={handleClose}>
+      <div
+        style={{
+          width: open ? 240 : 36,
+          transition: "width 0.3s ease",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        {open ? (
+          <TextField
+            autoFocus
+            size="small"
+            value={value}
+            placeholder={placeholder}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            onBlur={handleClose}
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" sx={{ color: "text.secondary" }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              backgroundColor: "white",
+              "& .MuiOutlinedInput-root": { borderRadius: "8px" },
+            }}
+          />
+        ) : (
+          <IconButton size="small" onClick={() => setOpen(true)}>
+            <SearchIcon fontSize="small" />
+          </IconButton>
+        )}
+      </div>
+    </ClickAwayListener>
+  );
 }
 

@@ -1,28 +1,25 @@
 export interface ExternalItem {
   id: string;
   title: string;
-  type: 'Story' | 'Task' | 'Epic';
-  jiraUrl: string;
+  type: string;              // <-- allow any (Issue, Bug, Task, Story…)
+  url: string;               // <-- renamed from jiraUrl
   description: string;
-  source: 'Jira' | 'ADO';
+  source: 'ADO';             // Jira disabled for now
   tags: string[];
 }
 
 
 export interface WizardState {
-  // Step 1: Jira / ADO
   selectedItemIds: string[];
-
-  // Step 2: Documents
   uploadedFiles: File[];
-
-  // Step 3: Questionnaire (dynamic)
   questionnaireResponses: {
     questionId: string;
     answer: string;
   }[];
-
-  // Step 4: Final inputs
   additionalInstructions: string;
   selectedApplicationId: string | null;
+
+  externalItems: ExternalItem[];     // <-- ADD
+  loadingItems: boolean;             // <-- ADD
 }
+

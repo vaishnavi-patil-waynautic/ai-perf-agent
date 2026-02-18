@@ -78,12 +78,12 @@ export const HistoryRow = ({
   if (compact) {
     return (
       <tr className="hover:bg-gray-50">
-        <td className="px-6 py-3 flex items-center gap-2">
+        <td className="pl-5 py-3 flex items-center gap-2">
           <FileText size={14} className="text-blue-500" />
           {item.name}
         </td>
 
-        <td className="px-6 py-3 text-right">
+        <td className="px-4 py-3 text-right">
           <button
             onClick={() => onDownload(item.id, item.name)}
             disabled={item.status !== "completed"}

@@ -9,6 +9,7 @@ import ApplicationSelect from '@/components/ApplicationSelect';
 import { generateNfr } from '../slices/nfr.thunks';
 import { WizardState } from '../types/nfrTypes';
 import AppSnackbar, { SnackbarType } from '@/components/AppSnackbar';
+import { showSnackbar } from '@/store/snackbarStore';
 
 const WizardStep4_Generate: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -106,38 +107,79 @@ const WizardStep4_Generate: React.FC = () => {
   };
 };
 
+const handleGenerate = async () => {
+  if (!selectedApp?.id || !selectedProject?.id) {
+    dispatch(
+      showSnackbar({
+        message: "Missing project or application",
+        type: "error",
+      })
+    );
+    return;
+  }
 
-    const handleGenerate = async () => {
-        if (!selectedApp?.id || !selectedProject?.id) {
-            alert('Missing project or application');
-            return;
-        }
+  setLoading(true);
 
-        setLoading(true);
+  try {
+    const payload = buildGenerateNfrPayload(
+      wizardState,
+      selectedProject.id,
+      selectedApp.id
+    );
 
-        const payload = buildGenerateNfrPayload(
-            wizardState,
-            selectedProject.id,
-            selectedApp.id
-        );
+    await dispatch(generateNfr(payload)).unwrap();
 
-        console.log("Wizard payload : ", payload)
+    navigate("/nfr");
 
-        const result = await dispatch(generateNfr(payload));
+    dispatch(
+      showSnackbar({
+        message: "NFR generation started...",
+        type: "success",
+      })
+    );
+  } catch (error) {
+    dispatch(
+      showSnackbar({
+        message: error || "NFR generation failed",
+        type: "error",
+      })
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
-        if (generateNfr.fulfilled.match(result)) {
-            navigate('/nfr');
-            setSnackbar({
-                open: true,
-                message: 'NFR generation started...',
-                type: 'success',
-            });
-        } else {
-            alert(result.payload || 'NFR generation failed');
-        }
+    // const handleGenerate = async () => {
+    //     if (!selectedApp?.id || !selectedProject?.id) {
+    //         alert('Missing project or application');
+    //         return;
+    //     }
 
-        setLoading(false);
-    };
+    //     setLoading(true);
+
+    //     const payload = buildGenerateNfrPayload(
+    //         wizardState,
+    //         selectedProject.id,
+    //         selectedApp.id
+    //     );
+
+    //     console.log("Wizard payload : ", payload)
+
+    //     const result = await dispatch(generateNfr(payload));
+
+    //     if (generateNfr.fulfilled.match(result)) {
+    //         navigate('/nfr');
+    //         setSnackbar({
+    //             open: true,
+    //             message: 'NFR generation started...',
+    //             type: 'success',
+    //         });
+    //     } else {
+    //         alert(result.payload || 'NFR generation failed');
+    //     }
+
+    //     setLoading(false);
+    // };
 
 
     return (

@@ -108,6 +108,14 @@ const autoAnalysisSlice = createSlice({
   name: 'autoAnalysis',
   initialState,
   reducers: {
+    // autoAnalysisSlice.ts
+
+updateRecipientsLocal: (state, action) => {
+    if (!state.currentApp?.config) return;
+
+    state.currentApp.config.recipient_list = action.payload.join(",");
+},
+
     clearCurrentApp: (state) => {
       state.currentApp = null;
     },
@@ -151,5 +159,5 @@ const autoAnalysisSlice = createSlice({
 },
 });
 
-export const { clearCurrentApp } = autoAnalysisSlice.actions;
+export const { clearCurrentApp,updateRecipientsLocal } = autoAnalysisSlice.actions;
 export default autoAnalysisSlice.reducer;

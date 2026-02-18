@@ -570,52 +570,390 @@
 
 
 
-import { useEffect, useState } from "react";
-import { Edit2, Trash2, Plus, MoreVertical, AlertCircle } from "lucide-react";
-import IntegrationTokenDialog from "../components/IntegrationTokenDialog";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { deleteIntegration, fetchIntegrations } from "../store/integration.thunk";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/store/store";
-import { Integration, IntegrationStatus } from "../types/settings.types";
+// import { useEffect, useState } from "react";
+// import { Edit2, Trash2, Plus, MoreVertical, AlertCircle } from "lucide-react";
+// import IntegrationTokenDialog from "../components/IntegrationTokenDialog";
+// import { useAppDispatch, useAppSelector } from "../store/hooks";
+// import { deleteIntegration, fetchIntegrations } from "../store/integration.thunk";
+// import { useDispatch, useSelector } from "react-redux";
+// import { AppDispatch, RootState } from "@/store/store";
+// import { Integration, IntegrationStatus } from "../types/settings.types";
 
 /* ---------------- Dummy Data ---------------- */
 
 
+// export default function IntegrationDetail() {
+
+//    const dispatch = useDispatch<AppDispatch>();
+//   const { selectedProject } = useSelector((state: RootState) => state.project);
+
+// const integrations = useSelector((state: RootState) => state.integration.list);
+
+//   const [openToken, setOpenToken] = useState<string | null>(null);
+//   const [deleteTarget, setDeleteTarget] = useState<Integration | null>(null);
+//   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+//   const [expandedError, setExpandedError] = useState<string | null>(null);
+
+//   /* ---------------- Actions ---------------- */
+
+//   useEffect(() => {
+//   if (!selectedProject?.id) return;
+//   dispatch(fetchIntegrations(selectedProject.id));
+// }, [selectedProject?.id]);
+
+
+//  const handleDelete = () => {
+//   if (!deleteTarget || !deleteTarget.id || !selectedProject?.id) return;
+
+//   dispatch(
+//     deleteIntegration({
+//       projectId: selectedProject.id,
+//       id: Number(deleteTarget.id),
+//     })
+//   );
+
+//   setDeleteTarget(null);
+// };
+
+
+//   const getStatusColor = (status: IntegrationStatus) => {
+//     switch (status) {
+//       case "active":
+//         return "text-green-600 bg-green-50";
+//       case "failed":
+//         return "text-red-600 bg-red-50";
+//       default:
+//         return "text-gray-500 bg-gray-50";
+//     }
+//   };
+
+//   const getStatusDot = (status: IntegrationStatus) => {
+//     switch (status) {
+//       case "active":
+//         return "bg-green-500";
+//       case "failed":
+//         return "bg-red-500";
+//       default:
+//         return "bg-gray-300";
+//     }
+//   };
+
+//   const shortenText = (text: string, max: number) => {
+//     if (!text) return "";
+//     if (text.length <= max) return text;
+//     return text.slice(0, max).trimEnd() + "...";
+//   };
+
+
+//   return (
+
+//     <div className="max-w-6xl mx-auto">
+
+//       <h1 className="text-2xl font-semibold text-gray-900 mb-8">Integrations</h1>
+
+//       {integrations.some(i => i.status === "failed") && (
+//         <div className="mb-6 space-y-2">
+//           {integrations
+//             .filter(i => i.status === "failed")
+//             .map(i => (
+//               <div
+//                 key={i.id}
+//                 className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+//               >
+//                 <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+
+//                 <div className="flex-1">
+//                   <p className="font-semibold">{i.name}</p>
+//                   <p className="text-sm opacity-90 break-words">{i.error}</p>
+//                 </div>
+//               </div>
+//             ))}
+//         </div>
+//       )}
+
+
+//       <div
+//         className="grid gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4  xl:grid-cols-5">
+
+//         {integrations.map(integration => (
+//           <div
+//             key={integration.id ?? integration.type}
+//             onMouseEnter={() => setHoveredCard(integration.id)}
+//             onMouseLeave={() => setHoveredCard(null)}
+//             className="relative bg-white rounded-xl shadow-sm hover:shadow-md 
+//                  transition-all duration-200 border-l-4 border-transparent
+//                  h-[150px] flex flex-col justify-between"
+//             style={{
+//               borderLeftColor:
+//                 integration.status === "active"
+//                   ? "#22c55e"
+//                   : integration.status === "failed"
+//                     ? "#ef4444"
+//                     : "#d1d5db"
+//             }}
+//           >
+//             <div className="p-5 flex flex-col h-full">
+
+
+//               <div className="flex items-start justify-between mb-4">
+//                 <div className="flex items-center gap-2 flex-1">
+
+//                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDot(integration.status)}`} />
+
+//                   <h3 className="font-medium text-gray-900 text-base truncate">
+//                     {integration.name}
+//                   </h3>
+//                 </div>
+
+//                 {(hoveredCard === integration.id || integration.status !== "active") && (
+//                   <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+//                     {integration.status === "active" ? (
+//                       <>
+//                         <button
+//                           onClick={() => setOpenToken(String(integration.id))}
+//                           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+//                           title="Edit token"
+//                         >
+//                           <Edit2 size={16} className="text-gray-600" />
+//                         </button>
+
+//                         <button
+//                           onClick={() => setDeleteTarget(integration)}
+//                           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+//                           title="Remove token"
+//                         >
+//                           <Trash2 size={16} className="text-gray-600" />
+//                         </button>
+//                       </>
+//                     ) : (
+//                       <button
+//                         onClick={() => setOpenToken(String(integration.id))}
+//                         className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors"
+//                         title="Configure"
+//                       >
+//                         <Plus size={16} className="text-white" />
+//                       </button>
+//                     )}
+//                   </div>
+//                 )}
+//               </div>
+
+//               <div className="mb-3">
+//                 <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${getStatusColor(integration.status)}`}>
+//                   {integration.status === "active" ? "Active" : integration.status === "failed" ? "Failed" : "Inactive"}
+//                 </span>
+//               </div>
+
+
+//               {integration.status === "active" && integration.token && (
+//                 <p className="text-xs text-gray-400 mt-2 font-mono">
+//                   {integration.token.substring(0, 12)}...
+//                 </p>
+//               )}
+//             </div>
+//           </div>
+//         ))}
+//       </div>
+
+
+
+
+//       <IntegrationTokenDialog
+//         open={!!openToken}
+//         onClose={() => setOpenToken(null)}
+//         initialTokenDetail={}
+//         onSave={() => { }}
+//         type = {integrationType}
+
+//       />
+
+//       {
+//         deleteTarget && (
+//           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+//             <div className="bg-white rounded-xl shadow-xl p-6 w-[400px] border border-gray-100">
+//               <h3 className="text-lg font-semibold text-gray-900 mb-2">Remove Integration</h3>
+//               <p className="text-sm text-gray-600 mb-6">
+//                 Are you sure you want to remove the token for <span className="font-medium text-gray-900">{deleteTarget.name}</span>? This will deactivate the integration.
+//               </p>
+
+//               <div className="flex justify-end gap-3">
+//                 <button
+//                   onClick={() => setDeleteTarget(null)}
+//                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+//                 >
+//                   Cancel
+//                 </button>
+//                 <button
+//                   onClick={handleDelete}
+//                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+//                 >
+//                   Remove
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+//         )
+//       }
+//     </div >
+//   );
+// }
+
+import { useEffect, useState } from "react";
+import { Edit2, Trash2, Plus, AlertCircle } from "lucide-react";
+import IntegrationTokenDialog from "../components/IntegrationTokenDialog";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import { deleteIntegration, fetchIntegrations } from "../store/integration.thunk";
+import { Integration, IntegrationStatus } from "../types/settings.types";
+
+// export default function IntegrationDetail() {
+//   const dispatch = useDispatch<AppDispatch>();
+//   const { selectedProject } = useSelector((state: RootState) => state.project);
+//   const integrations = useSelector((state: RootState) => state.integration.list);
+
+//   const [openToken, setOpenToken] = useState<number | null>(null);
+//   const [integrationType, setIntegrationType] = useState<string>("github");
+//   const [deleteTarget, setDeleteTarget] = useState<Integration | null>(null);
+
+//   useEffect(() => {
+//     if (!selectedProject?.id) return;
+//     dispatch(fetchIntegrations(selectedProject.id));
+//   }, [selectedProject?.id]);
+
+//   const handleDelete = () => {
+//     if (!deleteTarget || !selectedProject?.id) return;
+
+//     dispatch(deleteIntegration({
+//       projectId: selectedProject.id,
+//       id: Number(deleteTarget.id),
+//     }));
+
+//     setDeleteTarget(null);
+//   };
+
+//   return (
+//     <div className="max-w-6xl mx-auto">
+//       <h1 className="text-2xl font-semibold text-gray-900 mb-8">Integrations</h1>
+
+//       {integrations.some(i => i.status === "failed") && (
+//         <div className="mb-6 space-y-2">
+//           {integrations
+//             .filter(i => i.status === "failed")
+//             .map(i => (
+//               <div
+//                 key={i.id}
+//                 className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+//               >
+//                 <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+
+//                 <div className="flex-1">
+//                   <p className="font-semibold">{i.name}</p>
+//                   <p className="text-sm opacity-90 break-words">{i.error}</p>
+//                 </div>
+//               </div>
+//             ))}
+//         </div>
+//       )}
+
+//       <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+//         {integrations.map(integration => (
+//           <div key={integration.id} className="bg-white rounded-xl shadow-sm border p-4 flex justify-between items-center">
+//             <div>
+//               <p className="font-medium">{integration.name}</p>
+//               <p className="text-xs text-gray-400">{integration.status}</p>
+//             </div>
+
+//             {integration.status === "active" ? (
+//               <div className="flex gap-2">
+//                 <button
+//                   onClick={() => {
+//                     setOpenToken(integration.id);
+//                     setIntegrationType(integration?.type);
+//                   }}
+//                 >
+//                   <Edit2 size={16} />
+//                 </button>
+
+//                 <button onClick={() => setDeleteTarget(integration)}>
+//                   <Trash2 size={16} />
+//                 </button>
+//               </div>
+//             ) : (
+//               <button
+//                 onClick={() => {
+//                   setOpenToken(null);
+//                   setIntegrationType(integration.type);
+//                 }}
+//                 className="bg-blue-500 text-white p-2 rounded"
+//               >
+//                 <Plus size={16} />
+//               </button>
+//             )}
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* TOKEN DIALOG */}
+//       <IntegrationTokenDialog
+//         open={openToken !== null || integrationType !== ""}
+//         onClose={() => setOpenToken(null)}
+//         integrationId={openToken}
+//         type={integrationType}
+//         projectId={selectedProject?.id}
+//       />
+
+//       {/* DELETE MODAL */}
+//       {deleteTarget && (
+//         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+//           <div className="bg-white p-6 rounded-lg">
+//             <p>Remove {deleteTarget.name}?</p>
+//             <button onClick={() => setDeleteTarget(null)}>Cancel</button>
+//             <button onClick={handleDelete} className="text-red-600 ml-3">Remove</button>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+
 export default function IntegrationDetail() {
-
-   const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useDispatch<AppDispatch>();
   const { selectedProject } = useSelector((state: RootState) => state.project);
-  
-const integrations = useSelector((state: RootState) => state.integration.list);
+  const integrations = useSelector((state: RootState) => state.integration.list);
 
-  const [openToken, setOpenToken] = useState<string | null>(null);
+  const [openToken, setOpenToken] = useState<number | null>(null);
+  const [integrationType, setIntegrationType] = useState<string>("github");
   const [deleteTarget, setDeleteTarget] = useState<Integration | null>(null);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-  const [expandedError, setExpandedError] = useState<string | null>(null);
+  const [dialogState, setDialogState] = useState<{
+    open: boolean;
+    integrationId?: number;
+    type?: string;
+  }>({ open: false });
 
-  /* ---------------- Actions ---------------- */
 
+  /* ---------------- Fetch ---------------- */
   useEffect(() => {
-  if (!selectedProject?.id) return;
-  dispatch(fetchIntegrations(selectedProject.id));
-}, [selectedProject?.id]);
+    if (!selectedProject?.id) return;
+    dispatch(fetchIntegrations(selectedProject.id));
+  }, [selectedProject?.id]);
 
+  /* ---------------- Delete ---------------- */
+  const handleDelete = () => {
+    if (!deleteTarget || !deleteTarget.id || !selectedProject?.id) return;
 
- const handleDelete = () => {
-  if (!deleteTarget || !deleteTarget.id || !selectedProject?.id) return;
+    dispatch(
+      deleteIntegration({
+        projectId: selectedProject.id,
+        id: Number(deleteTarget.id),
+      })
+    );
 
-  dispatch(
-    deleteIntegration({
-      projectId: selectedProject.id,
-      id: Number(deleteTarget.id),
-    })
-  );
+    setDeleteTarget(null);
+  };
 
-  setDeleteTarget(null);
-};
-
-
+  /* ---------------- Helpers ---------------- */
   const getStatusColor = (status: IntegrationStatus) => {
     switch (status) {
       case "active":
@@ -638,43 +976,13 @@ const integrations = useSelector((state: RootState) => state.integration.list);
     }
   };
 
-  const shortenText = (text: string, max: number) => {
-    if (!text) return "";
-    if (text.length <= max) return text;
-    return text.slice(0, max).trimEnd() + "...";
-  };
-
-
+  /* ---------------- UI ---------------- */
   return (
-
     <div className="max-w-6xl mx-auto">
 
       <h1 className="text-2xl font-semibold text-gray-900 mb-8">Integrations</h1>
 
-      {integrations.some(i => i.status === "failed") && (
-        <div className="mb-6 space-y-2">
-          {integrations
-            .filter(i => i.status === "failed")
-            .map(i => (
-              <div
-                key={i.id}
-                className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
-              >
-                <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
-
-                <div className="flex-1">
-                  <p className="font-semibold">{i.name}</p>
-                  <p className="text-sm opacity-90 break-words">{i.error}</p>
-                </div>
-              </div>
-            ))}
-        </div>
-      )}
-
-
-      <div
-        className="grid gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4  xl:grid-cols-5">
-
+      <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {integrations.map(integration => (
           <div
             key={integration.id ?? integration.type}
@@ -694,12 +1002,9 @@ const integrations = useSelector((state: RootState) => state.integration.list);
           >
             <div className="p-5 flex flex-col h-full">
 
-
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-2 flex-1">
-
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDot(integration.status)}`} />
-
                   <h3 className="font-medium text-gray-900 text-base truncate">
                     {integration.name}
                   </h3>
@@ -707,10 +1012,23 @@ const integrations = useSelector((state: RootState) => state.integration.list);
 
                 {(hoveredCard === integration.id || integration.status !== "active") && (
                   <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+
+                    {/* ACTIVE → EDIT */}
                     {integration.status === "active" ? (
                       <>
                         <button
-                          onClick={() => setOpenToken(String(integration.id))}
+                          // onClick={() => {
+                          //   setOpenToken(integration.id ?? null);
+                          //   setIntegrationType(integration.type);   // 👈 pass type
+                          // }}
+                          onClick={() => {
+                            setDialogState({
+                              open: true,
+                              integrationId: integration.id ?? undefined,
+                              type: integration.type,
+                            });
+                          }}
+
                           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
                           title="Edit token"
                         >
@@ -726,24 +1044,40 @@ const integrations = useSelector((state: RootState) => state.integration.list);
                         </button>
                       </>
                     ) : (
+                      /* INACTIVE / FAILED → NEW TOKEN */
                       <button
-                        onClick={() => setOpenToken(String(integration.id))}
+                        // onClick={() => {
+                        //   setOpenToken(null);              // 👈 new token (no id)
+                        //   setIntegrationType(integration.type);
+                        // }}
+                        onClick={() => {
+                          setDialogState({
+                            open: true,
+                            integrationId: undefined,   // 👈 new
+                            type: integration.type,
+                          });
+                        }}
+
                         className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors"
                         title="Configure"
                       >
                         <Plus size={16} className="text-white" />
                       </button>
                     )}
+
                   </div>
                 )}
               </div>
 
               <div className="mb-3">
                 <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${getStatusColor(integration.status)}`}>
-                  {integration.status === "active" ? "Active" : integration.status === "failed" ? "Failed" : "Inactive"}
+                  {integration.status === "active"
+                    ? "Active"
+                    : integration.status === "failed"
+                      ? "Failed"
+                      : "Inactive"}
                 </span>
               </div>
-
 
               {integration.status === "active" && integration.token && (
                 <p className="text-xs text-gray-400 mt-2 font-mono">
@@ -755,43 +1089,51 @@ const integrations = useSelector((state: RootState) => state.integration.list);
         ))}
       </div>
 
-
-
-
-      <IntegrationTokenDialog
-        open={!!openToken}
+      {/* ================= TOKEN DIALOG ================= */}
+      {/* <IntegrationTokenDialog
+        open={openToken !== null}
         onClose={() => setOpenToken(null)}
-        initialToken={null}
-        onSave={() => { }}
+        integrationId={openToken ?? undefined}
+        type={integrationType}
+        projectId={selectedProject?.id}
+      /> */}
+      <IntegrationTokenDialog
+        open={dialogState.open}
+        onClose={() => setDialogState({ open: false })}
+        integrationId={dialogState.integrationId}
+        type={dialogState.type ?? "github"}
+        projectId={selectedProject?.id}
       />
 
-      {
-        deleteTarget && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-xl p-6 w-[400px] border border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Remove Integration</h3>
-              <p className="text-sm text-gray-600 mb-6">
-                Are you sure you want to remove the token for <span className="font-medium text-gray-900">{deleteTarget.name}</span>? This will deactivate the integration.
-              </p>
 
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setDeleteTarget(null)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Remove
-                </button>
-              </div>
+      {/* ================= DELETE MODAL ================= */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-[400px] border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Remove Integration</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to remove the token for
+              <span className="font-medium text-gray-900"> {deleteTarget.name}</span>?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Remove
+              </button>
             </div>
           </div>
-        )
-      }
-    </div >
+        </div>
+      )}
+    </div>
   );
 }

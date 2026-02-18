@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -23,6 +23,7 @@ import { AddApplicationModal } from '../components/AddApplicationModal';
 import AddApplicationDialog from '@/pages/settings/components/AddApplicationDialog';
 import { createApplication, updateApplication } from '@/pages/project/store/project.thunks';
 import { Application } from '@/pages/project/types/project.types';
+import { showSnackbar } from '@/store/snackbarStore';
 
 
 export const DashboardPage: React.FC = () => {
@@ -32,7 +33,7 @@ export const DashboardPage: React.FC = () => {
   const { loading, applications } = useSelector((state) => state.autoAnalysis);
 
   const { selectedProject } = useSelector((state: RootState) => state.project);
-  
+
   const [openAdd, setOpenAdd] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [search, setSearch] = useState("");
@@ -45,7 +46,8 @@ export const DashboardPage: React.FC = () => {
   );
   const [editingApp, setEditingApp] = useState<Application | null>(null);
   const [open, setOpen] = useState(false);
-
+  const [stage, setStage] = useState<"new" | "in_progress">("new")
+  
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -54,8 +56,51 @@ export const DashboardPage: React.FC = () => {
     message: ""
   });
 
+  const appsPollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  
   console.log("SELECTED PROJECT IN AUTOSCRIPT : ", selectedProject);
 
+  const stopAppsPolling = () => {
+  if (appsPollingRef.current) {
+    clearInterval(appsPollingRef.current);
+    appsPollingRef.current = null;
+  }
+};
+
+const startAppsPolling = () => {
+  if (!selectedProject?.id) return;
+
+  // prevent duplicate polling
+  if (appsPollingRef.current) return;
+
+  console.log("Starting apps polling...");
+
+  appsPollingRef.current = setInterval(async () => {
+    try {
+      const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
+
+      const hasInProgress = result?.some(
+        (app: any) =>
+          app.status === "in_progress"
+      );
+
+      console.log("Polling apps... in_progress:", hasInProgress);
+
+      // stop polling when all finished
+      if (!hasInProgress) {
+        console.log("All apps finished → stop polling");
+
+        if (appsPollingRef.current) {
+          clearInterval(appsPollingRef.current);
+          appsPollingRef.current = null;
+        }
+      }
+    } catch (err) {
+      console.error("Apps polling error:", err);
+    }
+  }, 5000); // 🔁 every 5 sec
+};
 
   useEffect(() => {
     if (!selectedProject?.id) return;
@@ -64,45 +109,167 @@ export const DashboardPage: React.FC = () => {
 
   }, [dispatch, selectedProject]);
 
+  useEffect(() => {
+  return () => {
+    stopAppsPolling();
+  };
+}, []);
+
+
+
+  // const handleAdd = async (data: { name: string; description: string }) => {
+  //   if (!selectedProject?.id) return;
+
+  //   try {
+  //     await dispatch(createApplication({
+  //       projectId: selectedProject.id,
+  //       name: data.name,
+  //       description: data.description
+  //     })).unwrap();
+
+  //     console.log("[UI] Application created");
+
+  //     dispatch(fetchApps(selectedProject.id));
+
+  //   } catch (err) {
+  //     console.error("[UI] Create failed:", err);
+  //   }
+  // };
 
   const handleAdd = async (data: { name: string; description: string }) => {
-      if (!selectedProject?.id) return;
-  
-      try {
-        await dispatch(createApplication({
-          projectId: selectedProject.id,
-          name: data.name,
-          description: data.description
-        })).unwrap();
-  
-        console.log("[UI] Application created");
+  if (!selectedProject?.id) return;
 
-        dispatch(fetchApps(selectedProject.id));
-  
-      } catch (err) {
-        console.error("[UI] Create failed:", err);
-      }
-    };
-  
-  
-    const handleEdit = async (data: { name: string; description: string }) => {
-      if (!editingApp) return;
-  
-      try {
-        await dispatch(updateApplication({
-          appId: editingApp.id,   // must be NUMBER
-          name: data.name,
-          description: data.description
-        })).unwrap();
-  
-        console.log("[UI] Application updated");
-  
-        setEditingApp(null);
-  
-      } catch (err) {
-        console.error("[UI] Update failed:", err);
-      }
-    };
+  try {
+    await dispatch(
+      createApplication({
+        projectId: selectedProject.id,
+        name: data.name,
+        description: data.description,
+      })
+    ).unwrap();
+
+    dispatch(fetchApps(selectedProject.id));
+
+    dispatch(
+      showSnackbar({
+        message: "Application created successfully",
+        type: "success",
+      })
+    );
+  } catch (err) {
+    console.error("[UI] Create failed:", err);
+
+    dispatch(
+      showSnackbar({
+        message: "Failed to create application",
+        type: "error",
+      })
+    );
+  }
+};
+
+//   const handleClose = async () => {
+//   setOpenAdd(false)
+
+
+//   try {
+//     const result = await dispatch(fetchApps(selectedProject?.id)).unwrap();
+
+//     const hasInProgress = result?.some(
+//       (app: any) =>
+//         app.status === "in_progress" 
+//     );
+
+//     if (hasInProgress) {
+//       console.log("Some apps still running → start polling");
+//       startAppsPolling();
+//     } else {
+//       stopAppsPolling();
+//     }
+
+//   } catch (err) {
+//     console.error("handleClose fetch failed:", err);
+//   }
+// };
+
+const handleClose = async () => {
+  setOpenAdd(false);
+
+  try {
+    const result = await dispatch(fetchApps(selectedProject?.id)).unwrap();
+
+    const hasInProgress = result?.some(
+      (app: any) => app.status === "in_progress"
+    );
+
+    if (hasInProgress) {
+      startAppsPolling();
+    } else {
+      stopAppsPolling();
+    }
+  } catch (err) {
+    console.error("handleClose fetch failed:", err);
+
+    dispatch(
+      showSnackbar({
+        message: "Failed to refresh applications",
+        type: "error",
+      })
+    );
+  }
+};
+
+  // const handleEdit = async (data: { name: string; description: string }) => {
+  //   if (!editingApp) return;
+
+  //   try {
+  //     await dispatch(updateApplication({
+  //       appId: editingApp.id,   // must be NUMBER
+  //       name: data.name,
+  //       description: data.description
+  //     })).unwrap();
+
+  //     console.log("[UI] Application updated");
+
+  //     setEditingApp(null);
+
+  //   } catch (err) {
+  //     console.error("[UI] Update failed:", err);
+  //   }
+  // };
+
+  const handleEdit = async (data: { name: string; description: string }) => {
+  if (!editingApp) return;
+
+  try {
+    await dispatch(
+      updateApplication({
+        appId: editingApp.id,
+        name: data.name,
+        description: data.description,
+      })
+    ).unwrap();
+
+    setEditingApp(null);
+
+    dispatch(
+      showSnackbar({
+        message: "Application updated successfully",
+        type: "success",
+      })
+    );
+  } catch (err) {
+    console.error("[UI] Update failed:", err);
+
+    dispatch(
+      showSnackbar({
+        message: "Failed to update application",
+        type: "error",
+      })
+    );
+  }
+};
+
 
   if (!selectedProject) {
     return (
@@ -116,17 +283,40 @@ export const DashboardPage: React.FC = () => {
 
 
 
+  // const handleDelete = async (id: string) => {
+  //   try {
+  //     // dispatch(removeApp(id));  
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Application deleted successfully"
+  //     });
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+
   const handleDelete = async (id: string) => {
-    try {
-      // dispatch(removeApp(id));  
-      setSnackbar({
-        open: true,
-        message: "Application deleted successfully"
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  try {
+    // await dispatch(removeApp(id)).unwrap();
+
+    dispatch(
+      showSnackbar({
+        message: "Application deleted successfully",
+        type: "success",
+      })
+    );
+  } catch (err) {
+    console.error(err);
+
+    dispatch(
+      showSnackbar({
+        message: "Failed to delete application",
+        type: "error",
+      })
+    );
+  }
+};
+
 
 
   return (
@@ -186,71 +376,24 @@ export const DashboardPage: React.FC = () => {
               </Box>
             </Tooltip>
 
-            {/* Add application */}
-            {/* <Tooltip title="Add application" arrow>
-              <IconButton
-                onClick={() => setOpenAdd(true)}
-                sx={{
-                  borderRadius: 2,
-                  color: "primary.main",
-                  bgcolor: "rgba(25, 118, 210, 0.08)",
-                  transition: "all 0.15s ease",
-                  "&:hover": {
-                    bgcolor: "rgba(25, 118, 210, 0.15)",
-                    transform: "translateY(-1px)"
-                  }
-                }}
-              >
-                <AddIcon />
-              </IconButton>
-            </Tooltip> */}
-
 
             {user?.is_staff && (
-  <button
-    onClick={() => {
-      setEditingApp(null);   // create mode
-      setOpen(true);         // open dialog
-    }}
-    className="
+              <button
+                onClick={() => {
+                  setEditingApp(null);   // create mode
+                  setOpen(true);         // open dialog
+                }}
+                className="
       px-4 py-2 rounded-md text-white bg-blue-600
       hover:bg-blue-700 transition
       flex items-center gap-2
     "
-  >
-    + Add Application
-  </button>
-)}
+              >
+                + Add Application
+              </button>
+            )}
 
           </Box>
-
-
-
-
-
-          {/* <Box className="flex items-center gap-2 ">
-            {/* <IconButton onClick={() => setOpenSettings(true)} color="primary">
-              <Settings />
-            </IconButton> 
-
-            <SearchBar
-              value={search}
-              onChange={setSearch}
-              placeholder="Search applications..."
-              onSearch={{}}
-            />
-
-            <Button
-              variant="contained"
-              size="medium"
-              startIcon={<AddIcon />}
-              className="mt-1 rounded min-w-fit"
-              disableElevation
-              onClick={() => setOpenAdd(true)}
-            >
-              Add Application
-            </Button>
-          </Box> */}
         </div>
 
         {/* </Toolbar> */}
@@ -475,7 +618,7 @@ export const DashboardPage: React.FC = () => {
         </div> */}
 
         <div className="space-y-4 w-full mx-auto">
-          {filteredApplications.length>0 ? filteredApplications.map((app) => (
+          {filteredApplications.length > 0 ? filteredApplications.map((app) => (
             <InfoCard
               name={app.name}
               // recentBuild={{ id: app.latest_build, name: app.latest_build, link: `/autoanalysis/${app.id}/reports/b1` }}
@@ -492,10 +635,17 @@ export const DashboardPage: React.FC = () => {
               // onDelete={() => handleDelete(app.id)}
               onView={() => navigate(`/autoanalysis/${app.id}`)}
               onUnconfigured={() => {
-  setSelectedApplicationId(app.id);
-  setSelectedApplicationName(app.name);
-  setOpenAdd(true);
-}}
+                setSelectedApplicationId(app.id);
+                setSelectedApplicationName(app.name);
+                setStage("new");
+                setOpenAdd(true);
+              }}
+              onProgress = {() => {
+                setSelectedApplicationId(app.id);
+                setSelectedApplicationName(app.name);
+                setStage("in_progress");
+                setOpenAdd(true);
+              }}
             />
           )) : (
             <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-500 p-10">
@@ -508,7 +658,7 @@ export const DashboardPage: React.FC = () => {
 
 
 
-        <AddApplicationModal open={openAdd} onClose={() => setOpenAdd(false)} selectedApplicationId={selectedApplicationId} selectedApplicationName={selectedApplicationName} />
+        <AddApplicationModal open={openAdd} onClose={handleClose} selectedApplicationId={selectedApplicationId} selectedApplicationName={selectedApplicationName} projectId={selectedProject.id} stage={stage}/>
         <SettingsModal open={openSettings} onClose={() => setOpenSettings(false)} />
       </div>
 

@@ -204,7 +204,7 @@ export default function ApplicationSelect() {
                     ))}
 
                     {/* Modern subtle action */}
-                    <MenuItem
+                    {/* <MenuItem
                         value={ADD_NEW_VALUE}
                         sx={{
                             fontStyle: "italic",
@@ -213,12 +213,12 @@ export default function ApplicationSelect() {
                         }}
                     >
                         + Add new application
-                    </MenuItem>
+                    </MenuItem> */}
                 </Select>
             </FormControl>
 
             {/* Minimal dialog */}
-            <Dialog open={openDialog} onClose={handleClose} fullWidth maxWidth="xs">
+            {/* <Dialog open={openDialog} onClose={handleClose} fullWidth maxWidth="xs">
                 <DialogTitle sx={{ pb: 1, color: 'primary.main', fontWeight: 'bold' }}>
                     Add application
                 </DialogTitle>
@@ -252,7 +252,7 @@ export default function ApplicationSelect() {
                 </DialogActions>
 
 
-            </Dialog>
+            </Dialog> */}
         </>
     );
 }
