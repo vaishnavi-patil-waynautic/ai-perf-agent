@@ -20,23 +20,23 @@ const Login: React.FC = () => {
 
 
   const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  dispatch(loginStart());
+    dispatch(loginStart());
 
-  try {
-    const res = await login(email, password); // USE FORM STATE
+    try {
+      const res = await login(email, password); // USE FORM STATE
 
-    dispatch(loginSuccess(res));
+      dispatch(loginSuccess(res));
 
-    navigate("/", { replace: true });
+      navigate("/", { replace: true });
 
-  } catch (err: any) {
-    console.error("Login error:", err);
-    setError(err.message || "Invalid email or password");
-    dispatch(loginFailure());
-  }
-};
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(err.message || "Invalid email or password");
+      dispatch(loginFailure());
+    }
+  };
 
 
   return (
@@ -44,11 +44,11 @@ const Login: React.FC = () => {
       {/* Left Side - Image */}
       <div className="hidden lg:flex lg:w-1/2 bg-blue-600 items-center justify-center relative">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700 to-blue-900 opacity-90"></div>
-        <img 
+        <img
           // src="https://picsum.photos/1000/1000?grayscale" 
-          src = "public/img/19197363.jpg"
-          alt="Login Visual" 
-          className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-40" 
+          src="public/img/19197363.jpg"
+          alt="Login Visual"
+          className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-40"
         />
         <div className="relative z-10 text-white p-12">
           <h1 className="text-5xl font-bold mb-6">Waynautic AI Perf Agent</h1>
@@ -69,21 +69,21 @@ const Login: React.FC = () => {
           {error && <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm text-center border border-red-200">{error}</div>}
 
           <form onSubmit={handleLogin}>
-            <Input 
-              label="Email Address" 
-              type="email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
+            <Input
+              label="Email Address"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="john@example.com"
               required
             />
-            
+
             <div className="mb-6">
-              <Input 
-                label="Password" 
-                type="password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
+              <Input
+                label="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
               />
@@ -98,7 +98,7 @@ const Login: React.FC = () => {
           </form>
 
           <div className="mt-6 text-center text-sm text-gray-600">
-            Don't have an account? 
+            Don't have an account?
             <Link to="/signup" className="ml-1 text-blue-600 font-medium hover:underline">Sign up</Link>
           </div>
         </div>

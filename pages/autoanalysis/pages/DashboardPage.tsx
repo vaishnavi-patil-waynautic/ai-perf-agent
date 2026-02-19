@@ -11,7 +11,6 @@ import {
 import { Add, Settings, Delete, Visibility } from '@mui/icons-material';
 import { fetchApps } from '../store/autoAnalysisSlice';
 import { StatusBadge } from '../../../components/StatusBadge';
-// import { AddApplicationModal } from '../components/AddApplicationModal';
 import { SettingsModal } from '../components/SettingsModal';
 import PrimaryButton from '../components/PrimaryButton';
 import { Activity, CheckCircle, EditIcon, Trash2, TrashIcon } from 'lucide-react';
@@ -47,7 +46,7 @@ export const DashboardPage: React.FC = () => {
   const [editingApp, setEditingApp] = useState<Application | null>(null);
   const [open, setOpen] = useState(false);
   const [stage, setStage] = useState<"new" | "in_progress">("new")
-  
+
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -58,49 +57,56 @@ export const DashboardPage: React.FC = () => {
 
   const appsPollingRef = useRef<NodeJS.Timeout | null>(null);
 
-  
+
   console.log("SELECTED PROJECT IN AUTOSCRIPT : ", selectedProject);
 
   const stopAppsPolling = () => {
-  if (appsPollingRef.current) {
-    clearInterval(appsPollingRef.current);
-    appsPollingRef.current = null;
-  }
-};
-
-const startAppsPolling = () => {
-  if (!selectedProject?.id) return;
-
-  // prevent duplicate polling
-  if (appsPollingRef.current) return;
-
-  console.log("Starting apps polling...");
-
-  appsPollingRef.current = setInterval(async () => {
-    try {
-      const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
-
-      const hasInProgress = result?.some(
-        (app: any) =>
-          app.status === "in_progress"
-      );
-
-      console.log("Polling apps... in_progress:", hasInProgress);
-
-      // stop polling when all finished
-      if (!hasInProgress) {
-        console.log("All apps finished → stop polling");
-
-        if (appsPollingRef.current) {
-          clearInterval(appsPollingRef.current);
-          appsPollingRef.current = null;
-        }
-      }
-    } catch (err) {
-      console.error("Apps polling error:", err);
+    if (appsPollingRef.current) {
+      clearInterval(appsPollingRef.current);
+      appsPollingRef.current = null;
     }
-  }, 5000); // 🔁 every 5 sec
-};
+  };
+
+  const startAppsPolling = () => {
+    if (!selectedProject?.id) return;
+
+    // prevent duplicate polling
+    if (appsPollingRef.current) return;
+
+    console.log("Starting apps polling...");
+
+    appsPollingRef.current = setInterval(async () => {
+      try {
+        const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
+
+        const hasInProgress = result?.some(
+          (app: any) =>
+            app.config_status === "in_progress"
+        );
+
+        console.log("Polling apps... in_progress:", hasInProgress);
+
+        // stop polling when all finished
+        if (!hasInProgress) {
+          console.log("All apps finished → stop polling");
+
+          dispatch(
+            showSnackbar({
+              message: "Application configured successfully",
+              type: "success",
+            })
+          );
+
+          if (appsPollingRef.current) {
+            clearInterval(appsPollingRef.current);
+            appsPollingRef.current = null;
+          }
+        }
+      } catch (err) {
+        console.error("Apps polling error:", err);
+      }
+    }, 5000); // 🔁 every 5 sec
+  };
 
   useEffect(() => {
     if (!selectedProject?.id) return;
@@ -109,11 +115,11 @@ const startAppsPolling = () => {
 
   }, [dispatch, selectedProject]);
 
-  useEffect(() => {
-  return () => {
-    stopAppsPolling();
-  };
-}, []);
+  //   useEffect(() => {
+  //   return () => {
+  //     stopAppsPolling();
+  //   };
+  // }, []);
 
 
 
@@ -137,87 +143,89 @@ const startAppsPolling = () => {
   // };
 
   const handleAdd = async (data: { name: string; description: string }) => {
-  if (!selectedProject?.id) return;
+    if (!selectedProject?.id) return;
 
-  try {
-    await dispatch(
-      createApplication({
-        projectId: selectedProject.id,
-        name: data.name,
-        description: data.description,
-      })
-    ).unwrap();
+    try {
+      await dispatch(
+        createApplication({
+          projectId: selectedProject.id,
+          name: data.name,
+          description: data.description,
+        })
+      ).unwrap();
 
-    dispatch(fetchApps(selectedProject.id));
+      dispatch(fetchApps(selectedProject.id));
 
-    dispatch(
-      showSnackbar({
-        message: "Application created successfully",
-        type: "success",
-      })
-    );
-  } catch (err) {
-    console.error("[UI] Create failed:", err);
+      dispatch(
+        showSnackbar({
+          message: "Application created successfully",
+          type: "success",
+        })
+      );
+    } catch (err) {
+      console.error("[UI] Create failed:", err);
 
-    dispatch(
-      showSnackbar({
-        message: "Failed to create application",
-        type: "error",
-      })
-    );
-  }
-};
-
-//   const handleClose = async () => {
-//   setOpenAdd(false)
-
-
-//   try {
-//     const result = await dispatch(fetchApps(selectedProject?.id)).unwrap();
-
-//     const hasInProgress = result?.some(
-//       (app: any) =>
-//         app.status === "in_progress" 
-//     );
-
-//     if (hasInProgress) {
-//       console.log("Some apps still running → start polling");
-//       startAppsPolling();
-//     } else {
-//       stopAppsPolling();
-//     }
-
-//   } catch (err) {
-//     console.error("handleClose fetch failed:", err);
-//   }
-// };
-
-const handleClose = async () => {
-  setOpenAdd(false);
-
-  try {
-    const result = await dispatch(fetchApps(selectedProject?.id)).unwrap();
-
-    const hasInProgress = result?.some(
-      (app: any) => app.status === "in_progress"
-    );
-
-    if (hasInProgress) {
-      startAppsPolling();
-    } else {
-      stopAppsPolling();
+      dispatch(
+        showSnackbar({
+          message: "Failed to create application",
+          type: "error",
+        })
+      );
     }
-  } catch (err) {
-    console.error("handleClose fetch failed:", err);
+  };
 
-    dispatch(
-      showSnackbar({
-        message: "Failed to refresh applications",
-        type: "error",
-      })
-    );
-  }
-};
+  //   const handleClose = async () => {
+  //   setOpenAdd(false)
+
+
+  //   try {
+  //     const result = await dispatch(fetchApps(selectedProject?.id)).unwrap();
+
+  //     const hasInProgress = result?.some(
+  //       (app: any) =>
+  //         app.status === "in_progress" 
+  //     );
+
+  //     if (hasInProgress) {
+  //       console.log("Some apps still running → start polling");
+  //       startAppsPolling();
+  //     } else {
+  //       stopAppsPolling();
+  //     }
+
+  //   } catch (err) {
+  //     console.error("handleClose fetch failed:", err);
+  //   }
+  // };
+
+  const handleClose = async () => {
+    setOpenAdd(false);
+
+    try {
+      const result = await dispatch(fetchApps(selectedProject?.id)).unwrap();
+
+      const hasInProgress = result?.some(
+        (app: any) => app.config_status === "in_progress"
+      );
+
+      console.log("Checked status after close................", result)
+
+      if (hasInProgress) {
+        startAppsPolling();
+      } else {
+        stopAppsPolling();
+      }
+    } catch (err) {
+      console.error("handleClose fetch failed:", err);
+
+      dispatch(
+        showSnackbar({
+          message: "Failed to refresh applications",
+          type: "error",
+        })
+      );
+    }
+  };
 
   // const handleEdit = async (data: { name: string; description: string }) => {
   //   if (!editingApp) return;
@@ -239,36 +247,36 @@ const handleClose = async () => {
   // };
 
   const handleEdit = async (data: { name: string; description: string }) => {
-  if (!editingApp) return;
+    if (!editingApp) return;
 
-  try {
-    await dispatch(
-      updateApplication({
-        appId: editingApp.id,
-        name: data.name,
-        description: data.description,
-      })
-    ).unwrap();
+    try {
+      await dispatch(
+        updateApplication({
+          appId: editingApp.id,
+          name: data.name,
+          description: data.description,
+        })
+      ).unwrap();
 
-    setEditingApp(null);
+      setEditingApp(null);
 
-    dispatch(
-      showSnackbar({
-        message: "Application updated successfully",
-        type: "success",
-      })
-    );
-  } catch (err) {
-    console.error("[UI] Update failed:", err);
+      dispatch(
+        showSnackbar({
+          message: "Application updated successfully",
+          type: "success",
+        })
+      );
+    } catch (err) {
+      console.error("[UI] Update failed:", err);
 
-    dispatch(
-      showSnackbar({
-        message: "Failed to update application",
-        type: "error",
-      })
-    );
-  }
-};
+      dispatch(
+        showSnackbar({
+          message: "Failed to update application",
+          type: "error",
+        })
+      );
+    }
+  };
 
 
   if (!selectedProject) {
@@ -296,26 +304,26 @@ const handleClose = async () => {
   // };
 
   const handleDelete = async (id: string) => {
-  try {
-    // await dispatch(removeApp(id)).unwrap();
+    try {
+      // await dispatch(removeApp(id)).unwrap();
 
-    dispatch(
-      showSnackbar({
-        message: "Application deleted successfully",
-        type: "success",
-      })
-    );
-  } catch (err) {
-    console.error(err);
+      dispatch(
+        showSnackbar({
+          message: "Application deleted successfully",
+          type: "success",
+        })
+      );
+    } catch (err) {
+      console.error(err);
 
-    dispatch(
-      showSnackbar({
-        message: "Failed to delete application",
-        type: "error",
-      })
-    );
-  }
-};
+      dispatch(
+        showSnackbar({
+          message: "Failed to delete application",
+          type: "error",
+        })
+      );
+    }
+  };
 
 
 
@@ -640,7 +648,7 @@ const handleClose = async () => {
                 setStage("new");
                 setOpenAdd(true);
               }}
-              onProgress = {() => {
+              onProgress={() => {
                 setSelectedApplicationId(app.id);
                 setSelectedApplicationName(app.name);
                 setStage("in_progress");
@@ -658,7 +666,7 @@ const handleClose = async () => {
 
 
 
-        <AddApplicationModal open={openAdd} onClose={handleClose} selectedApplicationId={selectedApplicationId} selectedApplicationName={selectedApplicationName} projectId={selectedProject.id} stage={stage}/>
+        <AddApplicationModal open={openAdd} onClose={handleClose} selectedApplicationId={selectedApplicationId} selectedApplicationName={selectedApplicationName} projectId={selectedProject.id} stage={stage} />
         <SettingsModal open={openSettings} onClose={() => setOpenSettings(false)} />
       </div>
 
