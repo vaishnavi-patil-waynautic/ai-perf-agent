@@ -25,7 +25,8 @@
     "react-router-dom": "^7.10.0",
     "recharts": "^3.7.0",
     "redux-persist": "^6.0.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "styled-jsx": "^5.1.7"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

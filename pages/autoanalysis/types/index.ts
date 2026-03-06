@@ -25,6 +25,9 @@ export interface AppConfiguration {
   application_name: string;
 
   script_id: number | null;
+  script_file_configured : boolean;
+  script_file_name : string | null;
+
 
   blazemeter_url: string | null;
   gha_repo_url: string | null;

@@ -976,6 +976,12 @@ export default function IntegrationDetail() {
     }
   };
 
+
+  const handleClose = () =>{
+    setDialogState({ open: false });
+    dispatch(fetchIntegrations(selectedProject.id));
+  }
+
   /* ---------------- UI ---------------- */
   return (
     <div className="max-w-6xl mx-auto">
@@ -1099,7 +1105,7 @@ export default function IntegrationDetail() {
       /> */}
       <IntegrationTokenDialog
         open={dialogState.open}
-        onClose={() => setDialogState({ open: false })}
+        onClose= {handleClose}
         integrationId={dialogState.integrationId}
         type={dialogState.type ?? "github"}
         projectId={selectedProject?.id}

@@ -11,7 +11,7 @@ import { deleteNfrById, fetchNfrReport, getNfrById, fetchNfrList } from '../slic
 import { resetWizard } from '../slices/nfrWizardSlice';
 import { StatusBadge } from '@/components/StatusBadge';
 import PrimaryButton from '@/pages/autoanalysis/components/PrimaryButton';
-import { Activity, Box, Download, EditIcon, Trash2, TrashIcon } from 'lucide-react';
+import { Activity, Box, Download, EditIcon, Search, Trash2, TrashIcon } from 'lucide-react';
 import InfoCard from '@/components/InfoCard';
 import { nfrService } from '../services/nfrService';
 import AppSnackbar, { SnackbarType } from '@/components/AppSnackbar';
@@ -27,10 +27,11 @@ const NFRPage: React.FC = () => {
   // const [polling, setPolling] = useState(false);
   let count = 0;
   const pollingRef = useRef(null);
-  const [search, setSearch] = useState("");
 
   console.log("SELECTED PROJECT IN NFR : ", selectedProject);
 
+  const [search, setSearch] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
 
   const { strategies } = useSelector((state: RootState) => state.nfrList);
 
@@ -60,9 +61,12 @@ const NFRPage: React.FC = () => {
         console.log("Fetching NFR by project id in Useeffect")
 
         // const strategies = await dispatch(getNfrById(selectedProject.id)).unwrap();
-        const strategies = await dispatch(getNfrById(selectedProject.id)).unwrap();
+        const strategies = await dispatch(getNfrById(selectedProject?.id)).unwrap();
 
         if (!hasPending(strategies)) return;
+
+
+        console.log("The application has pending status------------------------------");
 
         // Prevent duplicate intervals
         if (pollingRef.current) return;
@@ -75,41 +79,41 @@ const NFRPage: React.FC = () => {
             if (!hasPending(updated)) {
 
               dispatch(
-    showSnackbar({
-      message: "NFR generation completed",
-      type: "success",
-    })
-  );
+                showSnackbar({
+                  message: "NFR generation completed",
+                  type: "success",
+                })
+              );
 
               clearInterval(pollingRef.current);
               pollingRef.current = null;
             }
 
           } catch (err) {
-  console.error("Polling failed", err);
+            console.error("Polling failed", err);
 
-  dispatch(
-    showSnackbar({
-      message: "Polling failed",
-      type: "error",
-    })
-  );
-}
+            dispatch(
+              showSnackbar({
+                message: "Polling failed",
+                type: "error",
+              })
+            );
+          }
 
 
         }, 5000);
 
       } catch (err) {
-  console.error("Initial fetch failed", err);
 
-  dispatch(
-    showSnackbar({
-      message: "Failed to fetch NFR data",
-      type: "error",
-    })
-  );
-}
+        console.error("Initial fetch failed", err);
 
+        dispatch(
+          showSnackbar({
+            message: "Failed to fetch NFR data",
+            type: "error",
+          })
+        );
+      }
 
     };
 
@@ -125,6 +129,11 @@ const NFRPage: React.FC = () => {
   }, [dispatch, selectedProject]);
 
 
+  const filteredStrategies = strategies?.filter((strategy) =>
+    (strategy.display_name || "")
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
 
   if (!selectedProject) {
@@ -168,35 +177,35 @@ const NFRPage: React.FC = () => {
   // };
 
   const handleDownload = async (id: number) => {
-  try {
-    const blob = await nfrService.downloadById(id);
+    try {
+      const blob = await nfrService.downloadById(id);
 
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
 
-    a.href = url;
-    a.download = `nfr-${id}.txt`;
+      a.href = url;
+      a.download = `nfr-${id}.txt`;
 
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
 
-    dispatch(
-      showSnackbar({
-        message: "NFR downloaded successfully",
-        type: "success",
-      })
-    );
-  } catch (err) {
-    dispatch(
-      showSnackbar({
-        message: "Failed to download NFR",
-        type: "error",
-      })
-    );
-  }
-};
+      dispatch(
+        showSnackbar({
+          message: "NFR downloaded successfully",
+          type: "success",
+        })
+      );
+    } catch (err) {
+      dispatch(
+        showSnackbar({
+          message: "Failed to download NFR",
+          type: "error",
+        })
+      );
+    }
+  };
 
 
   // const handleDelete = async (id: number) => {
@@ -274,48 +283,48 @@ const NFRPage: React.FC = () => {
 
   // }, [dispatch]);
 
-const handleDelete = async (id: number) => {
-  try {
-    await dispatch(deleteNfrById(id)).unwrap();
+  const handleDelete = async (id: number) => {
+    try {
+      await dispatch(deleteNfrById(id)).unwrap();
 
-    dispatch(
-      showSnackbar({
-        message: "NFR deleted successfully",
-        type: "success",
-      })
-    );
-  } catch (err) {
-    dispatch(
-      showSnackbar({
-        message: "Failed to delete NFR",
-        type: "error",
-      })
-    );
-  }
-};
+      dispatch(
+        showSnackbar({
+          message: "NFR deleted successfully",
+          type: "success",
+        })
+      );
+    } catch (err) {
+      dispatch(
+        showSnackbar({
+          message: "Failed to delete NFR",
+          type: "error",
+        })
+      );
+    }
+  };
 
 
   return (
     <div className="m-auto max-w-6xl p-10">
-      
 
 
-<div className="mb-8 flex items-center justify-between w-full">
 
-  {/* LEFT SIDE — TITLE */}
-  <div className="flex flex-col">
-    <h1 className="text-2xl font-bold text-gray-800">
-      Performance Strategy Hub
-    </h1>
-    <p className="text-gray-500 mt-1">
-      Generate Performance Test Strategy using AI
-    </p>
-  </div>
+      <div className="mb-8 flex items-center justify-between w-full">
 
-  {/* RIGHT SIDE — SEARCH + BUTTON */}
-  <div className="flex items-center gap-3 ml-auto">
+        {/* LEFT SIDE — TITLE */}
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-bold text-gray-800">
+            Performance Strategy Hub
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Generate Performance Test Strategy using AI
+          </p>
+        </div>
 
-    {/* <Tooltip title="Search applications" arrow>
+        {/* RIGHT SIDE — SEARCH + BUTTON */}
+        <div className="flex items-center gap-3 ml-auto">
+
+          {/* <Tooltip title="Search applications" arrow>
       <div style={{ width: 240, minWidth: 240 }}>
         <SearchBar
           value={search}
@@ -326,19 +335,92 @@ const handleDelete = async (id: number) => {
       </div>
     </Tooltip> */}
 
-    <Tooltip title="Generate Performance Test Strategy" arrow>
-      <button
-        onClick={() => navigate("/nfr/wizard")}
-        className="flex items-center gap-1 bg-blue-600 text-white text-sm font-medium rounded px-4 py-1.5 hover:bg-blue-700 whitespace-nowrap"
-      >
-        <AddIcon style={{ fontSize: 18 }} />
-        Generate Performance Test Strategy
-      </button>
-    </Tooltip>
+          {/* <Tooltip title="Generate Performance Test Strategy" arrow>
+            <button
+              onClick={() => navigate("/nfr/wizard")}
+              className="
+      px-4 py-2 rounded-md text-white bg-blue-600
+      hover:bg-blue-700 transition
+      flex items-center gap-2
+    "
+              >
+              <AddIcon style={{ fontSize: 18 }} />
+              Generate Performance Test Strategy
+            </button>
+          </Tooltip> */}
 
-  </div>
 
-</div>
+          {/* <div className="flex items-center gap-3 ml-auto">
+
+
+            {!showSearch && (
+              <Tooltip title="Search strategies" arrow>
+              <button
+                onClick={() => setShowSearch(prev => !prev)}
+                className=" rounded-md hover:bg-gray-100 transition"
+              >
+                <Search size={18} />
+              </button>
+            </Tooltip>
+            )}
+            
+
+            {showSearch && (
+              <input
+                type="text"
+                placeholder="Search by title..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autoFocus
+              />
+            )}
+
+            <Tooltip title="Generate Performance Test Strategy" arrow>
+              <button
+                onClick={() => navigate("/nfr/wizard")}
+                className="
+        px-4 py-2 rounded-md text-white bg-blue-600
+        hover:bg-blue-700 transition
+        flex items-center gap-2
+      "
+              >
+                <AddIcon style={{ fontSize: 18 }} />
+                Generate Performance Test Strategy
+              </button>
+            </Tooltip>
+
+          </div> */}
+
+
+          <div className="flex items-center gap-3 ml-auto">
+
+            {/* 🔍 Search */}
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder="Search strategies..." onSearch={undefined} />
+
+            {/* Generate Button */}
+            <Tooltip title="Generate Performance Test Strategy" arrow>
+              <button
+                onClick={() => navigate("/nfr/wizard")}
+                className="
+        px-4 py-2 rounded-md text-white bg-blue-600
+        hover:bg-blue-700 transition
+        flex items-center gap-2
+      "
+              >
+                <AddIcon style={{ fontSize: 18 }} />
+                Generate Performance Test Strategy
+              </button>
+            </Tooltip>
+
+          </div>
+
+        </div>
+
+      </div>
 
 
       <AppSnackbar
@@ -349,9 +431,9 @@ const handleDelete = async (id: number) => {
       />
 
       <div className="space-y-4 w-full mx-auto">
-        {(strategies?.length ?? 0) > 0 ? (
+        {(filteredStrategies?.length ?? 0) > 0 ? (
 
-          strategies?.map((strategy) => (
+          filteredStrategies?.map((strategy) => (
             <InfoCard key={strategy.id}
               name={strategy.display_name == 'N/A' ? "Default Application" : strategy.display_name}
               createdOn={strategy.created_on && strategy.created_on.replace("Z", "") || "N/A"}

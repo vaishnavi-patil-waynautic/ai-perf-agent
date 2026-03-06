@@ -8,37 +8,47 @@ import {
 } from '../../types/chat.types';
 import {
   sendMessage,
-  loadFAQs,
+  // loadFAQs,
   loadChatHistories,
   loadChatMessages,
   createChat,
+  sendFeedback,
+  loadFAQs,
 } from './chat.thunk';
+import { stat } from 'fs';
 
 const initialState: ChatState = {
-  messages: [
-    {
-      id: '1',
-      sender: 'bot',
-      type: 'text',
-      content:
-        "Hello! I'm your Performance Engineering Assistant.\n\nI can help you analyze NFRs, debug JMX scripts, or explain error logs.",
-      timestamp: new Date(),
-    },
-  ],
+  // messages: [
+  //   {
+  //     id: '1',
+  //     sender: 'bot',
+  //     type: 'text',
+  //     content:
+  //       "Hello! I'm your Performance Engineering Assistant.\n\nI can help you analyze NFRs, debug JMX scripts, or explain error logs.",
+  //     timestamp: new Date(),
+  //   },
+  // ],
+  messages: [],
   chatHistories: [],
   currentChatId: null,
   faqs: [],
   selectedModel: 'gpt-4',
   isLoading: false,
   error: null,
+  isFullScreen: false,
+  chatLoading: false,
 };
 
 const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
+    toggleScreenView: (state) => {
+      state.isFullScreen = !state.isFullScreen;
+    },
     addUserMessage: (state, action: PayloadAction<ChatMessage>) => {
       state.messages.push(action.payload);
+      state.chatLoading = true;
     },
     setSelectedModel: (state, action: PayloadAction<string>) => {
       state.selectedModel = action.payload;
@@ -56,7 +66,7 @@ const chatSlice = createSlice({
       }
     },
     clearMessages: (state) => {
-      state.messages = [initialState.messages[0]];
+      state.messages = [];
     },
     setCurrentChat: (state, action: PayloadAction<string>) => {
       state.currentChatId = action.payload;
@@ -68,47 +78,56 @@ const chatSlice = createSlice({
       .addCase(sendMessage.pending, (state) => {
         state.isLoading = true;
         state.error = null;
+        state.chatLoading = true;
       })
       .addCase(sendMessage.fulfilled, (state, action) => {
+
+        console.log("🟢 addUserMessage", action.payload);
         state.isLoading = false;
-        state.messages.push(action.payload);
+        state.chatLoading = false;
+
+        state.messages.push(action.payload.message);
+
+        const newChatId = action.payload.chatId;
+
+        // If this was a new chat (chat=0 or null)
+        if (!state.currentChatId || state.currentChatId === "0") {
+          state.currentChatId = newChatId;
+        }
+      })
+      .addCase(sendFeedback.fulfilled, (state, action) => {
+        const msg = state.messages.find(m => m.id === action.payload.messageId);
+        if (msg) {
+          msg.liked = action.payload.reaction === 'like';
+          msg.disliked = action.payload.reaction === 'dislike';
+        }
       })
       .addCase(sendMessage.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
-      });
-
-    // Load FAQs
-    builder
+        state.chatLoading = false;
+      })
       .addCase(loadFAQs.fulfilled, (state, action) => {
         state.faqs = action.payload;
-      });
-
-    // Load Chat Histories
-    builder
+      })
       .addCase(loadChatHistories.fulfilled, (state, action) => {
+        console.log("🟢 Load History", state);
         state.chatHistories = action.payload;
-      });
-
-    // Load Chat Messages
-    builder
+      })
       .addCase(loadChatMessages.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(loadChatMessages.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.messages = action.payload;
+        state.messages = [...action.payload];
       })
       .addCase(loadChatMessages.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
-      });
-
-    // Create New Chat
-    builder
+      })
       .addCase(createChat.fulfilled, (state, action) => {
         state.currentChatId = action.payload;
-        state.messages = [initialState.messages[0]];
+        state.messages = [];   // must be empty
       });
   },
 });
@@ -119,6 +138,7 @@ export const {
   toggleMessageReaction,
   clearMessages,
   setCurrentChat,
+  toggleScreenView
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

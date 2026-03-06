@@ -89,7 +89,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
         ))}
       </div>
 
-      <ChatInput onSend={handleSend} isFullScreen={false}/>
+      <ChatInput onSend={handleSend}/>
     </Paper>
   );
 };

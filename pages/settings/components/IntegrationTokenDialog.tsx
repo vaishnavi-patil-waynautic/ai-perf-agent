@@ -78,7 +78,7 @@ import {
   TextField,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import {integrationService} from "../services/integration.service";
+import { integrationService } from "../services/integration.service";
 import { showSnackbar } from "@/store/snackbarStore";
 import { useDispatch } from "react-redux";
 
@@ -101,10 +101,15 @@ export default function IntegrationTokenDialog({
   const dispatch = useDispatch();
 
   const [token, setToken] = useState("");
+  const [name, setName] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [apiSecret, setApiSecret] = useState("");
   const [adoPat, setAdoPat] = useState("");
   const [loading, setLoading] = useState(false);
+  const [url, setUrl] = useState("");
+  const [username, setUsername] = useState("");
+  const [applicationKey, setApplicationKey] = useState("");
+
 
   /* ================= Fetch existing token (EDIT mode) ================= */
   useEffect(() => {
@@ -117,6 +122,11 @@ export default function IntegrationTokenDialog({
         setApiKey("");
         setApiSecret("");
         setAdoPat("");
+        setUrl("");
+        setUsername("");
+        setApplicationKey("");
+        setName("");
+
         return;
       }
 
@@ -129,6 +139,11 @@ export default function IntegrationTokenDialog({
         setApiKey(data?.api_key || "");
         setApiSecret(data?.api_secret || "");
         setAdoPat(data?.ado_pat || "");
+        setUrl(data?.url || "");
+        setUsername(data?.username || "");
+        setApplicationKey(data?.application_key || "")
+        setName(data?.name || '')
+
 
       } catch (err) {
         console.error("Failed to fetch token", err);
@@ -170,46 +185,105 @@ export default function IntegrationTokenDialog({
 
 
   const handleSave = async () => {
-  try {
-    const payload: any = { integration_type: type };
+    try {
+      setLoading(true);
 
-    if (type === "github" || type === "jira" || type === "datadog") {
-      payload.token = token;
+      const payload: any = {
+        integration_type: type,
+      };
+
+      // ================= Build Payload =================
+
+      payload.name = name
+
+      if (type === "github") {
+        payload.token = token;
+        
+      }
+
+      if (type === "jira") {
+        payload.token = token;
+        payload.url = url;
+        payload.username = username;
+      }
+
+      if (type === "datadog") {
+        payload.token = token;
+        payload.url = url;
+        payload.application_key = applicationKey;
+      }
+
+      if (type === "blazemeter") {
+        payload.api_key = apiKey;
+        payload.api_secret = apiSecret;
+      }
+
+      if (type === "ado") {
+        payload.ado_pat = adoPat;
+        payload.url = url;
+      }
+
+      console.log("Saving payload:", payload);
+
+      // ================= Create or Update =================
+
+      // if (integrationId) {
+      //   await integrationService.updateIntegration(
+      //     projectId,
+      //     integrationId,
+      //     payload
+      //   );
+      // } else {
+      await integrationService.createIntegration(
+        projectId,
+        payload
+      );
+      // }
+
+      dispatch(
+        showSnackbar({
+          message: "Integration saved successfully",
+          type: "success",
+        })
+      );
+
+      onClose();
+
+    } catch (err: any) {
+      console.error("Save failed:", err);
+
+      // ================= Handle Backend Errors =================
+
+      const errors =
+        err?.errors ||
+        err?.data?.errors ||
+        err?.response?.data?.errors ||
+        err?.data?.error ||
+        null;
+
+      let message = "Failed to save integration";
+
+      if (errors) {
+        if (typeof errors === "string") {
+          message = errors;
+        } else if (typeof errors === "object") {
+          message = Object.values(errors).join("\n");
+        }
+      } else if (err?.message) {
+        message = err.message;
+      }
+
+      dispatch(
+        showSnackbar({
+          message,
+          type: "error",
+        })
+      );
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (type === "blazemeter") {
-      payload.api_key = apiKey;
-      payload.api_secret = apiSecret;
-    }
-
-    if (type === "ado") {
-      payload.ado_pat = adoPat;
-    }
-
-    console.log("Saving payload:", payload);
-
-    // TODO: call create/update API here
-    // await dispatch(saveIntegration(payload)).unwrap();
-
-    onClose();
-
-    dispatch(
-      showSnackbar({
-        message: "Integration saved successfully",
-        type: "success",
-      })
-    );
-  } catch (err: any) {
-    console.error("Save failed:", err);
-
-    dispatch(
-      showSnackbar({
-        message: err?.message || "Failed to save integration",
-        type: "error",
-      })
-    );
-  }
-};
 
   /* ================= UI (UNCHANGED LOOK) ================= */
   return (
@@ -219,6 +293,15 @@ export default function IntegrationTokenDialog({
       </DialogTitle>
 
       <DialogContent sx={{ pt: 1 }}>
+
+        <TextField
+          label="Name"
+          fullWidth
+          size="small"
+          margin="normal"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
         {/* GitHub / Jira / Datadog */}
         {(type === "github" || type === "jira" || type === "datadog") && (
@@ -260,16 +343,54 @@ export default function IntegrationTokenDialog({
 
         {/* Azure DevOps */}
         {type === "ado" && (
+          <>
+            <TextField
+              label="Personal Access Token"
+              type="password"
+              fullWidth
+              size="small"
+              margin="normal"
+              value={adoPat}
+              onChange={(e) => setAdoPat(e.target.value)}
+            /></>
+        )}
+
+
+        {type === "datadog" && (
           <TextField
-            label="Personal Access Token"
+            label="Application Key"
             type="password"
             fullWidth
             size="small"
             margin="normal"
-            value={adoPat}
-            onChange={(e) => setAdoPat(e.target.value)}
+            value={applicationKey}
+            onChange={(e) => setApplicationKey(e.target.value)}
           />
         )}
+
+        {/* URL required for ADO / JIRA / Datadog */}
+        {(type === "ado" || type === "jira" || type === "datadog") && (
+          <TextField
+            label="URL"
+            fullWidth
+            size="small"
+            margin="normal"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+        )}
+
+        {type === "jira" && (
+          <TextField
+            label="Username"
+            fullWidth
+            size="small"
+            margin="normal"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        )}
+
 
       </DialogContent>
 
@@ -280,10 +401,11 @@ export default function IntegrationTokenDialog({
           variant="contained"
           disabled={
             (type === "blazemeter" && (!apiKey || !apiSecret)) ||
-            (type === "ado" && !adoPat) ||
-            ((type === "github" || type === "jira" || type === "datadog") &&
-              !token.trim())
+            (type === "ado" && (!adoPat || !url)) ||
+            ((type === "jira" || type === "datadog") && (!token.trim() || !url)) ||
+            (type === "github" && !token.trim())
           }
+
           onClick={handleSave}
         >
           Save

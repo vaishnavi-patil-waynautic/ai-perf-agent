@@ -9,5 +9,7 @@ export interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  loading: boolean;
+  // loading: boolean;
+  authLoading: boolean;     // bootstrap only
+  loginLoading: boolean;   
 }

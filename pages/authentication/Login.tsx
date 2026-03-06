@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginStart, loginSuccess, loginFailure } from '../../store/authSlice';
 import { authApi } from '../../services/api';
@@ -9,6 +9,7 @@ import { login } from './services/loginService';
 import { fetchProjectById } from '../project/store/project.thunks';
 import { useAppDispatch } from '../settings/store/hooks';
 import { config } from '../../config/backendConfig';
+import { RootState } from '@/store/store';
 
 
 const Login: React.FC = () => {
@@ -17,13 +18,17 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState<Boolean>(false);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
 
   const handleLogin = async (e: React.FormEvent) => {
+
     e.preventDefault();
+    setError("");
 
     dispatch(loginStart());
-
+    setLoading(true);
     try {
       const res = await login(email, password); // USE FORM STATE
 
@@ -36,6 +41,8 @@ const Login: React.FC = () => {
       setError(err.message || "Invalid email or password");
       dispatch(loginFailure());
     }
+
+    setLoading(false);
   };
 
 
@@ -94,7 +101,7 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-            <Button type="submit" fullWidth>Sign In</Button>
+            <Button type="submit" disabled={!!loading} fullWidth>Sign In</Button>
           </form>
 
           <div className="mt-6 text-center text-sm text-gray-600">

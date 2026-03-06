@@ -575,8 +575,8 @@ const AutoScriptPage: React.FC = () => {
 
   const { selectedProject } = useSelector((state: RootState) => state.project);
   const selectedApp = useSelector(
-      (state: RootState) => state.project.selectedApp
-    );
+    (state: RootState) => state.project.selectedApp
+  );
 
   const fileRef1 = useRef<HTMLInputElement>(null);
   const fileRef2 = useRef<HTMLInputElement>(null);
@@ -584,6 +584,7 @@ const AutoScriptPage: React.FC = () => {
   const applicationId = useSelector(
     (state: RootState) => state.project.selectedApp
   );
+  const [failedApps, setFailedApps] = useState<Number>(0);
 
 
 
@@ -613,9 +614,9 @@ const AutoScriptPage: React.FC = () => {
   //   } catch (err) {
   //     console.error(err);
   //   } 
-    
-    
-    
+
+
+
   //   const handleDelete = async (id: number) => {
   //     try {
   //       await autoScriptService.deleteJmx(id);
@@ -676,86 +677,156 @@ const AutoScriptPage: React.FC = () => {
 
 
   const handleDelete = async (id: number) => {
-  try {
-    await autoScriptService.deleteJmx(id);
+    try {
+      await autoScriptService.deleteJmx(id);
 
-    setHistory(h => h.filter(x => x.id !== id));
+      setHistory(h => h.filter(x => x.id !== id));
 
-    dispatch(
-      showSnackbar({
-        message: "Script deleted successfully",
-        type: "success",
-      })
-    );
-  } catch (err) {
-    console.error(err);
+      dispatch(
+        showSnackbar({
+          message: "Script deleted successfully",
+          type: "success",
+        })
+      );
+    } catch (err) {
+      console.error(err);
 
-    dispatch(
-      showSnackbar({
-        message: "Failed to delete script",
-        type: "error",
-      })
-    );
-  }
-};
-
-const handleDownload = async (id: number, script_name: string) => {
-  try {
-    const blob = await autoScriptService.downloadJmx(id);
-
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-
-    a.href = url;
-    a.download = `Script-${script_name}.jmx`;
-
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-
-    dispatch(
-      showSnackbar({
-        message: "Download started",
-        type: "success",
-      })
-    );
-  } catch (error) {
-    console.error("Dowload JMX Error : ",error);
-
-    dispatch(
-      showSnackbar({
-        message: error?.message || "Download failed",
-        type: "error",
-      })
-    );
-  }
-};
-
-
-
-
-useEffect(() => {
-  if (!showFullLayout) return;
-
-  const scroll = () => {
-    if (!tableRef.current) return;
-
-    // Find actual scroll container (window OR parent with overflow)
-    const scrollParent = document.querySelector("#root") || window;
-
-    tableRef.current.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+      dispatch(
+        showSnackbar({
+          message: "Failed to delete script",
+          type: "error",
+        })
+      );
+    }
   };
 
-  // Wait for layout + paint (very important)
-  requestAnimationFrame(() => {
-    requestAnimationFrame(scroll);
-  });
+  const handleDownload = async (id: number, script_name: string) => {
+    try {
+      const blob = await autoScriptService.downloadJmx(id);
 
-}, [showFullLayout]);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = `Script-${script_name}.jmx`;
+
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      dispatch(
+        showSnackbar({
+          message: "Download started",
+          type: "success",
+        })
+      );
+    } catch (error) {
+      console.error("Dowload JMX Error : ", error);
+
+      dispatch(
+        showSnackbar({
+          message: error?.message || "Download failed",
+          type: "error",
+        })
+      );
+    }
+  };
+
+
+  useEffect(() => {
+    if (!showFullLayout) return;
+    if (!tableRef.current) return;
+
+    const findScrollableParent = (el: HTMLElement | null): HTMLElement | Window => {
+      let parent = el?.parentElement;
+
+      while (parent) {
+        const style = window.getComputedStyle(parent);
+        const overflowY = style.overflowY;
+
+        if (overflowY === "auto" || overflowY === "scroll") {
+          return parent;
+        }
+
+        parent = parent.parentElement;
+      }
+
+      return window; // fallback
+    };
+
+    const scrollToTable = () => {
+      const table = tableRef.current!;
+      const scrollParent = findScrollableParent(table);
+
+      const rect = table.getBoundingClientRect();
+
+      const OFFSET = 100;
+
+      if (scrollParent === window) {
+        const absoluteTop = rect.top + window.pageYOffset;
+        window.scrollTo({
+          top: absoluteTop - OFFSET,
+          behavior: "smooth",
+        });
+
+        // Fallback: force small scroll if page barely scrollable
+        setTimeout(() => {
+          if (window.scrollY === 0) {
+            window.scrollBy({ top: 120, behavior: "smooth" });
+          }
+        }, 150);
+
+      } else {
+        const parentRect = (scrollParent as HTMLElement).getBoundingClientRect();
+        const scrollTop =
+          rect.top - parentRect.top + (scrollParent as HTMLElement).scrollTop - OFFSET;
+
+        (scrollParent as HTMLElement).scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+
+        // Fallback small scroll
+        setTimeout(() => {
+          const el = scrollParent as HTMLElement;
+          if (el.scrollTop === 0) {
+            el.scrollBy({ top: 120, behavior: "smooth" });
+          }
+        }, 150);
+      }
+    };
+
+    // Wait for layout + render + paint
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(scrollToTable);
+      });
+    });
+
+    return () => cancelAnimationFrame(id);
+  }, [showFullLayout, history.length]);
+  // useEffect(() => {
+  //   if (!showFullLayout) return;
+
+  //   const scroll = () => {
+  //     if (!tableRef.current) return;
+
+  //     // Find actual scroll container (window OR parent with overflow)
+  //     const scrollParent = document.querySelector("#root") || window;
+
+  //     tableRef.current.scrollIntoView({
+  //       behavior: "smooth",
+  //       block: "start",
+  //     });
+  //   };
+
+  //   // Wait for layout + paint (very important)
+  //   requestAnimationFrame(() => {
+  //     requestAnimationFrame(scroll);
+  //   });
+
+  // }, [showFullLayout]);
 
   // // ---------------- POLLING ----------------
   // useEffect(() => {
@@ -792,155 +863,222 @@ useEffect(() => {
 
   useEffect(() => {
 
-  if (!selectedProject?.id) return;
+    if (!selectedProject?.id) return;
 
-  let cancelled = false;
-  let timeoutId: ReturnType<typeof setTimeout>;
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
-  const fetchHistory = async () => {
+    const fetchHistory = async () => {
 
-    try {
-      const data = await autoScriptService.getHistory(selectedProject.id);
-
-      if (cancelled) return;
-
-      setHistory(data);
-
-      const stillRunning = data.some(
-        s => s.status === 'IN_PROGRESS' || s.status === 'PROCESSING'
-      );
-
-      if (stillRunning) {
-
-        timeoutId = setTimeout(fetchHistory, 5000);
-
-      } else {
-
-        // Only show message if polling was ACTIVE
-        // if (polling) {
-        //   setSnackbar({
-        //     open: true,
-        //     message: "Script generation completed",
-        //     type: "success",
-        //   });
-        // }
-
-        if (polling) {
-  dispatch(
-    showSnackbar({
-      message: "Script generation completed",
-      type: "success",
-    })
-  );
-}
-
-
+      try {
         const data = await autoScriptService.getHistory(selectedProject.id);
+
+        console.log("Script FetchHistory: ", data)
+
+        if (cancelled) return;
+
         setHistory(data);
 
+        const stillRunning = data.some(
+          s => s.status === 'in_progress' || s.status === "processing" || s.status === "pending"
+        );
+
+
+        const failedCount = data.filter(
+          s => s.status === "failed" || s.status === "error"
+        ).length;
+
+        console.log("Failed count aafter first count1 : ", failedCount)
+
+        setFailedApps(failedCount);
+
+        console.log("Has Still Running ", stillRunning);
+
+        if (stillRunning) {
+
+          console.log("POlling in progress")
+
+          const failedCount = data.filter(
+            s => s.status === "failed" || s.status === "error"
+          ).length;
+
+          console.log("Failed count aafter first count : ", failedCount)
+
+          setFailedApps(failedCount);
+
+          console.log("Failed Apps aafter first count : ", failedApps)
+
+          timeoutId = setTimeout(fetchHistory, 2000);
+
+        } else {
+
+          // Only show message if polling was ACTIVE
+          // if (polling) {
+          //   setSnackbar({
+          //     open: true,
+          //     message: "Script generation completed",
+          //     type: "success",
+          //   });
+          // }
+
+          // if (polling) {
+          //   dispatch(
+          //     showSnackbar({
+          //       message: "Script generation completed",
+          //       type: "success",
+          //     })
+          //   );
+          // }
+
+
+
+
+          const data = await autoScriptService.getHistory(selectedProject.id);
+
+          const failedCount = data.filter(
+            s => s.status === "failed" || s.status === "error"
+          ).length;
+
+
+          // if (polling) {
+          //   console.log("Failed count : ", failedCount, " FailedApps : ", failedApps)
+          //   if (failedCount > Number(failedApps)) {
+          //     dispatch(
+          //       showSnackbar({
+          //         message: "Script generation failed",
+          //         type: "error",
+          //       })
+          //     );
+          //   }
+          //   else {
+          //     dispatch(
+          //       showSnackbar({
+          //         message: "Script generation completed",
+          //         type: "success",
+          //       })
+          //     );
+          //   }
+          // }
+
+
+
+          console.log("Script Generation completed : ", data)
+
+          setHistory(data);
+
+          setPolling(false);
+        }
+
+      } catch (error) {
+        console.error("Polling failed:", error);
+        dispatch(
+          showSnackbar({
+            message: "Polling failed",
+            type: "error",
+          })
+        );
         setPolling(false);
       }
 
-    } catch (error) {
-  console.error("Polling failed:", error);
-  dispatch(
-    showSnackbar({
-      message: "Polling failed",
-      type: "error",
-    })
-  );
-  setPolling(false);
-}
+    };
 
-  };
+    fetchHistory();
 
-  fetchHistory();
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
 
-  return () => {
-    cancelled = true;
-    if (timeoutId) clearTimeout(timeoutId);
-  };
-
-}, [selectedProject?.id, polling]);
+  }, [selectedProject?.id, polling]);
 
   // ---------------- GENERATE ----------------
-//  const generate = async () => {
-//     if (!file1 || !file2) return;
+  //  const generate = async () => {
+  //     if (!file1 || !file2) return;
 
-//     try {
-//       setIsGenerating(true);
+  //     try {
+  //       setIsGenerating(true);
 
-//       console.log("Project : ", selectedProject.id, " application id : ", applicationId?.id);
+  //       console.log("Project : ", selectedProject.id, " application id : ", applicationId?.id);
 
-//       await autoScriptService.generate(
-//         file1,
-//         file2,
-//         selectedProject.id,
-//         applicationId?.id ?? undefined 
-//       );
+  //       await autoScriptService.generate(
+  //         file1,
+  //         file2,
+  //         selectedProject.id,
+  //         applicationId?.id ?? undefined 
+  //       );
 
-//       setSnackbar({
-//         open: true,
-//         message: "Script generation started",
-//         type: "success",
-//       });
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Script generation started",
+  //         type: "success",
+  //       });
 
-//       setPolling(true);
+  //       setPolling(true);
 
-//       // Reset only after success
-//       setFile1(null);
-//       setFile2(null);
+  //       // Reset only after success
+  //       setFile1(null);
+  //       setFile2(null);
 
-//       if (fileRef1.current) fileRef1.current.value = '';
-//       if (fileRef2.current) fileRef2.current.value = '';
+  //       if (fileRef1.current) fileRef1.current.value = '';
+  //       if (fileRef2.current) fileRef2.current.value = '';
 
-//     } catch (err) {
-//       console.error(err);
-//     } finally {
-//       setIsGenerating(false);
-//     }
-//   };
+  //     } catch (err) {
+  //       console.error(err);
+  //     } finally {
+  //       setIsGenerating(false);
+  //     }
+  //   };
 
-const generate = async () => {
-  if (!file1 || !file2) return;
+  const generate = async () => {
+    if (!file1 || !file2) return;
 
-  try {
-    setIsGenerating(true);
+    try {
+      setIsGenerating(true);
 
-    await autoScriptService.generate(
-      file1,
-      file2,
-      selectedProject.id,
-      applicationId?.id ?? undefined
-    );
+      autoScriptService.generate(
+        file1,
+        file2,
+        selectedProject.id,
+        applicationId?.id ?? undefined
+      );
 
-    dispatch(
-      showSnackbar({
-        message: "Script generation started",
-        type: "success",
-      })
-    );
+      dispatch(
+        showSnackbar({
+          message: "Script generation started",
+          type: "success",
+        })
+      );
 
-    setPolling(true);
+      setPolling(true);
 
+      setFile1(null);
+      setFile2(null);
+
+      if (fileRef1.current) fileRef1.current.value = "";
+      if (fileRef2.current) fileRef2.current.value = "";
+    } catch (err) {
+      console.error(err);
+
+      dispatch(
+        showSnackbar({
+          message: "Script generation failed",
+          type: "error",
+        })
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const cancelFile1 = () => {
     setFile1(null);
+    if (fileRef1.current) fileRef1.current.value = '';
+  };
+
+  const cancelFile2 = () => {
     setFile2(null);
-
-    if (fileRef1.current) fileRef1.current.value = "";
-    if (fileRef2.current) fileRef2.current.value = "";
-  } catch (err) {
-    console.error(err);
-
-    dispatch(
-      showSnackbar({
-        message: "Script generation failed",
-        type: "error",
-      })
-    );
-  } finally {
-    setIsGenerating(false);
-  }
-};
+    if (fileRef2.current) fileRef2.current.value = '';
+  };
 
 
   if (!selectedProject) {
@@ -953,60 +1091,72 @@ const generate = async () => {
   }
 
   // ======================================================
-// 🔴 FULL ORIGINAL LAYOUT (Upload TOP, Table BOTTOM)
-// ======================================================
-if (showFullLayout) {
-  return (
-    <div className="max-w-6xl m-auto p-8 min-h-screen">
+  // 🔴 FULL ORIGINAL LAYOUT (Upload TOP, Table BOTTOM)
+  // ======================================================
+  if (showFullLayout) {
+    return (
+      // <div className="max-w-6xl m-auto p-8 min-h-screen">
+      <div className="max-w-6xl m-auto p-8">
 
-      <UploadSection
-        file1={file1}
-        file2={file2}
-        onFile1={() => fileRef1.current?.click()}
-        onFile2={() => fileRef2.current?.click()}
-        onGenerate={generate}
-        isGenerating={isGenerating}
-      />
+        {/* <UploadSection
+          file1={file1}
+          file2={file2}
+          onFile1={() => fileRef1.current?.click()}
+          onFile2={() => fileRef2.current?.click()}
+          onGenerate={generate}
+          isGenerating={isGenerating}
+        /> */}
 
-       <div ref={tableRef}>
-      <HistoryTable 
-        history={history}
-        onDelete={handleDelete}
-        onDownload={handleDownload}
-        compact={false}
-      />
+        <UploadSection
+          file1={file1}
+          file2={file2}
+          onFile1={() => fileRef1.current?.click()}
+          onFile2={() => fileRef2.current?.click()}
+          onCancelFile1={cancelFile1}   // NEW
+          onCancelFile2={cancelFile2}   // NEW
+          onGenerate={generate}
+          isGenerating={isGenerating}
+        />
+
+        <div ref={tableRef}>
+          <HistoryTable
+            history={history}
+            onDelete={handleDelete}
+            onDownload={handleDownload}
+            compact={false}
+          />
+        </div>
+
+        {/* 🔽 SHOW LESS BUTTON */}
+        {/* 🔽 SHOW LESS BUTTON */}
+        <div className="text-center mt-4">
+          <button
+            className="text-blue-600 hover:underline"
+            onClick={() => setShowFullLayout(false)}
+          >
+            Show Less
+          </button>
+        </div>
+
+        {/* 👇 IMPORTANT: allows scroll when table small */}
+        {/* <div style={{ height: 300 }} /> */}
+
+        <AppSnackbar
+          open={snackbar.open}
+          message={snackbar.message}
+          type={snackbar.type}
+          onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+        />
+
+
+        <input hidden ref={fileRef1} type="file" accept=".har"
+          onChange={(e) => setFile1(e.target.files?.[0] || null)} />
+
+        <input hidden ref={fileRef2} type="file" accept=".har"
+          onChange={(e) => setFile2(e.target.files?.[0] || null)} />
       </div>
-
-      {/* 🔽 SHOW LESS BUTTON */}
-      {/* 🔽 SHOW LESS BUTTON */}
-<div className="text-center mt-4">
-  <button
-    className="text-blue-600 hover:underline"
-    onClick={() => setShowFullLayout(false)}
-  >
-    Show Less
-  </button>
-</div>
-
-{/* 👇 IMPORTANT: allows scroll when table small */}
-<div style={{ height: 300 }} />
-
-  <AppSnackbar
-        open={snackbar.open}
-        message={snackbar.message}
-        type={snackbar.type}
-        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-      />
-
-
-      <input hidden ref={fileRef1} type="file" accept=".har"
-        onChange={(e) => setFile1(e.target.files?.[0] || null)} />
-
-      <input hidden ref={fileRef2} type="file" accept=".har"
-        onChange={(e) => setFile2(e.target.files?.[0] || null)} />
-    </div>
-  );
-}
+    );
+  }
 
 
   // ======================================================
@@ -1015,39 +1165,56 @@ if (showFullLayout) {
   return (
     <div className="max-w-7xl m-auto p-8">
 
-        <AppSnackbar
+      <AppSnackbar
         open={snackbar.open}
         message={snackbar.message}
         type={snackbar.type}
         onClose={() => setSnackbar(s => ({ ...s, open: false }))}
       />
 
-      <div className="grid grid-cols-12 gap-1">
+      {/* <div className="grid grid-cols-12 gap-1">
+       */}
+      <div className="grid grid-cols-12 gap-1 items-stretch min-h-[420px]">
 
-        {/* LEFT — HISTORY */}
-        <div className="col-span-4">
 
-          <HistoryTable
-            history={history.slice(0, 4)}
-            onDelete={handleDelete}
-            onDownload={handleDownload}
-            compact={true}
-            showViewMore={true}
-            onViewMore={() => setShowFullLayout(true)}
-          />
-
-        </div>
 
         {/* RIGHT — INPUT */}
-        <div className="col-span-8">
+        <div className="col-span-8 h-full flex">
 
-          <UploadSection
+          {/* <UploadSection
             file1={file1}
             file2={file2}
             onFile1={() => fileRef1.current?.click()}
             onFile2={() => fileRef2.current?.click()}
             onGenerate={generate}
             isGenerating={isGenerating}
+          /> */}
+
+
+          <UploadSection
+            file1={file1}
+            file2={file2}
+            onFile1={() => fileRef1.current?.click()}
+            onFile2={() => fileRef2.current?.click()}
+            onCancelFile1={cancelFile1}   // NEW
+            onCancelFile2={cancelFile2}   // NEW
+            onGenerate={generate}
+            isGenerating={isGenerating}
+          />
+
+        </div>
+
+
+        {/* LEFT — HISTORY */}
+        <div className="col-span-4">
+
+          <HistoryTable
+            history={history.slice(0, 8)}
+            onDelete={handleDelete}
+            onDownload={handleDownload}
+            compact={true}
+            showViewMore={true}
+            onViewMore={() => setShowFullLayout(true)}
           />
 
         </div>

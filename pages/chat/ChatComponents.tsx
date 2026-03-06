@@ -308,6 +308,8 @@ import SchemaIcon from '@mui/icons-material/Schema';
 import { ChatMessage } from './chatTypes';
 import Tooltip from '@mui/material/Tooltip';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { AppDispatch, RootState } from '@/store/store';
+import { useDispatch, useSelector } from 'react-redux';
 
 
 /* ---------------- TYPES ---------------- */
@@ -417,12 +419,15 @@ export const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) =
 
 interface InputProps {
   onSend: (text: string, model: string) => void;
-  isFullScreen: boolean;
+  // isFullScreen: boolean;
 }
 
-export const ChatInput: React.FC<InputProps> = ({ onSend, isFullScreen }) => {
+export const ChatInput: React.FC<InputProps> = ({ onSend }) => {
   const [text, setText] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  
+  const dispatch = useDispatch<AppDispatch>();
+  const isFullScreen = useSelector((state: RootState) => state.chat.isFullScreen)
 
   const models: AIModel[] = [
     {

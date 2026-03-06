@@ -834,7 +834,7 @@ export const ConfigDetailsPage: React.FC = () => {
     const [openExecution, setOpenExecution] = useState(false);
     const [openPerf, setOpenPerf] = useState(false);
     const [openEmails, setOpenEmails] = useState(false);
-    
+
     const prevAppRef = useRef<typeof currentApp | null>(null);
 
 
@@ -843,6 +843,8 @@ export const ConfigDetailsPage: React.FC = () => {
         message: '',
         type: 'success' as SnackbarType,
     });
+
+
 
     useEffect(() => {
         if (!selectedProject?.id || !id) return;
@@ -854,22 +856,22 @@ export const ConfigDetailsPage: React.FC = () => {
     }, [id, selectedProject?.id]);
 
 
-useEffect(() => {
-    if (!currentApp) return;
+    useEffect(() => {
+        if (!currentApp) return;
 
-    const prev = prevAppRef.current;
+        const prev = prevAppRef.current;
 
-    if (prev?.config?.recipient_list !== currentApp.config.recipient_list) {
-        console.log("Email list changed");
-    }
+        if (prev?.config?.recipient_list !== currentApp.config.recipient_list) {
+            console.log("Email list changed");
+        }
 
-    if (prev?.builds?.[0]?.build_number !== currentApp.builds?.[0]?.build_number) {
-        console.log("New build arrived");
-    }
+        if (prev?.builds?.[0]?.build_number !== currentApp.builds?.[0]?.build_number) {
+            console.log("New build arrived");
+        }
 
-    prevAppRef.current = currentApp;
+        prevAppRef.current = currentApp;
 
-}, [currentApp]);
+    }, [currentApp]);
 
 
 
@@ -877,7 +879,7 @@ useEffect(() => {
     //     if (!currentApp) return;
 
     //     console.log("currentApp changed → update UI / derived state");
-        
+
 
     // }, [currentApp]);   // ✔ allowed here (NO dispatch inside)
 
@@ -1035,133 +1037,133 @@ useEffect(() => {
 
 
     const handleDownloadScript = async () => {
-  try {
-    if (!selectedProject?.id || !currentApp?.config?.application_id) return;
+        try {
+            if (!selectedProject?.id || !currentApp?.config?.application_id) return;
 
-    const blob = await downloadScript(
-      selectedProject.id,
-      currentApp.config.application_id
-    );
+            const blob = await downloadScript(
+                selectedProject.id,
+                currentApp.config.application_id
+            );
 
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
 
-    a.href = url;
-    a.download = `script-${currentApp.config.application_name}.jmx`;
+            a.href = url;
+            a.download = `script-${currentApp.config.application_name}.jmx`;
 
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
 
-    dispatch(
-      showSnackbar({
-        message: "Script downloaded successfully",
-        type: "success",
-      })
-    );
-  } catch (err: any) {
-    console.error(err);
+            dispatch(
+                showSnackbar({
+                    message: "Script downloaded successfully",
+                    type: "success",
+                })
+            );
+        } catch (err: any) {
+            console.error(err);
 
-    dispatch(
-      showSnackbar({
-        message: err?.message || "Download failed",
-        type: "error",
-      })
-    );
-  }
-};
+            dispatch(
+                showSnackbar({
+                    message: err?.message || "Download failed",
+                    type: "error",
+                })
+            );
+        }
+    };
 
 
-const handleAddEmail = async () => {
-  if (!emailInput.trim()) return;
-  if (!selectedProject?.id || !currentApp?.config?.application_id) return;
+    const handleAddEmail = async () => {
+        if (!emailInput.trim()) return;
+        if (!selectedProject?.id || !currentApp?.config?.application_id) return;
 
-  const existingEmails =
-    currentApp.config?.recipient_list
-      ?.split(",")
-      .map(e => e.trim())
-      .filter(Boolean) ?? [];
+        const existingEmails =
+            currentApp.config?.recipient_list
+                ?.split(",")
+                .map(e => e.trim())
+                .filter(Boolean) ?? [];
 
-  const newEmails = [...existingEmails, emailInput.trim()];
+        const newEmails = [...existingEmails, emailInput.trim()];
 
-  try {
-    await updateEmailRecipients(
-      selectedProject.id,
-      currentApp.config.application_id,
-      newEmails
-    );
+        try {
+            await updateEmailRecipients(
+                selectedProject.id,
+                currentApp.config.application_id,
+                newEmails
+            );
 
-    dispatch(updateRecipientsLocal(newEmails));
+            dispatch(updateRecipientsLocal(newEmails));
 
-    dispatch(
-      showSnackbar({
-        message: "Recipients updated successfully",
-        type: "success",
-      })
-    );
-  } catch (err: any) {
-    const msg =
-      err?.data?.error?.recipient_list?.[0] ||
-      err?.message ||
-      "Failed to update recipients";
+            dispatch(
+                showSnackbar({
+                    message: "Recipients updated successfully",
+                    type: "success",
+                })
+            );
+        } catch (err: any) {
+            const msg =
+                err?.data?.error?.recipient_list?.[0] ||
+                err?.message ||
+                "Failed to update recipients";
 
-    dispatch(
-      showSnackbar({
-        message: msg,
-        type: "error",
-      })
-    );
-  }
+            dispatch(
+                showSnackbar({
+                    message: msg,
+                    type: "error",
+                })
+            );
+        }
 
-  setEmailInput("");
-};
+        setEmailInput("");
+    };
 
-const handleRemoveEmail = async (email: string) => {
-  if (!selectedProject?.id || !currentApp?.config?.application_id) return;
+    const handleRemoveEmail = async (email: string) => {
+        if (!selectedProject?.id || !currentApp?.config?.application_id) return;
 
-  const existingEmails =
-    currentApp.config?.recipient_list
-      ?.split(",")
-      .map(e => e.trim())
-      .filter(Boolean) ?? [];
+        const existingEmails =
+            currentApp.config?.recipient_list
+                ?.split(",")
+                .map(e => e.trim())
+                .filter(Boolean) ?? [];
 
-  const updatedEmails = existingEmails.filter(e => e !== email);
+        const updatedEmails = existingEmails.filter(e => e !== email);
 
-  try {
-    await updateEmailRecipients(
-      selectedProject.id,
-      currentApp.config.application_id,
-      updatedEmails
-    );
+        try {
+            await updateEmailRecipients(
+                selectedProject.id,
+                currentApp.config.application_id,
+                updatedEmails
+            );
 
-    dispatch(
-      fetchConfig({
-        projectId: selectedProject.id,
-        appId: Number(id),
-      })
-    );
+            dispatch(
+                fetchConfig({
+                    projectId: selectedProject.id,
+                    appId: Number(id),
+                })
+            );
 
-    dispatch(
-      showSnackbar({
-        message: "Recipient removed successfully",
-        type: "success",
-      })
-    );
-  } catch (err: any) {
-    const msg =
-      err?.data?.error?.recipient_list?.[0] ||
-      err?.message ||
-      "Failed to update recipients";
+            dispatch(
+                showSnackbar({
+                    message: "Recipient removed successfully",
+                    type: "success",
+                })
+            );
+        } catch (err: any) {
+            const msg =
+                err?.data?.error?.recipient_list?.[0] ||
+                err?.message ||
+                "Failed to update recipients";
 
-    dispatch(
-      showSnackbar({
-        message: msg,
-        type: "error",
-      })
-    );
-  }
-};
+            dispatch(
+                showSnackbar({
+                    message: msg,
+                    type: "error",
+                })
+            );
+        }
+    };
 
 
 
@@ -1188,6 +1190,10 @@ const handleRemoveEmail = async (email: string) => {
             {open ? <ExpandLess /> : <ExpandMore />}
         </Box>
     );
+
+
+    // console.log("Failuers and warnings : ", currentApp?.failures, currentApp?.warnings, (currentApp?.failures?.length || currentApp?.warnings?.length))
+
 
     return (
         <Box className="bg-slate-50 min-h-screen m-auto max-w-6xl p-10">
@@ -1225,20 +1231,19 @@ const handleRemoveEmail = async (email: string) => {
 
 
                         {/* ================= Compact Status Messages ================= */}
-                        {(currentApp?.failures?.length || currentApp?.warnings?.length) && (
-                            <div className="mt-5 space-y-2 mb-5">
+                        {(currentApp?.failures?.length>0 || currentApp?.warnings?.length>0) && ( 
+                           <div className="mt-5 space-y-2 mb-5"> 
 
-                                {/* Failures */}
-                                {currentApp.failures?.map((f, idx) => (
+                                 {currentApp.failures?.map((f, idx) => (
                                     <div
                                         key={`fail-${idx}`}
                                         className="
-          w-full
-          bg-red-50/70 border border-red-200
-          rounded-lg px-3 py-1
-          text-xs
-          flex items-start gap-2
-        "
+                                            w-full
+                                            bg-red-50/70 border border-red-200
+                                            rounded-lg px-3 py-1
+                                            text-xs
+                                            flex items-start gap-2
+                                            "
                                     >
                                         <div className="w-1.5 rounded bg-red-500 mt-0.5" />
 
@@ -1251,20 +1256,19 @@ const handleRemoveEmail = async (email: string) => {
                                             </span>
                                         </div>
                                     </div>
-                                ))}
+                                ))} 
 
-                                {/* Warnings */}
-                                {currentApp.warnings?.map((w, idx) => (
+                                 {currentApp?.warnings?.map((w, idx) => (
                                     <div
                                         key={`warn-${idx}`}
                                         className="
-          w-full
-          bg-yellow-50/70 border border-yellow-200
-          rounded-lg px-3 py-1
-          text-xs
-          flex items-start gap-2
-        "
-                                    >
+                                            w-full
+                                            bg-yellow-50/70 border border-yellow-200
+                                            rounded-lg px-3 py-1
+                                            text-xs
+                                            flex items-start gap-2
+                                            "
+                                                                        >
                                         <div className="w-1.5 rounded bg-yellow-500 mt-0.5" />
 
                                         <div className="leading-snug">
@@ -1276,10 +1280,10 @@ const handleRemoveEmail = async (email: string) => {
                                             </span>
                                         </div>
                                     </div>
-                                ))}
+                                ))} 
 
-                            </div>
-                        )}
+                             </div>
+                        )} 
 
 
 
@@ -1300,15 +1304,22 @@ const handleRemoveEmail = async (email: string) => {
                             {/* Script → download */}
                             <IntegrationTile
                                 title="Script"
-                                active={currentApp.config.script_id !== null}
+                                active={currentApp.config.script_id !== null || currentApp.config.script_file_configured == true}
                                 onClick={handleDownloadScript}
                             />
 
                             {/* Normal links */}
-                            <IntegrationTile
+                            {/* <IntegrationTile
                                 title="GitHub"
                                 active={currentApp.config.gha_repo_url !== null}
                                 link={currentApp.config.gha_repo_url}
+                            /> */}
+
+
+                            <IntegrationTile
+                                title="GitHub"
+                                active={true}
+                                link={"https://github.com/Pushpak03/test_service-workflow.git"}
                             />
 
                             <IntegrationTile
@@ -1317,16 +1328,29 @@ const handleRemoveEmail = async (email: string) => {
                                 link={currentApp.config.blazemeter_url}
                             />
 
-                            <IntegrationTile
+                            {/* <IntegrationTile
                                 title="Azure DevOps"
                                 active={currentApp.config.ado_url !== null}
                                 link={currentApp.config.ado_url}
-                            />
+                            /> */}
 
                             <IntegrationTile
+                                title="Azure DevOps"
+                                active={true}
+                                link={"https://dev.azure.com/waynautic/ai-perf-agent/_workitems/recentlyupdated/"}
+                            />
+
+                            {/* <IntegrationTile
                                 title="Datadog"
                                 active={currentApp.config.datadog_url !== null}
                                 link={currentApp.config.datadog_url}
+                            /> */}
+
+
+                            <IntegrationTile
+                                title="Datadog"
+                                active={true}
+                                link={"https://app.datadoghq.com/software?env=%2A&fromUser=true&lens=Performance"}
                             />
                         </div>
                     </Collapse>
@@ -1493,7 +1517,7 @@ const handleRemoveEmail = async (email: string) => {
                                 onClick={() => {
                                     if (!currentApp.config.gha_workflow) return;
 
-                                    window.open(currentApp.config.gha_workflow, "_blank", "noopener,noreferrer");
+                                    window.open("https://github.com/Pushpak03/test_service-workflow/actions/workflows/main.yml", "_blank", "noopener,noreferrer");
                                 }}
                             >
                                 Run Now

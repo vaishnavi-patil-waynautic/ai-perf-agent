@@ -1,20 +1,23 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
-  sendMessageToAPI,
+  fetchChatHistories,
+  fetchChatMessages,
   getFAQs,
-  getChatHistories,
-  loadChatById,
-  createNewChat,
+  sendFeedbackAPI,
+  sendMessageToAPI,
 } from '../../services/chat.service';
-import { ChatMessage, SendMessagePayload } from '../../types/chat.types';
+import { ChatMessage, MessageReactionPayload, SendMessagePayload } from '../../types/chat.types';
 import { addUserMessage } from './chat.slice';
 
 // Send message thunk
 export const sendMessage = createAsyncThunk(
   'chat/sendMessage',
-  async (payload: SendMessagePayload, { dispatch, rejectWithValue }) => {
+  async (payload: SendMessagePayload, { dispatch, getState, rejectWithValue }) => {
     try {
-      // Add user message first
+      const state: any = getState();
+      const chatId = state.chat.currentChatId;
+
+      // Add user message immediately
       const userMessage: ChatMessage = {
         id: Date.now().toString(),
         sender: 'user',
@@ -24,15 +27,24 @@ export const sendMessage = createAsyncThunk(
       };
       dispatch(addUserMessage(userMessage));
 
-      // Get bot response
-      const botResponse = await sendMessageToAPI(payload.text, payload.modelId);
-      return botResponse;
+      // Call API
+      const { message, chatId: newChatId } = await sendMessageToAPI(
+        payload.text,
+        payload.modelId,
+        chatId && chatId !== "0" ? chatId : undefined
+      );
+
+      // If chat was newly created → reload chat list
+      if (!chatId || chatId === "0") {
+        dispatch(loadChatHistories());
+      }
+
+      return { message, chatId: newChatId };
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to send message');
     }
   }
 );
-
 // Load FAQs
 export const loadFAQs = createAsyncThunk(
   'chat/loadFAQs',
@@ -51,10 +63,9 @@ export const loadChatHistories = createAsyncThunk(
   'chat/loadChatHistories',
   async (_, { rejectWithValue }) => {
     try {
-      const histories = await getChatHistories();
-      return histories;
+      return await fetchChatHistories();
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to load chat histories');
+      return rejectWithValue(error.message);
     }
   }
 );
@@ -64,10 +75,25 @@ export const loadChatMessages = createAsyncThunk(
   'chat/loadChatMessages',
   async (chatId: string, { rejectWithValue }) => {
     try {
-      const messages = await loadChatById(chatId);
-      return messages;
+      return await fetchChatMessages(chatId);
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to load chat messages');
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const sendFeedback = createAsyncThunk(
+  'chat/sendFeedback',
+  async ({ messageId, reaction }: MessageReactionPayload, { rejectWithValue }) => {
+    try {
+      await sendFeedbackAPI(
+        messageId,
+        reaction === 'like',
+        reaction === 'dislike'
+      );
+      return { messageId, reaction };
+    } catch (error: any) {
+      return rejectWithValue(error.message);
     }
   }
 );
@@ -77,7 +103,7 @@ export const createChat = createAsyncThunk(
   'chat/createChat',
   async (_, { rejectWithValue }) => {
     try {
-      const chatId = await createNewChat();
+      const chatId = await createChat();
       return chatId;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to create chat');

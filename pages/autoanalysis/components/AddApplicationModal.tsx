@@ -605,11 +605,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
-  TextField, MenuItem, LinearProgress, Box, Typography, Alert
+  TextField, MenuItem, LinearProgress, Box, Typography, Alert,
+  IconButton
 } from '@mui/material';
 import { AppDispatch } from '../../../store/store';
 import { fetchJmx } from '../store/autoAnalysisSlice';
-import { configureApplication, getApplicationStatus } from '../services/mockService';
+import { configureApplication, getApplicationStatus, syncSecretsToGitHub } from '../services/mockService';
+import { X } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -641,6 +643,14 @@ export const AddApplicationModal: React.FC<Props> = ({
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null); // ADDED
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const githubRepoRef = useRef<string>(''); // ← stale closure fix
+
+  // ── SYNC STATE ─────────────────────────────────────────────────────────────
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [syncMsg, setSyncMsg] = useState('');
+  const [syncedSecrets, setSyncedSecrets] = useState<string[]>([]);
+  const [secretsSynced, setSecretsSynced] = useState(false);
+  // ──────────────────────────────────────────────────────────────────────────
 
   const [formData, setFormData] = useState({
     appName: selectedApplicationName,
@@ -650,7 +660,9 @@ export const AddApplicationModal: React.FC<Props> = ({
     users: 10,
     duration: 30,
     throughput: 100,
-    githubRepo: ''
+    githubRepo: '',
+    adoURL: '',
+    datadogURL: ''
   });
 
   /* ================= POLLING (ADDED) ================= */
@@ -661,10 +673,10 @@ export const AddApplicationModal: React.FC<Props> = ({
       pollingRef.current = null;
     }
 
-     if (timeoutRef.current) {
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = null;
-  }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
   };
 
   const fetchStatus = async () => {
@@ -678,24 +690,31 @@ export const AddApplicationModal: React.FC<Props> = ({
         Number(selectedApplicationId)
       );
 
-          console.log("Get status :", res);
+      console.log("Get status :", res);
 
-    const statusData = res?.data;   // 👈 FIX
+      const statusData = res?.data;   // 👈 FIX
 
-    const progressVal = statusData?.progress_percentage ?? 0;
-    const msgVal =
-      statusData?.last_setup_step ||
-      statusData?.status ||
-      "Processing...";
+      const progressVal = statusData?.progress_percentage ?? 0;
+      const appStatus   = statusData?.status ?? "";
+
+      const msgVal =
+        statusData?.last_setup_step ||
+        "Configuration Processing...";
 
       setProgress(progressVal);
-    setStatusMsg(msgVal);
+      setStatusMsg(msgVal);
 
-    console.log("progress :", progressVal, " and msg :", msgVal);
+      console.log("progress :", progressVal, " and msg :", msgVal);
 
-    if (progressVal >= 100 || statusData?.status === "completed"){
+      const isDone =
+        progressVal >= 100 ||
+        appStatus === "completed" ||
+        appStatus === "configured" ||
+        appStatus === "partially_configured" ||
+        appStatus === "failed";
 
-      // if (data.progress >= 100 || data.status === "completed" || data.status === "partially_configured") {
+      if (isDone) {
+        // if (data.progress >= 100 || data.status === "completed" || data.status === "partially_configured") {
         setProgress(100);
         setStep("success");
         stopPolling();
@@ -715,16 +734,23 @@ export const AddApplicationModal: React.FC<Props> = ({
     pollingRef.current = setInterval(fetchStatus, 2000);
 
     timeoutRef.current = setTimeout(() => {
-    console.log("Polling timeout reached (2 min)");
+      console.log("Polling timeout reached (2 min)");
 
-    stopPolling();
-    setStatusMsg("Setup taking too long. Try again.");
+      stopPolling();
+      setStatusMsg("Setup taking too long. Try again.");
 
-    handleClose();             // 🔥 close popup automatically
-  }, 120000);
+      handleClose();             // 🔥 close popup automatically
+    }, 120000);
   };
 
   /* ================= EXISTING JMX FETCH ================= */
+
+  useEffect(() => {
+    if (!open) return;
+
+    resetSyncState();
+
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -755,6 +781,36 @@ export const AddApplicationModal: React.FC<Props> = ({
     return () => stopPolling();
   }, [open, stage]);
 
+
+  /* ================= SYNC SECRETS TO GITHUB ================= */
+
+  const handleSyncSecrets = async () => {
+    const repoUrl = githubRepoRef.current.trim(); // ← ref se lo, stale closure nahi
+    if (!repoUrl) return;
+
+    setSyncStatus('syncing');
+    setSyncMsg('');
+    setSecretsSynced(false);
+
+    try {
+      const result = await syncSecretsToGitHub(
+        projectId,
+        Number(selectedApplicationId),
+        repoUrl    // ← ref ki fresh value
+      );
+
+      const pushed = result?.pushed || [];
+      setSyncedSecrets(pushed);
+      setSyncStatus('success');
+      setSyncMsg(result?.message || `✅ ${pushed.length} secrets synced to GitHub`);
+      setSecretsSynced(true);
+    } catch (err: any) {
+      setSyncStatus('error');
+      setSyncMsg(err.message || 'Sync failed. Check GitHub integration in Settings.');
+      setSecretsSynced(false);
+    }
+  };
+
   /* ================= START CONFIG ================= */
 
   const handleStart = async () => {
@@ -767,6 +823,8 @@ export const AddApplicationModal: React.FC<Props> = ({
       payload.append('duration', String(formData.duration));
       payload.append('ramp_up', '1');
       payload.append('auto_execute', 'false');
+      payload.append('ado_url', formData.adoURL);
+      payload.append('datadog_url', formData.datadogURL);
 
       if (formData.githubRepo) {
         payload.append('github_repo_url', formData.githubRepo);
@@ -794,12 +852,59 @@ export const AddApplicationModal: React.FC<Props> = ({
     }
   };
 
+
+  const resetSyncState = () => {
+    setSyncStatus('idle');
+    setSyncMsg('');
+    setSecretsSynced(false);
+    setSyncedSecrets([]);   // must be array, not null
+  };
+
   /* ================= CLOSE (MODIFIED) ================= */
 
   const handleClose = () => {
     stopPolling(); // ADDED
+    setFormData({
+      appName: selectedApplicationName,
+      jmxSource: 'auto',
+      jmxFile: null as File | null,
+      jmxScriptId: '',
+      users: 10,
+      duration: 30,
+      throughput: 100,
+      githubRepo: '',
+      datadogURL: '',
+      adoURL: ''
+    });
+
+
+    resetSyncState();
+
     onClose();
   };
+
+
+
+
+
+  const handleCancel = () => {
+    setFormData({
+      appName: selectedApplicationName,
+      jmxSource: 'auto',
+      jmxFile: null as File | null,
+      jmxScriptId: '',
+      users: 10,
+      duration: 30,
+      throughput: 100,
+      githubRepo: '',
+      datadogURL: '',
+      adoURL: ''
+    });
+
+    resetSyncState();
+
+    onClose();
+  }
 
   /* ================= UI (UNCHANGED except status text) ================= */
 
@@ -879,35 +984,91 @@ export const AddApplicationModal: React.FC<Props> = ({
                 ))}
               </TextField>
             ) : (
-              <Button
-  variant="outlined"
-  component="label"
-  fullWidth
-  sx={{
-    borderRadius: 2,
-    textTransform: 'none',
-    boxShadow: 1,
-    py: 1.5,
-    bgcolor: 'background.paper',
-    '&:hover': { bgcolor: 'primary.light' },
-  }}
->
-  {formData.jmxFile ? `Selected: ${formData.jmxFile.name}` : "Upload JMX"}
+              // <Button
+              //   variant="outlined"
+              //   component="label"
+              //   fullWidth
+              //   sx={{
+              //     borderRadius: 2,
+              //     textTransform: 'none',
+              //     boxShadow: 1,
+              //     py: 1.5,
+              //     bgcolor: 'background.paper',
+              //     '&:hover': { bgcolor: 'primary.light' },
+              //   }}
+              // >
+              //   {formData.jmxFile ? `Selected: ${formData.jmxFile.name}` : "Upload JMX"}
 
-  <input
-    type="file"
-    hidden
-    accept=".jmx"
-    onChange={(e) => {
-      const file = e.target.files?.[0] || null;
-      setFormData({ ...formData, jmxFile: file });
-    }}
-  />
-</Button>
+              //   <input
+              //     type="file"
+              //     hidden
+              //     accept=".jmx"
+              //     onChange={(e) => {
+              //       const file = e.target.files?.[0] || null;
+              //       setFormData({ ...formData, jmxFile: file });
+              //     }}
+              //   />
+              // </Button>
+
+              <Button
+                variant="outlined"
+                component="label"
+                fullWidth
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                  boxShadow: 1,
+                  // py: 1.5,
+                  bgcolor: "background.paper",
+                  display: "flex",
+                  justifyContent: formData.jmxFile ? "space-between" : "center",
+                  alignItems: "center",
+
+                  // ❌ disable hover color change
+                  "&:hover": {
+                    bgcolor: "background.paper",
+                    boxShadow: 1,
+                  },
+                }}
+              >
+                {/* Text */}
+                <span style={{ pointerEvents: "none" }}>
+                  {formData.jmxFile
+                    ? `Selected: ${formData.jmxFile.name}`
+                    : "Upload JMX"}
+                </span>
+
+                {/* Remove icon when file selected */}
+                {formData.jmxFile && (
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setFormData({ ...formData, jmxFile: null });
+                    }}
+                  >
+                    <X size={16} />
+                  </IconButton>
+                )}
+
+                {/* Hidden file input */}
+                <input
+                  type="file"
+                  hidden
+                  accept=".jmx"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setFormData({ ...formData, jmxFile: file });
+                  }}
+                />
+              </Button>
+
+
 
             )}
 
-            <TextField
+            {/* <TextField
               label="GitHub Repository URL"
               fullWidth
               size="small"
@@ -916,41 +1077,159 @@ export const AddApplicationModal: React.FC<Props> = ({
                 setFormData({ ...formData, githubRepo: e.target.value })
               }
               sx={{ borderRadius: 2, boxShadow: 1 }}
+            /> 
+            
+            
+            <TextField
+              label="Azure Devops URL"
+              type="text"
+              size="small"
+              fullWidth
+              value={formData.adoURL}
+              onChange={(e) =>
+                setFormData({ ...formData, adoURL: e.target.value })
+              }
             />
+
+            
+            <TextField
+              label="Datadog URL"
+              type="text"
+              size="small"
+              fullWidth
+              value={formData.datadogURL}
+              onChange={(e) =>
+                setFormData({ ...formData, datadogURL: e.target.value })
+              }
+            />
+            
+            */}
+
+
+            {/* GitHub Repo URL + Sync Button */}
+            <Box>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                <TextField
+                  label="GitHub Repository URL"
+                  fullWidth
+                  size="small"
+                  value={formData.githubRepo || ''}
+                  onChange={(e) => {
+                    setFormData({ ...formData, githubRepo: e.target.value });
+                    githubRepoRef.current = e.target.value; // ← ref bhi update karo
+                    // URL change hone par sync reset karo
+                    if (syncStatus === 'success') {
+                      setSyncStatus('idle');
+                      setSecretsSynced(false);
+                      setSyncMsg('');
+                    }
+                  }}
+                  sx={{ borderRadius: 2, boxShadow: 1 }}
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleSyncSecrets}
+                  disabled={!formData.githubRepo.trim() || syncStatus === 'syncing'}
+                  size="small"
+                  sx={{
+                    whiteSpace: 'nowrap',
+                    height: 40,
+                    px: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    flexShrink: 0,
+                    ...(syncStatus === 'success' && {
+                      borderColor: '#16a34a',
+                      color: '#16a34a',
+                      bgcolor: '#f0fdf4',
+                      '&:hover': { bgcolor: '#dcfce7', borderColor: '#16a34a' }
+                    }),
+                    ...(syncStatus === 'error' && {
+                      borderColor: '#dc2626',
+                      color: '#dc2626',
+                      bgcolor: '#fff1f2',
+                      '&:hover': { bgcolor: '#fee2e2', borderColor: '#dc2626' }
+                    }),
+                  }}
+                >
+                  {syncStatus === 'syncing' ? 'Syncing…' :
+                    syncStatus === 'success' ? '✓ Synced' :
+                      syncStatus === 'error' ? 'Retry' :
+                        'Sync Secrets'}
+                </Button>
+              </Box>
+
+              {/* Sync feedback message */}
+              {syncMsg && (
+                <Box sx={{
+                  mt: 1, px: 1.5, py: 1, borderRadius: 1, fontSize: '0.75rem',
+                  ...(syncStatus === 'success'
+                    ? { bgcolor: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' }
+                    : { bgcolor: '#fff1f2', color: '#be123c', border: '1px solid #fecdd3' }
+                  )
+                }}>
+                  {syncMsg}
+                  {syncStatus === 'success' && syncedSecrets.length > 0 && (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                      {syncedSecrets.map((s) => (
+                        <Box key={s} component="span" sx={{
+                          bgcolor: '#d1fae5', color: '#065f46',
+                          border: '1px solid #a7f3d0',
+                          borderRadius: 0.5, px: 0.75, py: 0.25,
+                          fontSize: '0.7rem', fontFamily: 'monospace', fontWeight: 600
+                        }}>
+                          {s}
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              {/* Helper hint */}
+              {syncStatus === 'idle' && !formData.githubRepo.trim() && (
+                <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
+                  Save the repo URL and sync it — then the Start Configuration option will be enabled.
+                </Typography>
+              )}
+            </Box>
+
+            
+            
 
 
             <TextField
-  label="Concurrent Users"
-  type="number"
-  size="small"
-  fullWidth
-  value={formData.users}
-  onChange={(e) =>
-    setFormData({ ...formData, users: Number(e.target.value) })
-  }
-/>
+              label="Concurrent Users"
+              type="number"
+              size="small"
+              fullWidth
+              value={formData.users}
+              onChange={(e) =>
+                setFormData({ ...formData, users: Number(e.target.value) })
+              }
+            />
 
-<TextField
-  label="Duration (min)"
-  type="number"
-  size="small"
-  fullWidth
-  value={formData.duration}
-  onChange={(e) =>
-    setFormData({ ...formData, duration: Number(e.target.value) })
-  }
-/>
+            <TextField
+              label="Duration (min)"
+              type="number"
+              size="small"
+              fullWidth
+              value={formData.duration}
+              onChange={(e) =>
+                setFormData({ ...formData, duration: Number(e.target.value) })
+              }
+            />
 
-<TextField
-  label="Throughput (hits/s)"
-  type="number"
-  size="small"
-  fullWidth
-  value={formData.throughput}
-  onChange={(e) =>
-    setFormData({ ...formData, throughput: Number(e.target.value) })
-  }
-/>
+            <TextField
+              label="Throughput (hits/s)"
+              type="number"
+              size="small"
+              fullWidth
+              value={formData.throughput}
+              onChange={(e) =>
+                setFormData({ ...formData, throughput: Number(e.target.value) })
+              }
+            />
 
           </Box>
         )}
@@ -981,7 +1260,7 @@ export const AddApplicationModal: React.FC<Props> = ({
       >
         {step === 'form' && (
           <>
-            <Button onClick={onClose} color="inherit" sx={{ color: 'grey.700', fontWeight: '600' }}>
+            <Button onClick={handleCancel} color="inherit" sx={{ color: 'grey.700', fontWeight: '600' }}>
               Cancel
             </Button>
             {/* <Button
@@ -995,6 +1274,7 @@ export const AddApplicationModal: React.FC<Props> = ({
             <Button
               variant="contained"
               onClick={handleStart}
+              disabled={!secretsSynced || formData.githubRepo === '' || (formData.jmxFile === null && formData.jmxScriptId === '')}
               disableElevation
               sx={{
                 px: 4, py: 1.2, textTransform: 'none', bgcolor: '#1d4ed8',      // blue-700

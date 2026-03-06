@@ -81,7 +81,7 @@ const handleDownload = async (id, application_name) => {
     const a = document.createElement("a");
 
     a.href = url;
-    a.download = `NFR-${application_name}-${id}.txt`;
+    a.download = `NFR-${application_name}-${id}.md`;
 
     document.body.appendChild(a);
     a.click();

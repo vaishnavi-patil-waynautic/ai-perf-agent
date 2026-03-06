@@ -4,6 +4,9 @@ import ChatHeader from '../components/chat/ChatHeader';
 import ChatInput from '../components/chat/ChatInput';
 import MessageBubble from '../components/chat/MessageBubble';
 import { useAppSelector } from '../store/hooks';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/store/store';
+import { toggleScreenView } from '../store/slices/chat.slice';
 
 interface ChatWindowProps {
   isOpen: boolean;
@@ -13,6 +16,7 @@ interface ChatWindowProps {
 const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const messages = useAppSelector((state) => state.chat.messages);
+  const dispatch = useDispatch<AppDispatch>();
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -20,6 +24,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isOpen]);
+
+
+   const handleToggle = () =>{
+      dispatch(toggleScreenView());
+    }
 
   if (!isOpen) return null;
 
@@ -48,7 +57,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
         ))}
       </div>
 
-      <ChatInput isFullScreen={false} />
+      <ChatInput
+      //  isFullScreen={false} 
+       />
     </Paper>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Fab, Tooltip } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import ChatWindow from '../pages/ChatWindow';
+import { BotMessageSquare } from 'lucide-react';
 
 const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,13 +33,15 @@ const ChatWidget: React.FC = () => {
             } transition-colors duration-300`}
             size="large"
           >
-            <ChatIcon
+            {/* <ChatIcon
               className={
                 isOpen
                   ? 'rotate-90 transition-transform'
                   : 'transition-transform'
               }
-            />
+            /> */}
+
+            {/* <BotMessageSquare /> */}
           </Fab>
         </Tooltip>
       </div>

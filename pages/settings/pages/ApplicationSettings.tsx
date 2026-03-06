@@ -20,6 +20,7 @@ export default function ApplicationSettings() {
 
   const [open, setOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<Application | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState<Application | null>(null);
 
   // const handleAdd = async (data: { name: string; description: string }) => {
   //   if (!selectedProject?.id) return;
@@ -133,6 +134,9 @@ const handleEdit = async (data: { name: string; description: string }) => {
 
 const handleDelete = async (id: number) => {
   try {
+
+    if(!deleteOpen) return;
+
     await dispatch(deleteApplication(id)).unwrap();
 
     dispatch(
@@ -151,6 +155,8 @@ const handleDelete = async (id: number) => {
       })
     );
   }
+
+  setDeleteOpen(null);
 };
 
 
@@ -179,15 +185,6 @@ const handleDelete = async (id: number) => {
 
       <div className="space-y-3">
         {applications.map(app => (
-          // <ApplicationCard
-          //   key={app.id}
-          //   app={app}
-          //   onEdit={() => {
-          //     setEditingApp(app);
-          //     setOpen(true);
-          //   }}
-          //   onDelete={() => handleDelete(app.id)}
-          // />
 
           <InfoCard
             key={app.id}
@@ -198,7 +195,7 @@ const handleDelete = async (id: number) => {
                 setEditingApp(app);
                 setOpen(true);
               },
-              onDelete: () => handleDelete(app.id),
+              onDelete: () => setDeleteOpen(app),
             })}
           />
 
@@ -214,6 +211,36 @@ const handleDelete = async (id: number) => {
         }}
         onSubmit={editingApp ? handleEdit : handleAdd}
       />
+
+
+       {deleteOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-[400px] border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Remove Integration</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to remove application
+              <span className="font-medium text-gray-900"> {deleteOpen?.name}</span>? This action may delete all configurations for this application.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteOpen(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() => handleDelete(deleteOpen?.id)}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

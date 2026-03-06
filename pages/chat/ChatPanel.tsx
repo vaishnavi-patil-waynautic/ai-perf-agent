@@ -8,16 +8,21 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { ChatInput, MessageBubble } from './ChatComponents'; // Use previous components
 import { ChatMessage } from './chatTypes';
 import { Tooltip } from "@mui/material";
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/store/store';
 
 interface ChatPanelProps {
     onClose: () => void;
-    isFullScreen: boolean;
-    toggleFullScreen: () => void;
+    // isFullScreen: boolean;
+    // toggleFullScreen: () => void;
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ onClose, isFullScreen, toggleFullScreen }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({ onClose }) => {
     const [faqOpen, setFaqOpen] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+    
+  const dispatch = useDispatch<AppDispatch>();
+  const isFullScreen = useSelector((state: RootState) => state.chat.isFullScreen)
 
     // Mock Messages
     const [messages, setMessages] = useState<ChatMessage[]>([
@@ -55,7 +60,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ onClose, isFullScreen, toggleFull
 
                     <div className="flex items-center gap-1">
                         <Tooltip title={isFullScreen ? "Exit Full Screen" : "Full Screen"}>
-                            <IconButton size="small" onClick={toggleFullScreen} className="text-gray-500 hover:text-blue-600">
+                            <IconButton size="small" onClick={()=>{}} className="text-gray-500 hover:text-blue-600">
                                 {isFullScreen ? <CloseFullscreenIcon fontSize="small" /> : <OpenInFullIcon fontSize="small" />}
                             </IconButton>
                         </Tooltip>
@@ -103,7 +108,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ onClose, isFullScreen, toggleFull
             </div>
 
             {/* --- 3. Footer Input --- */}
-            <ChatInput onSend={handleSend} isFullScreen={isFullScreen} />
+            <ChatInput onSend={handleSend} />
         </div>
     );
 };

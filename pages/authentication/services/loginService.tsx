@@ -28,8 +28,9 @@ export const login = async (
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => null);
-    console.error(errorData)
-    throw new Error(errorData?.message || errorData?.data?.error?.email || errorData?.data?.error?.password || errorData?.data?.error || "Login failed");
+      console.log("LOGIN ERROR RESPONSE:", errorData);
+    // console.error(errorData)
+    throw new Error(errorData?.message || errorData?.data?.errors?.email || errorData?.data?.errors?.password || errorData?.data?.error || "Login failed");
   }
 
   getUserInfo();

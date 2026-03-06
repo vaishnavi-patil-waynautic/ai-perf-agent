@@ -116,7 +116,7 @@ export const HistoryTable: React.FC<Props> = ({
       className="text-blue-600 hover:underline"
       onClick={onViewMore}
     >
-      View Full History
+      Show More
     </button>
   </div>
 )}

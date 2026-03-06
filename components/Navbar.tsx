@@ -44,18 +44,22 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
     }
 
 
-    if (projects.length > 0) {
-      console.log("PROJECTS : ", projects)
-      console.log("FETCHING FIRST PROJECT")
-      const lastId = projects[projects.length-1].id
-      dispatch(fetchProjectById(lastId));
-    }
+    
 
     const storedId = localStorage.getItem('selectedProjectId');
 
-    if (storedId) {
+    if(storedId){
       dispatch(fetchProjectById(Number(storedId)));
     }
+    
+    else {
+      console.log("PROJECTS : ", projects)
+      console.log("FETCHING FIRST PROJECT")
+      const lastId = projects[projects.length-1]?.id
+      dispatch(fetchProjectById(lastId));
+    }
+  
+    
   }, [dispatch, selectProject, projects.length]);
 
 

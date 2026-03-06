@@ -26,6 +26,36 @@ export const integrationService = {
     return json?.data?.integration;
   },
 
+  async createIntegration(
+  projectId: number,
+  payload: any
+): Promise<IntegrationDetail> {
+  const res = await fetch(
+    `${config.baseUrl}/autoanalysis/projects/${projectId}/integrations/`,
+    {
+      method: "POST",
+      headers: {
+        ...getHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw {
+      message: json?.data?.error || "Failed to create integration",
+      errors: json?.data?.errors || null,
+      raw: json,
+    };
+  }
+
+  return json?.data?.integration;
+},
+
+
 
   async list(projectId: number): Promise<IntegrationListResponse> {
     const res = await fetch(

@@ -21,17 +21,25 @@ import { AutoAnalysisRoutes } from './pages/autoanalysis';
 import { ConfigDetailsPage } from './pages/autoanalysis/pages/ConfigDetailsPage';
 import { ResultPage } from './pages/autoanalysis/pages/ResultPage';
 import { DashboardPage } from './pages/autoanalysis/pages/DashboardPage';
-import { SettingsLayout, ApplicationSettings, IntegrationsSettings, UserProfileSettings, AISettings } from "./pages/settings";
+import { SettingsLayout, ApplicationSettings, UserProfileSettings, AISettings } from "./pages/settings";
 import IntegrationsList from './pages/settings/pages/IntegrationList';
 import IntegrationDetail from './pages/settings/pages/IntegrationDetail';
 import { fetchCurrentUser } from './pages/settings/store/user.thunk';
 import GlobalAppSnackbar from './components/GlobalAppSnackbar';
+import { authChecked } from './store/authSlice';
+import { BotMessageSquare } from 'lucide-react';
+
 
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, authLoading } = useSelector((state: RootState) => state.auth);
   const location = useLocation();
+
+    if (authLoading) {
+    return <div className="h-screen flex items-center justify-center">Loading...</div>;
+  }
+  
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -43,18 +51,36 @@ const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
 const AppLayout = ({ children }: { children?: React.ReactNode }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const { token } = useSelector((state: RootState) => state.auth);
+  const isFullScreen = useSelector((state: RootState) => state.chat.isFullScreen)
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  // const [isFullScreen, setIsFullScreen] = useState(false);
 
-  useEffect(() => {
-  const token = localStorage.getItem("access_token");
-  if (token) {
-    dispatch(fetchCurrentUser());
-  }
-}, []);
+//   useEffect(() => {
+//   const initAuth = async () => {
+//     console.log("Token in storage:", token);
+
+//     if (!token) {
+//       dispatch(authChecked(false));
+//       return;
+//     }
+
+//     try {
+//       console.log("Calling /me to validate token...");
+//       await dispatch(fetchCurrentUser()).unwrap();
+//       console.log("Token VALID");
+//       dispatch(authChecked(true));
+//     } catch (err) {
+//       console.log("Token INVALID → logout", err);
+//       dispatch(authChecked(false));
+//     }
+//   };
+
+//   initAuth();
+// }, []);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 font-sans overflow-hidden">
@@ -94,8 +120,8 @@ const AppLayout = ({ children }: { children?: React.ReactNode }) => {
           {isChatOpen && (
             <ChatPanel
               onClose={() => setIsChatOpen(false)}
-              isFullScreen={isFullScreen}
-              toggleFullScreen={() => setIsFullScreen(!isFullScreen)}
+              // isFullScreen={isFullScreen}
+              // toggleFullScreen={() => setIsFullScreen(!isFullScreen)}
             />
           )}
         </div>
@@ -110,7 +136,8 @@ const AppLayout = ({ children }: { children?: React.ReactNode }) => {
               onClick={() => setIsChatOpen(true)}
               className="bg-blue-600 hover:bg-blue-700 shadow-lg"
             >
-              <ChatIcon />
+              {/* <ChatIcon /> */}
+              <BotMessageSquare />
             </Fab>
           </Tooltip>
         </div>
@@ -121,9 +148,101 @@ const AppLayout = ({ children }: { children?: React.ReactNode }) => {
 
 const App: React.FC = () => {
 
+  
+
+const dispatch = useDispatch<AppDispatch>();
+
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
   );
+    const { token } = useSelector((state: RootState) => state.auth);
+    const { authLoading } = useSelector((state: RootState) => state.auth);
+
+//     useEffect(() => {
+//   const initAuth = async () => {
+//     console.log("Token in storage:", token);
+
+//     if (!token) {
+//       dispatch(authChecked(false));
+//       return;
+//     }
+
+//     try {
+//       console.log("Calling /me to validate token...");
+//       await dispatch(fetchCurrentUser());
+//       console.log("Token VALID");
+//       dispatch(authChecked(true));
+//       console.log("Authchecked true ------------------------------------------------>")
+//     } catch (err) {
+//       console.log("Token INVALID → logout", err);
+//       dispatch(authChecked(false));
+//     }
+//   };
+
+//   initAuth();
+// }, []);
+
+
+// useEffect(() => {
+//   const initAuth = async () => {
+//     // 🚫 Do not run bootstrap while on login page
+//     if (window.location.pathname.includes("/login")) return;
+
+//     console.log("Token in storage:", token);
+
+//     if (!token) {
+//       dispatch(authChecked(false));
+//       return;
+//     }
+
+//     try {
+//       console.log("Calling /me to validate token...");
+//       await dispatch(fetchCurrentUser()).unwrap();   // 🔴 MUST unwrap
+//       console.log("Token VALID");
+//       dispatch(authChecked(true));
+//     } catch (err) {
+//       console.log("Token INVALID → logout", err);
+//       dispatch(authChecked(false));
+//     }
+//   };
+
+//   initAuth();
+// }, [dispatch]);
+
+
+useEffect(() => {
+  const initAuth = async () => {
+    console.log("Token in storage:", token);
+
+    // If no token → user is unauthenticated
+    if (!token) {
+      dispatch(authChecked(false));
+      return;
+    }
+
+    try {
+      console.log("Calling /me to validate token...");
+      await dispatch(fetchCurrentUser()).unwrap();
+      dispatch(authChecked(true));
+    } catch (err) {
+      dispatch(authChecked(false));
+    }
+  };
+
+  initAuth();
+}, [dispatch, token]);
+
+
+
+
+if (authLoading) {
+  return (
+    <div className="h-screen flex items-center justify-center">
+      Loading...
+    </div>
+  );
+}
+
 
   return (
     <Router basename="/ai-perf-agent">
@@ -256,10 +375,12 @@ const App: React.FC = () => {
 
 
         {/* Default redirect */}
-        <Route
+        {/* <Route
           path="*"
           element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} />}
-        />
+        /> */}
+
+        <Route path="*" element={<Navigate to="/dashboard" />} />
 
         
         
@@ -274,6 +395,3 @@ const App: React.FC = () => {
 
 export default App;
 
-function dispatch(arg0: any) {
-  throw new Error('Function not implemented.');
-}

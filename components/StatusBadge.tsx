@@ -44,6 +44,9 @@ const STATUS_STYLES: Record<
 
   // ⭐ Should now work regardless of input variation
   in_process:      { label: 'In Process',      bg: '#fff4cc', color: '#d99400' },
+  processing:      { label: 'Processing',      bg: '#fff4cc', color: '#d99400' },
+  in_progress:      { label: 'In Progress',      bg: '#fff4cc', color: '#d99400' },
+  partially_configured:      { label: 'Partially Configured',      bg: '#fff4cc', color: '#d99400' },
 };
 
 export const StatusBadge: React.FC<Props> = ({ status }) => {

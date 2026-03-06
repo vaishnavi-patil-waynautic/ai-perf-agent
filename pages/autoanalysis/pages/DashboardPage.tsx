@@ -46,6 +46,7 @@ export const DashboardPage: React.FC = () => {
   const [editingApp, setEditingApp] = useState<Application | null>(null);
   const [open, setOpen] = useState(false);
   const [stage, setStage] = useState<"new" | "in_progress">("new")
+  const pollingUrlRef = useRef<string | null>(null);
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -58,36 +59,58 @@ export const DashboardPage: React.FC = () => {
   const appsPollingRef = useRef<NodeJS.Timeout | null>(null);
 
 
-  console.log("SELECTED PROJECT IN AUTOSCRIPT : ", selectedProject);
+  // console.log("SELECTED PROJECT IN AUTOSCRIPT : ", selectedProject);
 
   const stopAppsPolling = () => {
     if (appsPollingRef.current) {
       clearInterval(appsPollingRef.current);
       appsPollingRef.current = null;
+      console.log("Stopeed Polling !!! ");
     }
   };
 
-  const startAppsPolling = () => {
+
+  const hasInProgress = (result) => {
+    return result?.some(
+      (app: any) =>
+        app.config_status === "in_progress"
+    );
+  };
+
+  const startAppsPolling = async () => {
+
     if (!selectedProject?.id) return;
 
-    // prevent duplicate polling
     if (appsPollingRef.current) return;
 
     console.log("Starting apps polling...");
 
+    pollingUrlRef.current = window.location.pathname;
+
+
+    console.log(" Current Autoanalysis URL : ", pollingUrlRef.current)
+
     appsPollingRef.current = setInterval(async () => {
+
       try {
+
+
+              if (window.location.pathname !== pollingUrlRef.current) {
+        console.log("URL changed → stopping polling");
+
+        clearInterval(appsPollingRef.current!);
+        appsPollingRef.current = null;
+        pollingUrlRef.current = null;
+        return;
+      }
+
+        console.log("DebugPolling : ", selectedProject);
+
         const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
 
-        const hasInProgress = result?.some(
-          (app: any) =>
-            app.config_status === "in_progress"
-        );
+        console.log("Polling apps... in_progress:", hasInProgress(result));
 
-        console.log("Polling apps... in_progress:", hasInProgress);
-
-        // stop polling when all finished
-        if (!hasInProgress) {
+        if (!hasInProgress(result)) {
           console.log("All apps finished → stop polling");
 
           dispatch(
@@ -105,13 +128,34 @@ export const DashboardPage: React.FC = () => {
       } catch (err) {
         console.error("Apps polling error:", err);
       }
-    }, 5000); // 🔁 every 5 sec
+
+    }, 5000);
+
   };
+
+
+  const fetchApplications = async () => {
+
+    const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
+
+    stopAppsPolling();
+
+    console.log("application in useeffect ", result)
+
+
+    if (hasInProgress(result)) {
+      console.log("application has in progress ", result)
+      startAppsPolling();
+    }
+
+  }
 
   useEffect(() => {
     if (!selectedProject?.id) return;
 
-    dispatch(fetchApps(selectedProject.id));
+    console.log("SELECTED PROJECT IN Useeffect : ", selectedProject);
+
+    fetchApplications();
 
   }, [dispatch, selectedProject]);
 

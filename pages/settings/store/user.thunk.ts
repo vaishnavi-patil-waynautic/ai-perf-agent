@@ -1,11 +1,20 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { userService } from "../services/user.service";
 import { User } from "../types/settings.types";
+import { logout } from "@/store/authSlice";
+
+
 
 export const fetchCurrentUser = createAsyncThunk(
   "user/fetchCurrentUser",
-  async () => {
-    return await userService.getMe();
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      const res = await userService.getMe();
+       return res;
+    } catch (err: any) {
+      dispatch(logout());          // 🔴 important
+      return rejectWithValue(err);
+    }
   }
 );
 

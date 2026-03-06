@@ -436,6 +436,57 @@ export const getScriptsByAppId = async (ApplicationId: number): Promise<any[]> =
   }
 };
 
+/* ================= SYNC SECRETS TO GITHUB ================= */
+export const syncSecretsToGitHub = async (
+  projectId: number,
+  appId: number,
+  repoUrl: string,                           // ← REQUIRED: GitHub repo URL
+  extraSecrets?: Record<string, string>
+): Promise<{
+  success: boolean;
+  pushed: string[];
+  failed: string[];
+  total: number;
+  message: string;
+}> => {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    // .git suffix strip karo — backend raw GitHub URL expect karta hai
+    const cleanRepoUrl = repoUrl.replace(/\.git$/, '').trim();
+
+    const body: Record<string, any> = {
+      repo_url: cleanRepoUrl,                // ← backend ko clean repo_url bhejo
+    };
+    if (extraSecrets) {
+      body.extra_secrets = extraSecrets;
+    }
+
+    const res = await fetch(
+      `${API_BASE}/autoanalysis/projects/${projectId}/applications/${appId}/gha/sync-secrets/`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      throw new Error(getErrorMessage(data, "Failed to sync secrets to GitHub"));
+    }
+
+    return data?.data;
+  } catch (err) {
+    console.error("syncSecretsToGitHub error:", err);
+    throw err;
+  }
+};
+
 /* ================= UPDATE EMAIL RECIPIENTS ================= */
 export const updateEmailRecipients = async (
   projectId: number,
