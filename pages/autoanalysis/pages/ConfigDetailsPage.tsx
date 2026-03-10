@@ -1308,19 +1308,19 @@ export const ConfigDetailsPage: React.FC = () => {
                                 onClick={handleDownloadScript}
                             />
 
-                            {/* Normal links */}
-                            {/* <IntegrationTile
+                            {/* GitHub Integration - Use dynamic URL from config */}
+                            <IntegrationTile
                                 title="GitHub"
                                 active={currentApp.config.gha_repo_url !== null}
                                 link={currentApp.config.gha_repo_url}
-                            /> */}
+                            />
 
-
-                            <IntegrationTile
+                            {/* Hardcoded URL removed - now using dynamic config */}
+                            {/* <IntegrationTile
                                 title="GitHub"
                                 active={true}
                                 link={"https://github.com/Pushpak03/test_service-workflow.git"}
-                            />
+                            /> */}
 
                             <IntegrationTile
                                 title="BlazeMeter"
@@ -1328,30 +1328,33 @@ export const ConfigDetailsPage: React.FC = () => {
                                 link={currentApp.config.blazemeter_url}
                             />
 
-                            {/* <IntegrationTile
+                            {/* Azure DevOps - Use dynamic URL from config */}
+                            <IntegrationTile
                                 title="Azure DevOps"
                                 active={currentApp.config.ado_url !== null}
                                 link={currentApp.config.ado_url}
-                            /> */}
+                            />
 
-                            <IntegrationTile
+                            {/* Hardcoded ADO URL removed - now using dynamic config */}
+                            {/* <IntegrationTile
                                 title="Azure DevOps"
                                 active={true}
                                 link={"https://dev.azure.com/waynautic/ai-perf-agent/_workitems/recentlyupdated/"}
-                            />
+                            /> */}
 
-                            {/* <IntegrationTile
+                            {/* Datadog - Use dynamic URL from config */}
+                            <IntegrationTile
                                 title="Datadog"
                                 active={currentApp.config.datadog_url !== null}
                                 link={currentApp.config.datadog_url}
-                            /> */}
+                            />
 
-
-                            <IntegrationTile
+                            {/* Hardcoded Datadog URL removed - now using dynamic config */}
+                            {/* <IntegrationTile
                                 title="Datadog"
                                 active={true}
                                 link={"https://app.datadoghq.com/software?env=%2A&fromUser=true&lens=Performance"}
-                            />
+                            /> */}
                         </div>
                     </Collapse>
 
@@ -1517,7 +1520,10 @@ export const ConfigDetailsPage: React.FC = () => {
                                 onClick={() => {
                                     if (!currentApp.config.gha_workflow) return;
 
-                                    window.open("https://github.com/Pushpak03/test_service-workflow/actions/workflows/main.yml", "_blank", "noopener,noreferrer");
+                                    // Use the workflow URL directly from config
+                                    // Backend already stores the full URL like:
+                                    // https://github.com/owner/repo/actions/workflows/workflow-name.yml
+                                    window.open(currentApp.config.gha_workflow, "_blank", "noopener,noreferrer");
                                 }}
                             >
                                 Run Now

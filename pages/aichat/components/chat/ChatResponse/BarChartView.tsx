@@ -270,7 +270,7 @@ return (
           <YAxis
             tick={{ fontSize: 12 }}
             label={{
-              value: yKey.replace("_", " "),
+              value: yKey?.replace("_", " "),
               angle: -90,
               position: "insideLeft",
               dx: 5,        // move slightly left

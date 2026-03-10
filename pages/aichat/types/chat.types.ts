@@ -61,6 +61,10 @@ export interface ChatMessage {
   disliked?: boolean;
 
   data?: ChatMessageData;
+  isStreaming?: boolean; //
+
+
+  streamParams?: StreamParams;
 }
 
 export interface FeedbackPayload {
@@ -108,6 +112,10 @@ export interface ChatState {
   chatLoading: boolean;
 }
 
+export interface APIError {
+  message: string;
+}
+
 export interface SendMessagePayload {
   text: string;
   modelId: string;
@@ -118,7 +126,8 @@ export interface SendMessageAPIResponse {
   chatId: string;
 }
 
-export interface MessageReactionPayload {
-  messageId: string;
-  reaction: 'like' | 'dislike';
+export interface StreamParams {
+  nlQuestion: string;
+  projectId: number;
+  chatId?: string | null;
 }

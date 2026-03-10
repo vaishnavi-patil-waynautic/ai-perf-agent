@@ -127,7 +127,7 @@ export const projectService = {
     const token = localStorage.getItem('access_token');
 
 
-    const res = await fetch(`${config.baseUrl}/users/application/${appId}`, {
+    const res = await fetch(`${config.baseUrl}/users/application/${appId}/`, {  // Added trailing slash
       method: 'DELETE',
       headers: {
         Accept: 'application/json',

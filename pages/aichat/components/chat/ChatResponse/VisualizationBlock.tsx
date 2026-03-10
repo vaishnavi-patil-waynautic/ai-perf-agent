@@ -165,7 +165,7 @@ useEffect(() => {
         </div> */}
 
         <div style={{ display: "flex", gap: 4 }}>
-  {(visualization.type!=="table") && (
+  {(visualization?.type!=="table") && (
     <button
       onClick={() => setView("chart")}
       style={toggleStyle(view === "chart")}

@@ -366,7 +366,7 @@ import {
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { sendMessage } from '../../store/slices/chat.thunk';
+import { sendMessage, sendMessageWithStreaming } from '../../store/slices/chat.thunk';
 import { setSelectedModel } from '../../store/slices/chat.slice';
 import { RootState } from '@/store/store';
 import { Rocket, Brain, Sparkles } from "lucide-react";
@@ -375,6 +375,7 @@ const ChatInput: React.FC = () => {
   const dispatch = useAppDispatch();
   const [input, setInput] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [streamStatus, setStreamStatus] = useState('');
   const selectedModel = useAppSelector((state) => state.chat.selectedModel);
   const isLoading = useAppSelector((state) => state.chat.isLoading);
   const isFullScreen = useAppSelector((state: RootState) => state.chat.isFullScreen);
@@ -410,7 +411,18 @@ const ChatInput: React.FC = () => {
 
   const handleSend = () => {
     if (input.trim()) {
-      dispatch(sendMessage({ text: input.trim(), modelId: selectedModel }));
+      // Use streaming version
+      dispatch(sendMessageWithStreaming({ 
+        text: input.trim(), 
+        modelId: selectedModel,
+        onStatus: (msg) => setStreamStatus(msg)
+      })).then(() => {
+        // Clear status when done
+        setStreamStatus('');
+      }).catch(() => {
+        // Clear status on error too
+        setStreamStatus('');
+      });
       setInput('');
     }
   };
@@ -429,13 +441,24 @@ const ChatInput: React.FC = () => {
   ];
 
   return (
-    <div className={`relative ${isFullScreen ? 'px-[280px] py-4' : 'p-4'}`}>
+    // <div className={`relative ${isFullScreen ? 'px-[280px] py-4' : 'p-4'}`}>
+
+<div
+  className={`relative py-4 w-full ${
+    isFullScreen
+      ? 'px-4 flex justify-center'
+      : 'px-4'
+  }`}
+>
+  {/* <div className={isFullScreen ? "w-full max-w-5xl" : "w-full"}> */}
+  <div className={isFullScreen ? "w-full max-w-3xl mx-auto" : "w-full"}>
       {/* Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-t from-purple-50/50 via-blue-50/30 to-transparent pointer-events-none"></div>
       
       {/* Glass Container */}
       <div className="relative backdrop-blur-md bg-white/60 rounded-2xl border border-white/60 shadow-xl p-4 transition-all duration-300">
-        <div className="flex items-end gap-3">
+        {/* <div className="flex items-end gap-3"> */}
+        <div className="flex items-end gap-3 w-full min-w-0">
           {/* Model Selector with Glass Effect */}
           {/* <FormControl size="small">
             <Tooltip title="Select AI Model" placement="top">
@@ -492,7 +515,7 @@ const ChatInput: React.FC = () => {
             </Tooltip>
           </FormControl> */}
 
-          <FormControl size="small">
+          <FormControl size="small" sx={{ flexShrink: 0 }}>
   <Tooltip title="Select AI Model" placement="top">
     <Select
       value={selectedModel}
@@ -625,7 +648,8 @@ const ChatInput: React.FC = () => {
 </FormControl>
 
           {/* Text Input with Glass Effect */}
-          <div className="flex-1 relative">
+          {/* <div className="flex-1 relative"> */}
+          <div className="flex-1 relative min-w-0">
             <TextField
               fullWidth
               multiline
@@ -701,12 +725,12 @@ const ChatInput: React.FC = () => {
                   transition: 'all 0.3s ease',
                   '&:hover:not(:disabled)': {
                     background: 'linear-gradient(135deg, rgba(139, 92, 246, 1), rgba(59, 130, 246, 1))',
-                    transform: 'scale(1.05) rotate(5deg)',
+                    transform: 'scale(1) ',
                     boxShadow: '0 8px 32px rgba(139, 92, 246, 0.4)',
                   },
-                  '&:active:not(:disabled)': {
-                    transform: 'scale(0.95)',
-                  },
+                  // '&:active:not(:disabled)': {
+                  //   transform: 'scale(0.95)',
+                  // },
                   '&:disabled': {
                     opacity: 0.5,
                     cursor: 'not-allowed',
@@ -726,7 +750,7 @@ const ChatInput: React.FC = () => {
         </div>
 
         {/* FAQ Suggestion with Glass Effect */}
-        {matchedFAQ && (
+        {matchedFAQ && !streamStatus && (
           <div 
             className="mt-3 animate-slideDown"
             style={{
@@ -753,6 +777,25 @@ const ChatInput: React.FC = () => {
                 },
               }}
             />
+          </div>
+        )}
+
+        {/* Streaming Status Indicator */}
+        {streamStatus && (
+          <div 
+            className="mt-3 animate-slideDown flex items-center gap-2"
+            style={{
+              animation: 'slideDown 0.3s ease-out',
+            }}
+          >
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50/80 backdrop-blur-sm border border-blue-200/50">
+              <div className="flex gap-1">
+                <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
+              </div>
+              <span className="text-sm text-blue-700 font-medium">{streamStatus}</span>
+            </div>
           </div>
         )}
 
@@ -784,6 +827,7 @@ const ChatInput: React.FC = () => {
           }
         }
       `}</style>
+    </div>
     </div>
   );
 };

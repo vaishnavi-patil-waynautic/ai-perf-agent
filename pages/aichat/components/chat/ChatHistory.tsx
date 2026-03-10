@@ -169,7 +169,7 @@ const ChatHistory: React.FC = () => {
 
   const handleChatSelect = (chatId: string) => {
     dispatch(setCurrentChat(chatId));
-    dispatch(clearMessages());
+    // dispatch(clearMessages());
     dispatch(loadChatMessages(chatId));
   };
 

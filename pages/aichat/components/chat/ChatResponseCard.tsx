@@ -419,6 +419,7 @@ import { RootState } from "@/store/store";
 import { toggleScreenView } from "../../store/slices/chat.slice";
 import { useDispatch } from "react-redux";
 import { ClassNames } from "@emotion/react";
+import { useRef } from "react";
 
 interface Props {
   data: any;
@@ -429,6 +430,7 @@ export default function ChatResponseCard({ data }: Props) {
   const dispatch = useDispatch<any>();
 
   const isFullScreen = useAppSelector((state: RootState) => state.chat.isFullScreen)
+    const chatLoading = useAppSelector((state: RootState) => state.chat.chatLoading)
 
 
   console.log(" isFullScreen : ", isFullScreen)
@@ -440,8 +442,21 @@ export default function ChatResponseCard({ data }: Props) {
 
   if (!data) return null;
 
+  const ChatSkeleton = () => (
+  <div className="p-4 space-y-3">
+    <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded"></div>
+    <div className="h-6 w-2/3 bg-gray-200 animate-pulse rounded"></div>
+    <div className="h-6 w-1/2 bg-gray-200 animate-pulse rounded"></div>
+  </div>
+);
+
+  if (chatLoading) {
+  return <ChatSkeleton />;
+}
+
 
   console.log("Data in ChatResponse : ", data)
+
 
   // ---------- TEXT ----------
   const hasSummary = !!data.summary;

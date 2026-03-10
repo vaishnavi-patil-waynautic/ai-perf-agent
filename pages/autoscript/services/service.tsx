@@ -161,8 +161,6 @@ export const autoScriptService = {
    */
   getHistory: async (projectId: number): Promise<JMXRecord[]> => {
     try {
-      await getUserApplication(3);
-
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("Missing access token");
 

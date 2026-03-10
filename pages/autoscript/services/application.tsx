@@ -37,7 +37,7 @@ export async function getUserApplication(appId: number) {
     }
 
     const res = await fetch(
-      `http://127.0.0.1:8000/api/v1/users/application/${appId}`,
+      `http://127.0.0.1:8000/api/v1/users/application/${appId}/`,  // Added trailing slash
       {
         method: "GET",
         headers: {

@@ -1126,7 +1126,8 @@ export const AddApplicationModal: React.FC<Props> = ({
                   }}
                   sx={{ borderRadius: 2, boxShadow: 1 }}
                 />
-                <Button
+                {/* Sync Secrets button removed - auto sync happens on Start Configuration */}
+                {/* <Button
                   variant="outlined"
                   onClick={handleSyncSecrets}
                   disabled={!formData.githubRepo.trim() || syncStatus === 'syncing'}
@@ -1156,11 +1157,11 @@ export const AddApplicationModal: React.FC<Props> = ({
                     syncStatus === 'success' ? '✓ Synced' :
                       syncStatus === 'error' ? 'Retry' :
                         'Sync Secrets'}
-                </Button>
+                </Button> */}
               </Box>
 
-              {/* Sync feedback message */}
-              {syncMsg && (
+              {/* Sync feedback message - removed as auto sync happens on Start Configuration */}
+              {/* {syncMsg && (
                 <Box sx={{
                   mt: 1, px: 1.5, py: 1, borderRadius: 1, fontSize: '0.75rem',
                   ...(syncStatus === 'success'
@@ -1184,14 +1185,12 @@ export const AddApplicationModal: React.FC<Props> = ({
                     </Box>
                   )}
                 </Box>
-              )}
+              )} */}
 
-              {/* Helper hint */}
-              {syncStatus === 'idle' && !formData.githubRepo.trim() && (
-                <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
-                  Save the repo URL and sync it — then the Start Configuration option will be enabled.
-                </Typography>
-              )}
+              {/* Helper hint - updated message */}
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
+                Secrets will be automatically synced when you click "Start Configuration"
+              </Typography>
             </Box>
 
             
@@ -1203,33 +1202,64 @@ export const AddApplicationModal: React.FC<Props> = ({
               type="number"
               size="small"
               fullWidth
+              inputProps={{ min: 0 }}
               value={formData.users}
-              onChange={(e) =>
-                setFormData({ ...formData, users: Number(e.target.value) })
-              }
+              onChange={(e) => {
+    const val = e.target.value;
+
+    if (val === "") {
+      setFormData({ ...formData, users: null });
+      return;
+    }
+
+    const num = Math.max(0, Number(val));
+    setFormData({ ...formData, users: num });
+  }}
             />
 
             <TextField
-              label="Duration (min)"
-              type="number"
-              size="small"
-              fullWidth
-              value={formData.duration}
-              onChange={(e) =>
-                setFormData({ ...formData, duration: Number(e.target.value) })
-              }
-            />
+  label="Duration (min)"
+  type="number"
+  size="small"
+  fullWidth
+  inputProps={{ min: 0 }}
+  value={formData.duration}
+  onChange={(e) => {
+    const val = e.target.value;
 
-            <TextField
-              label="Throughput (hits/s)"
-              type="number"
-              size="small"
-              fullWidth
-              value={formData.throughput}
-              onChange={(e) =>
-                setFormData({ ...formData, throughput: Number(e.target.value) })
-              }
-            />
+    if (val === "") {
+      setFormData({ ...formData, duration: null });
+      return;
+    }
+
+    setFormData({
+      ...formData,
+      duration: Math.max(0, Number(val)),
+    });
+  }}
+/>
+
+<TextField
+  label="Throughput (hits/s)"
+  type="number"
+  size="small"
+  fullWidth
+  inputProps={{ min: 0 }}
+  value={formData.throughput}
+  onChange={(e) => {
+    const val = e.target.value;
+
+    if (val === "") {
+      setFormData({ ...formData, throughput: null });
+      return;
+    }
+
+    setFormData({
+      ...formData,
+      throughput: Math.max(0, Number(val)),
+    });
+  }}
+/>
 
           </Box>
         )}
@@ -1274,7 +1304,7 @@ export const AddApplicationModal: React.FC<Props> = ({
             <Button
               variant="contained"
               onClick={handleStart}
-              disabled={!secretsSynced || formData.githubRepo === '' || (formData.jmxFile === null && formData.jmxScriptId === '')}
+              disabled={formData.githubRepo === '' || (formData.jmxFile === null && formData.jmxScriptId === '')}
               disableElevation
               sx={{
                 px: 4, py: 1.2, textTransform: 'none', bgcolor: '#1d4ed8',      // blue-700
