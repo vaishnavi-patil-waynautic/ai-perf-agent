@@ -191,6 +191,7 @@ export const getFAQs = (): Promise<FAQ[]> => {
   });
 };
 
+import { config } from '@/config/backendConfig';
 // // Dummy Chat Histories
 // export const getChatHistories = (): Promise<ChatHistory[]> => {
 //   return new Promise((resolve) => {
@@ -313,7 +314,7 @@ export const getFAQs = (): Promise<FAQ[]> => {
 
 import { ChatMessage, ChatHistory, FAQ } from '../types/chat.types';
 
-const BASE_URL = "http://localhost:8000/api/v1/aichatbot";
+const BASE_URL = `${config.baseUrl}/aichatbot`;
 
 /* ---------------- SEND MESSAGE (CREATE / EXISTING CHAT) ---------------- */
 export const sendMessageToAPI = async (

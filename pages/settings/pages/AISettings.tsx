@@ -132,32 +132,45 @@
 
 
 import { Download, Trash2 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { createModel, deleteModel, fetchModels } from "../store/aiModel.thunk";
+import { AppDispatch, RootState } from "@/store/store";
 
 export default function AISettings() {
+  const dispatch = useDispatch<AppDispatch>();
   const [open, setOpen] = useState(false);
-  const [models, setModels] = useState([]);
+  const models = useSelector((state: RootState) => state.aiModel.models);
   const [form, setForm] = useState({
     name: "",
-    token: "",
+    api_token: "",
     rateLimit: "",
+    provider: "",
   });
 
-  const handleAdd = () => {
-    if (!form.name || !form.rateLimit) return;
+useEffect(() => {
+  dispatch(fetchModels());
+}, [dispatch]);
 
-    setModels([
-      ...models,
-      { id: Date.now(), name: form.name, rateLimit: form.rateLimit },
-    ]);
+const handleAdd = () => {
+  if (!form.name || !form.rateLimit) return;
 
-    setForm({ name: "", token: "", rateLimit: "" });
-    setOpen(false);
-  };
+  dispatch(
+    createModel({
+      name: form.name,
+      rate_limit: form.rateLimit,
+      provider: form.provider,
+      api_token: form.api_token
+    })
+  );
 
-  const handleDelete = (id) => {
-    setModels(models.filter((m) => m.id !== id));
-  };
+  setForm({ name: "", api_token: "", rateLimit: "", provider: "" });
+  setOpen(false);
+};
+
+const handleDelete = (id) => {
+  dispatch(deleteModel(id));
+};
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -180,6 +193,7 @@ export default function AISettings() {
           <thead className="bg-gray-50 text-gray-600 px-5">
             <tr>
               <th className="text-left p-3 font-medium px-5">Model Name</th>
+              <th className="text-left p-3 font-medium">Provider</th>
               <th className="text-left p-3 font-medium">Rate Limit</th>
               <th className="text-right p-3 font-medium px-5">Action</th>
             </tr>
@@ -203,7 +217,11 @@ export default function AISettings() {
                   {model.name}
                 </td>
 
-                <td className="p-3 text-gray-600">{model.rateLimit}</td>
+                <td className="p-3 font-medium text-gray-800 px-5">
+                  {model.provider}
+                </td>
+
+                <td className="p-3 text-gray-600">{model.rate_limit}</td>
 
                 <td className="p-3 text-right px-8">
                   <button
@@ -238,10 +256,20 @@ export default function AISettings() {
             />
 
             <input
-              placeholder="Token"
-              value={form.token}
+              placeholder="Provider"
+              value={form.provider}
               onChange={(e) =>
-                setForm({ ...form, token: e.target.value })
+                setForm({ ...form, provider: e.target.value })
+              }
+              className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+
+            <input
+              placeholder="API Token"
+              value={form.api_token}
+              type="password"
+              onChange={(e) =>
+                setForm({ ...form, api_token: e.target.value })
               }
               className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
             />

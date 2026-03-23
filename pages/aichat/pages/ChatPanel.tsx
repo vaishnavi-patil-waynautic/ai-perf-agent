@@ -35,15 +35,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   )
   const chatLoading = useAppSelector((state: RootState) => state.chat.chatLoading);
 
-  // const firstMessage = 
-  //   {
-  //     id: '1',
-  //     sender: "bot" as const,
-  //     type: 'text',
-  //     content:
-  //       "Hello! I'm your Performance Engineering Assistant.\n\nI can help you analyze NFRs, debug JMX scripts, or explain error logs.",
-  //     timestamp: new Date(),
-  //   };
 
 
   const firstMessage: ChatMessage = {
@@ -67,17 +58,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     console.log("ChatPanelUseeffect : ", messages)
   }, [messages.length]);
-// useEffect(() => {
-//   const el = scrollRef.current;
-//   if (!el) return;
-
-//   requestAnimationFrame(() => {
-//     el.scrollTo({
-//       top: el.scrollHeight,
-//       behavior: "auto",
-//     });
-//   });
-// }, [messages, chatLoading]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -137,21 +117,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           toggleFullScreen={handleToggle}
         />
 
-        {/* <FAQSection /> */}
-
-        {/* <div
-          className={`
-            flex-1 overflow-y-auto bg-gray-50/50 custom-scrollbar
-            ${isFullScreen ? 'py-6 px-[200px]' : 'p-4'}
-          `}
-          ref={scrollRef}
-        > */}
-
         <div
-  id="chat-scroll-container"
-  className="flex-1 overflow-y-auto bg-gray-50/50 custom-scrollbar h-0"
-  ref={scrollRef}
->
+          id="chat-scroll-container"
+          className="flex-1 overflow-y-auto bg-gray-50/50 custom-scrollbar h-0"
+          ref={scrollRef}
+        >
           <div className="mx-auto w-full max-w-[900px] px-4 sm:px-6 md:px-3 py-6">
             {messages.length > 0 ? messages.map((msg) => (
               <MessageBubble key={msg.id} message={msg} />

@@ -11,6 +11,7 @@ interface Props {
   onCancelFile2: () => void;   // NEW
   onGenerate: () => void;
   isGenerating: boolean;
+  compact: boolean;
   // applicationId: number | null;
   // changeApplicationId: (value: number | null) => void;
 }
@@ -24,11 +25,17 @@ export const UploadSection: React.FC<Props> = ({
   onCancelFile2,
   onGenerate,
   isGenerating,
+  compact = false,
   // applicationId,
   // changeApplicationId
 }) => (
-  <div className="bg-white p-8 rounded-lg border shadow-sm w-4/5 mx-auto mb-7">
+  // <div className= `{bg-white p-8 rounded-lg border shadow-sm w-full mx-auto mb-7}`>
 
+  <div
+  className={`bg-white p-8 rounded-lg border shadow-sm mx-auto mb-7 ${
+    compact ? "w-full" : "w-4/5"
+  }`}
+>
     <div className="w-64 mb-7 mx-auto">
       <ApplicationSelect />
     </div>

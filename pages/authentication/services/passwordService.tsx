@@ -1,5 +1,24 @@
 import { config } from "../../../config/backendConfig";
 
+export const forgotPassword = async (email: string): Promise<void> => {
+  const token = localStorage.getItem("access_token");
+
+  const res = await fetch(`${config.baseUrl}/users/forgot-password/`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...(getCsrfTokenFromCookie() && {
+        "X-CSRFTOKEN": getCsrfTokenFromCookie(),
+      }),
+    },
+    body: JSON.stringify({
+      email
+    }),
+  });
+};
+
 export const changePassword = async (
   old_password: string,
   new_password: string,

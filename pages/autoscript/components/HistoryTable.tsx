@@ -71,7 +71,7 @@ export const HistoryTable: React.FC<Props> = ({
   showViewMore = false,
   onViewMore
 }) => (
-  <div className="bg-white border rounded-lg overflow-hidden shadow-sm">
+  <div className={`bg-white border rounded-lg overflow-hidden shadow-sm`}>
 
     <div className="px-6 py-4 bg-gray-50 font-semibold">
       Generated JMX Scripts

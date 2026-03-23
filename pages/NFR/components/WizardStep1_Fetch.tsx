@@ -36,345 +36,48 @@ const WizardStep1_Fetch: React.FC = () => {
     dispatch(fetchAdoItems(selectedProject.id));
   }, []);
 
-  //   const handleFetch = async () => {
-  //     // Determine which service to call based on dummy logic
-  //     // In real app, you might mix both
-  //    const data = await dispatch(fetchAdoItems(selectedProject.id)).unwrap();
-  // setItems(data);
-
-  //   };
-
   const handleFetch = async () => {
-  setLoading(true);
+    setLoading(true);
 
-  const response = await dispatch(fetchAdoItems(selectedProject.id)).unwrap();
-  const allRecords = response;
+    const response = await dispatch(fetchAdoItems(selectedProject.id)).unwrap();
+    const allRecords = response;
 
-  let result = [...allRecords];
+    let result = [...allRecords];
 
-  // 🔍 Apply search filter
-  if (searchText.trim() !== '') {
-    const search = searchText.toLowerCase();
+    // 🔍 Apply search filter
+    if (searchText.trim() !== '') {
+      const search = searchText.toLowerCase();
 
-    result = result.filter((item: any) =>
-      item.tags &&
-      item.tags.some((tag: string) =>
-        tag.toLowerCase().includes(search)
-      )
-    );
-  }
+      result = result.filter((item: any) =>
+        item.tags &&
+        item.tags.some((tag: string) =>
+          tag.toLowerCase().includes(search)
+        )
+      );
+    }
 
-  // 🎯 Apply work item type filter
-  if (filterType !== 'All') {
+    // 🎯 Apply work item type filter
+    if (filterType !== 'All') {
 
-    console.log("filter Type : ", filterType, " result : ", result )
-    result = result.filter((item: any) =>
-  item.type?.toLowerCase() === filterType.toLowerCase()
-);
-  }
+      console.log("filter Type : ", filterType, " result : ", result)
+      result = result.filter((item: any) =>
+        item.type?.toLowerCase() === filterType.toLowerCase()
+      );
+    }
 
-  setItems(allRecords);        // original data
-  setFilteredData(result);     // filtered data
+    setItems(allRecords);        // original data
+    setFilteredData(result);     // filtered data
 
-  setLoading(false);
+    setLoading(false);
 
-  console.log("Final Result:", result);
-};
-
-
-  // const handleFetch = async () => {
-
-  //   console.log(searchText, filterType);
-
-  //   setLoading(true);
-
-  //   const response = await dispatch(fetchAdoItems(selectedProject.id)).unwrap(); // your existing API call
-  //   const allRecords = response;   // adjust based on your API structure
-  //   setItems(response);
+    console.log("Final Result:", result);
+  };
 
 
-  //   console.log("Search Text : ", searchText, " response : ", response)
 
-  //   if (searchText.trim() === '') {
-
-  //     console.log("Empty search")
-  //     setFilteredData(response);
-
-  //   }
-  //   else {
-  //     const search = searchText.toLowerCase();
-
-  //     const filtered = allRecords.filter((item: any) =>
-  //       item.tags &&
-  //       item.tags.some((tag: string) =>
-  //         tag.toLowerCase().includes(search)
-  //       )
-  //     );
-
-  //     setFilteredData(filtered);
-
-
-  //     console.log("Filtered Data : ", filteredData);
-  //   }
-
-    
-  //   console.log("2 Search Text : ", searchText, " response : ", filteredData)
-
-
-  //   if (filterType == 'ALL') {
-  //     setLoading(false);
-  //     return;
-  //   }
-
-
-  //   const filtered = filteredData.filter((item: any) =>
-  //     item.work_item_type &&
-  //     item.work_item_type.toLowerCase().includes(filterType.toLowerCase())
-  //   );
-
-  //   setFilteredData(filtered);
-
-
-  //   setLoading(false);
-
-    
-  //   console.log("Search Type : ", filterType, " response : ", filteredData)
-
-  // };
-
-  //   return (
-  //     <div className="space-y-3">
-  //       <div className="flex gap-4 items-end bg-gray-50 p-4 rounded-md border border-gray-200">
-  //         <div className="flex flex-col gap-1 w-48">
-  //           <label className="text-xs font-medium text-gray-600">Source</label>
-  //           <Select className="text-sm bg-white" size="small" value={source} onChange={(e) => setSource(e.target.value as any)} >
-  //             <MenuItem className="text-sm" value="Jira">Jira</MenuItem>
-  //             <MenuItem className="text-sm" value="ADO">Azure DevOps</MenuItem>
-  //           </Select>
-  //         </div>
-
-  //         <div className="flex flex-col gap-1 w-48">
-  //            <label className="text-xs font-medium text-gray-600">Type</label>
-  //            <Select size="small" value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-white">
-  //              <MenuItem value="All">All Types</MenuItem>
-  //              <MenuItem value="Story">Story</MenuItem>
-  //              <MenuItem value="Task">Task</MenuItem>
-  //              <MenuItem value="Epic">Epic</MenuItem>
-  //            </Select>
-  //         </div>
-
-  //         <Button variant="contained" onClick={handleFetch} className="h-10 bg-blue-600 hover:bg-blue-700">
-  //           Fetch Items
-  //         </Button>
-  //       </div>
-
-  //       <div className="border rounded-md overflow-hidden">
-  //         <Table size="small">
-  //           <TableHead className="bg-gray-100">
-  //             <TableRow>
-  //               <TableCell padding="checkbox">Select</TableCell>
-  //               <TableCell>ID</TableCell>
-  //               <TableCell>Title</TableCell>
-  //               <TableCell>Type</TableCell>
-  //               <TableCell>Tags</TableCell>
-  //             </TableRow>
-  //           </TableHead>
-  //           <TableBody>
-  //             {items.length === 0 ? (
-  //                 <TableRow><TableCell colSpan={5} align="center" className="py-8 text-gray-500">No items fetched yet.</TableCell></TableRow>
-  //             ) : (
-  //                 items.map((item) => {
-  //                   const isSelected = selectedItems.some(i => i.id === item.id);
-  //                   return (
-  //                     <TableRow key={item.id} hover selected={isSelected}>
-  //                       <TableCell padding="checkbox">
-  //                         <Checkbox checked={isSelected} onChange={() => dispatch(toggleItemSelection(item))} />
-  //                       </TableCell>
-  //                       <TableCell>{item.id}</TableCell>
-  //                       <TableCell>{item.title}</TableCell>
-  //                       <TableCell><Chip label={item.type} size="small" color={item.type === 'Epic' ? 'secondary' : 'default'} /></TableCell>
-  //                       <TableCell>{item.tags.join(', ')}</TableCell>
-  //                     </TableRow>
-  //                   );
-  //                 })
-  //             )}
-  //           </TableBody>
-  //         </Table>
-  //       </div>
-  //     </div>
-  //   );
 
   return (
-    <div className="space-y-3 text-xs">   {/* GLOBAL small text */}
-
-      {/* === FILTER BAR === */}
-      {/* <div className="flex gap-4 items-end bg-gray-50 p-4 rounded-md border border-gray-200 text-xs"> */}
-
-      {/* <div className="flex flex-col gap-1 w-48">
-            <label className="text-xs font-medium text-gray-600">Source</label>
-
-            <Select
-              size="small"
-              value={source}
-              onChange={(e) => setSource(e.target.value as any)}
-              className="bg-white"
-              sx={{
-                fontSize: '0.75rem',
-                '& .MuiMenuItem-root': { fontSize: '0.75rem' },
-              }}
-            > */}
-      {/* <MenuItem value="Jira" sx={{ fontSize: '0.75rem' }}>Jira</MenuItem> */}
-      {/* <MenuItem value="ADO" sx={{ fontSize: '0.75rem' }}>Azure DevOps</MenuItem>
-            </Select>
-          </div> */}
-
-      {/* <div className="flex flex-col gap-1 w-48">
-            <label className="text-xs font-medium text-gray-600">Type</label>
-
-            <Select
-              size="small"
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="bg-white"
-              sx={{
-                fontSize: '0.75rem',
-                '& .MuiMenuItem-root': { fontSize: '0.75rem' },
-              }}
-            >
-              <MenuItem value="All" sx={{ fontSize: '0.75rem' }}>All Types</MenuItem>
-              <MenuItem value="Story" sx={{ fontSize: '0.75rem' }}>Story</MenuItem>
-              <MenuItem value="Task" sx={{ fontSize: '0.75rem' }}>Task</MenuItem>
-              <MenuItem value="Epic" sx={{ fontSize: '0.75rem' }}>Epic</MenuItem>
-            </Select>
-          </div> */}
-
-      {/* <div className="flex items-center gap-3 mb-3">
-            <TextField
-              size="small"
-              label="Search by Tag"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              variant="outlined"
-            />
-
-            <Button
-              variant="contained"
-              onClick={handleFetch}
-            >
-              Fetch Items
-            </Button>
-          </div> */}
-
-      {/* <Button
-          variant="contained"
-          onClick={handleFetch}
-          className="h-9 bg-blue-600 hover:bg-blue-700"
-          sx={{ fontSize: '0.70rem', padding: '4px 10px' }}
-        >
-          Fetch Items
-        </Button> */}
-      {/* </div> */}
-
-      {/* === TABLE === */}
-      {/* <div className="border rounded-md overflow-hidden">
-        <Table
-          size="small"
-          sx={{
-            '& th, & td': {
-              fontSize: '0.75rem',      // <-- shrink everything
-              paddingTop: '4px',
-              paddingBottom: '4px',
-            },
-          }}
-        > */}
-
-
-      {/* <div className="flex gap-4 items-end bg-gray-50 p-4 rounded-md border border-gray-200 text-xs">
-
-  <div className="flex flex-col gap-1 w-48">
-    <label className="text-xs font-medium text-gray-600">Source</label>
-    <Select
-      size="small"
-      value={source}
-      onChange={(e) => setSource(e.target.value as any)}
-      className="bg-white h-9"
-      fullWidth
-      sx={{
-      height: 32,
-      fontSize: "11px",
-      "& .MuiSelect-select": {
-        fontSize: "11px",
-        padding: "6px 10px",
-      },
-    }}
-    >
-      <MenuItem value="ADO">Azure DevOps</MenuItem>
-    </Select>
-  </div>
-
-  <div className="flex flex-col gap-1 w-48">
-    <label className="text-xs font-medium text-gray-600">Type</label>
-    <Select
-      size="small"
-      value={filterType}
-      onChange={(e) => setFilterType(e.target.value)}
-      className="bg-white h-9 text-sm"
-      fullWidth
-       sx={{
-      height: 32,
-      fontSize: "11px",
-      "& .MuiSelect-select": {
-        fontSize: "11px",
-        padding: "6px 10px",
-      },
-    }}
-    >
-      <MenuItem value="All">All Types</MenuItem>
-      <MenuItem value="Story">Story</MenuItem>
-      <MenuItem value="Task">Task</MenuItem>
-      <MenuItem value="Epic">Epic</MenuItem>
-    </Select>
-  </div>
-
-  <div className="flex flex-col gap-1 w-56">
-    <label className="text-xs font-medium text-gray-600">Search Tag</label>
-    <TextField
-      size="small"
-      value={searchText}
-      onChange={(e) => setSearchText(e.target.value)}
-      variant="outlined"
-      fullWidth
-      sx={{
-        'backgroundColor': "white",
-        '& .MuiInputBase-root': { height: 36 },
-        '& input': { fontSize: '1rem', padding: '6px 8px' },
-      }}
-    />
-  </div>
-
-  <div className="flex flex-col gap-1 w-48">
-    <label className="opacity-0 text-xs">.</label>
-
-<Button
-  variant="contained"
-  onClick={handleFetch}
-  disabled={loading}   // prevent multiple clicks
-  className="h-9 whitespace-nowrap flex gap-2"
-  sx={{ fontSize: '0.75rem', padding: '6px 4px' }}
->
-  {loading ? (
-    <>
-      <CircularProgress size={16} color="inherit" />
-      Searching...
-    </>
-  ) : (
-    'Fetch Items'
-  )}
-</Button>
-  </div>
-
-</div> */}
-
+    <div className="space-y-3 text-xs">
 
       <div className="flex gap-4 items-end bg-gray-50 p-4 rounded-md border border-gray-200">
 
@@ -541,25 +244,6 @@ const WizardStep1_Fetch: React.FC = () => {
                   const isSelected = selectedItems.includes(item.id);
 
                   return (
-                    // <TableRow key={item.id} hover selected={isSelected}>
-                    //   <TableCell padding="checkbox">
-                    //     <Checkbox size="small" checked={isSelected} onChange={() => dispatch(toggleItemSelection(item))} />
-                    //   </TableCell>
-
-                    //   <TableCell>{item.id}</TableCell>
-                    //   <TableCell>{item.title}</TableCell>
-
-                    //   <TableCell>
-                    //     <Chip
-                    //       label={item.type}
-                    //       size="small"
-                    //       color={item.type === 'Epic' ? 'secondary' : 'default'}
-                    //       sx={{ fontSize: '0.65rem', height: '20px' }}
-                    //     />
-                    //   </TableCell>
-
-                    //   <TableCell>{item.tags.join(', ')}</TableCell>
-                    // </TableRow>
 
                     <TableRow key={item.id} hover selected={isSelected}>
                       <TableCell padding="checkbox">

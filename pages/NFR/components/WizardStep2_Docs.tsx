@@ -58,14 +58,6 @@ const WizardStep2_Docs: React.FC = () => {
 
           )}
 
-          {/* {files.map((f, idx) => (
-                <div key={idx} className="my-1">   
-                <ListItem className="border rounded-md">
-                    <ListItemIcon><InsertDriveFileIcon /></ListItemIcon>
-                    <ListItemText primary={f.name} />
-                </ListItem>
-                </div>
-            ))} */}
 
 
           {files.map((f, idx) => (

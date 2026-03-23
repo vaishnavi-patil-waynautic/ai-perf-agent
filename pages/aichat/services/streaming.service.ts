@@ -10,6 +10,8 @@
  *   - error: Error messages
  */
 
+import { config } from "@/config/backendConfig";
+
 export interface SSEStatusEvent {
   type: 'status';
   message: string;
@@ -58,7 +60,7 @@ export interface StreamParams {
   chatId?: string | null;
 }
 
-const BASE_URL = 'http://localhost:8000/api/v1/aichatbot';
+const BASE_URL = `${config.baseUrl}/aichatbot`;
 
 /**
  * Start SSE streaming for a chat question

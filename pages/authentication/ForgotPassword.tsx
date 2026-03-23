@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { authApi } from '../../services/api';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
+import { forgotPassword } from './services/passwordService';
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -10,7 +11,7 @@ const ForgotPassword: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await authApi.forgotPassword(email);
+    await forgotPassword(email);
     setSubmitted(true);
   };
 

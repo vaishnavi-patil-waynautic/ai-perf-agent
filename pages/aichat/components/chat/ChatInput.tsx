@@ -377,6 +377,7 @@ const ChatInput: React.FC = () => {
   const [isFocused, setIsFocused] = useState(false);
   const [streamStatus, setStreamStatus] = useState('');
   const selectedModel = useAppSelector((state) => state.chat.selectedModel);
+  const models = useAppSelector((state: RootState) => state.aiModel.models);
   const isLoading = useAppSelector((state) => state.chat.isLoading);
   const isFullScreen = useAppSelector((state: RootState) => state.chat.isFullScreen);
   const chatLoading = useAppSelector((state: RootState) => state.chat.chatLoading);
@@ -434,11 +435,6 @@ const ChatInput: React.FC = () => {
     }
   };
 
-  const models = [
-    { id: "gpt-4", name: "GPT-4", icon: <Rocket size={16} /> },
-    { id: "claude-3", name: "Claude 3", icon: <Brain size={16} /> },
-    { id: "gemini", name: "Gemini Pro", icon: <Sparkles size={16} /> },
-  ];
 
   return (
     // <div className={`relative ${isFullScreen ? 'px-[280px] py-4' : 'p-4'}`}>
@@ -609,7 +605,7 @@ const ChatInput: React.FC = () => {
               }}
             >
               <span className={selectedModel === model.id ? "text-purple-600" : "text-purple-500"}>
-                {model.icon}
+                {model?.icon} || <Brain size={16} />
               </span>
             </div>
             <div className="flex-1">

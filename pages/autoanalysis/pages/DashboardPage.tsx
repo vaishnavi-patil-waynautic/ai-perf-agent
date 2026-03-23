@@ -47,6 +47,7 @@ export const DashboardPage: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [stage, setStage] = useState<"new" | "in_progress">("new")
   const pollingUrlRef = useRef<string | null>(null);
+  const inProgressAppsRef = useRef<Map<string, string>>(new Map());
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -77,78 +78,175 @@ export const DashboardPage: React.FC = () => {
     );
   };
 
+  // const startAppsPolling = async () => {
+
+  //   if (!selectedProject?.id) return;
+
+  //   if (appsPollingRef.current) return;
+
+  //   console.log("Starting apps polling...");
+
+  //   pollingUrlRef.current = window.location.pathname;
+
+
+  //   console.log(" Current Autoanalysis URL : ", pollingUrlRef.current)
+
+  //   appsPollingRef.current = setInterval(async () => {
+
+  //     try {
+
+
+  //             if (window.location.pathname !== pollingUrlRef.current) {
+  //       console.log("URL changed → stopping polling");
+
+  //       clearInterval(appsPollingRef.current!);
+  //       appsPollingRef.current = null;
+  //       pollingUrlRef.current = null;
+  //       return;
+  //     }
+
+  //       console.log("DebugPolling : ", selectedProject);
+
+  //       const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
+
+  //       console.log("Polling apps... in_progress:", hasInProgress(result));
+
+  //       if (!hasInProgress(result)) {
+  //         console.log("All apps finished → stop polling");
+
+  //         dispatch(
+  //           showSnackbar({
+  //             message: "Application configured successfully",
+  //             type: "success",
+  //           })
+  //         );
+
+  //         if (appsPollingRef.current) {
+  //           clearInterval(appsPollingRef.current);
+  //           appsPollingRef.current = null;
+  //         }
+  //       }
+  //     } catch (err) {
+  //       console.error("Apps polling error:", err);
+  //     }
+
+  //   }, 5000);
+
+  // };
+
+
+  // const fetchApplications = async () => {
+
+  //   const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
+
+  //   stopAppsPolling();
+
+  //   console.log("application in useeffect ", result)
+
+
+  //   if (hasInProgress(result)) {
+  //     console.log("application has in progress ", result)
+  //     startAppsPolling();
+  //   }
+
+  // }
+
   const startAppsPolling = async () => {
+  if (!selectedProject?.id) return;
 
-    if (!selectedProject?.id) return;
+  if (appsPollingRef.current) return;
 
-    if (appsPollingRef.current) return;
+  console.log("Starting apps polling...");
 
-    console.log("Starting apps polling...");
+  pollingUrlRef.current = window.location.pathname;
 
-    pollingUrlRef.current = window.location.pathname;
+  console.log("Current Autoanalysis URL:", pollingUrlRef.current);
 
+  appsPollingRef.current = setInterval(async () => {
+    try {
 
-    console.log(" Current Autoanalysis URL : ", pollingUrlRef.current)
-
-    appsPollingRef.current = setInterval(async () => {
-
-      try {
-
-
-              if (window.location.pathname !== pollingUrlRef.current) {
+      // Stop polling if URL changed
+      if (window.location.pathname !== pollingUrlRef.current) {
         console.log("URL changed → stopping polling");
 
         clearInterval(appsPollingRef.current!);
         appsPollingRef.current = null;
         pollingUrlRef.current = null;
+
         return;
       }
 
-        console.log("DebugPolling : ", selectedProject);
+      console.log("Polling apps for project:", selectedProject.id);
 
-        const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
+      const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
 
-        console.log("Polling apps... in_progress:", hasInProgress(result));
+      result.forEach((app: any) => {
 
-        if (!hasInProgress(result)) {
-          console.log("All apps finished → stop polling");
+        const trackedAppName = inProgressAppsRef.current.get(app.id);
 
-          dispatch(
-            showSnackbar({
-              message: "Application configured successfully",
-              type: "success",
-            })
-          );
+        // If app was previously in progress and now finished
+        if (trackedAppName && app.config_status !== "in_progress") {
 
-          if (appsPollingRef.current) {
-            clearInterval(appsPollingRef.current);
-            appsPollingRef.current = null;
+          console.log("Status updated for:", trackedAppName, app.config_status);
+
+          if (app.config_status === "completed") {
+            dispatch(
+              showSnackbar({
+                message: `${trackedAppName} configured successfully`,
+                type: "success",
+              })
+            );
+          } else {
+            dispatch(
+              showSnackbar({
+                message: `${trackedAppName} configuration failed`,
+                type: "error",
+              })
+            );
           }
+
+          // Remove from tracking
+          inProgressAppsRef.current.delete(app.id);
         }
-      } catch (err) {
-        console.error("Apps polling error:", err);
+      });
+
+      // Stop polling when no apps left
+      if (inProgressAppsRef.current.size === 0) {
+        console.log("All apps finished → stop polling");
+
+        clearInterval(appsPollingRef.current!);
+        appsPollingRef.current = null;
       }
 
-    }, 5000);
-
-  };
+    } catch (err) {
+      console.error("Apps polling error:", err);
+    }
+  }, 5000);
+};
 
 
   const fetchApplications = async () => {
 
-    const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
+  const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
 
-    stopAppsPolling();
+  stopAppsPolling();
 
-    console.log("application in useeffect ", result)
+  console.log("application in useeffect ", result)
 
+  const inProgressApps = result?.filter(
+    (app: any) => app.config_status === "in_progress"
+  );
 
-    if (hasInProgress(result)) {
-      console.log("application has in progress ", result)
-      startAppsPolling();
-    }
+  if (inProgressApps?.length) {
 
+    inProgressApps.forEach((app: any) => {
+      inProgressAppsRef.current.set(app.id, app.name);
+    });
+
+    startAppsPolling();
   }
+
+}
 
   useEffect(() => {
     if (!selectedProject?.id) return;

@@ -1,5 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
 import { ChatMessage, ChatMessageData } from '../types/chat.types';
+import { config } from "../../../config/backendConfig";
+
+
 
 interface StreamCallbacks {
   onStatus?: (message: string) => void;
@@ -40,7 +43,7 @@ export function useChatStream() {
       });
 
       const token = localStorage.getItem('access_token');
-      const url = `http://localhost:8000/api/v1/aichatbot/ask/stream/?${params.toString()}`;
+      const url = `${config.baseUrl}/aichatbot/ask/stream/?${params.toString()}`;
 
       // Create EventSource with auth header (via URL param since EventSource doesn't support headers)
       // Note: For production, consider using fetch with ReadableStream instead

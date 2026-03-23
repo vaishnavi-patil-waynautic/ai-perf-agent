@@ -1092,8 +1092,9 @@ import { ChatMessage } from "../../types/chat.types";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { config } from "../../../../config/backendConfig";
 
-const BASE_URL = "http://localhost:8000/api/v1/aichatbot";
+const BASE_URL = `${config.baseUrl}/aichatbot`;
 
 interface Props {
   message: ChatMessage;

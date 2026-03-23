@@ -9,6 +9,7 @@ import IntegrationSlice from "../pages/settings/store/integration.slice";
 import userReducer from "../pages/settings/store/user.slice"
 import chatReducer from "../pages/aichat/store/slices/chat.slice"
 import appSnackbarReducer from "./snackbarStore"
+import aiModelReducer from '../pages/settings/store/aiModel.slice';
 
 
 
@@ -23,7 +24,8 @@ export const store = configureStore({
     integration: IntegrationSlice,
     user: userReducer,
     chat: chatReducer,
-    appSnackbar : appSnackbarReducer
+    appSnackbar : appSnackbarReducer,
+    aiModel: aiModelReducer,
   },
 });
 

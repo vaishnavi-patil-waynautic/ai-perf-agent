@@ -4,7 +4,7 @@ import { Stepper, Step, StepLabel } from '@mui/material';
 const steps = ['Fetch & Select', 'Add Documents', 'Questionnaire', 'Generate'];
 
 interface Props {
-  onStepChange?: (stepIndex: number) => void; // optional callback for parent
+  onStepChange?: (stepIndex: number) => void; 
 }
 
 const NFRStepper: React.FC<Props> = ({ onStepChange }) => {

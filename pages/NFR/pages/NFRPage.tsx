@@ -1,4 +1,30 @@
-import React, { Dispatch, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
+
+function useContainerWidth() {
+  const ref = useRef(null);
+  const [isCompressed, setIsCompressed] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+
+    const element = ref.current;
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0].contentRect.width;
+
+      console.log("Container width:", width);
+
+      setIsCompressed(width < 900);
+    });
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [ref.current]); // <-- IMPORTANT
+
+  return { ref, isCompressed };
+}
+
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Tooltip } from '@mui/material';
@@ -23,6 +49,8 @@ const NFRPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
+  const { ref, isCompressed } = useContainerWidth();
+
   const { selectedProject } = useSelector((state: RootState) => state.project);
   // const [polling, setPolling] = useState(false);
   let count = 0;
@@ -34,100 +62,226 @@ const NFRPage: React.FC = () => {
   const [showSearch, setShowSearch] = useState(false);
 
   const { strategies } = useSelector((state: RootState) => state.nfrList);
+  const nfrInProgressRef = useRef<Map<string, string>>(new Map());
+  console.log("ref attached:", ref);
 
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: SnackbarType;
-  }>({
-    open: false,
-    message: '',
-    type: 'success',
-  });
+  // const [snackbar, setSnackbar] = useState<{
+  //   open: boolean;
+  //   message: string;
+  //   type: SnackbarType;
+  // }>({
+  //   open: false,
+  //   message: '',
+  //   type: 'success',
+  // });
 
+
+  // useEffect(() => {
+
+  //   const hasPending = (list) =>
+  //     list.some(s => s.status === 'in_process' || s.status === 'draft' || s.status === 'pending');
+
+  //   dispatch(resetWizard());
+
+  //   console.log("Fetching NFR by project id in Useeffect Before polling")
+
+  //   const startPolling = async () => {
+  //     try {
+
+  //       console.log("Fetching NFR by project id in Useeffect")
+
+  //       // const strategies = await dispatch(getNfrById(selectedProject.id)).unwrap();
+  //       const strategies = await dispatch(getNfrById(selectedProject?.id)).unwrap();
+
+  //       if (!hasPending(strategies)) return;
+
+
+  //       console.log("The application has pending status------------------------------");
+
+  //       // Prevent duplicate intervals
+  //       if (pollingRef.current) return;
+
+  //       pollingRef.current = setInterval(async () => {
+
+  //         try {
+  //           const updated = await dispatch(getNfrById(selectedProject.id)).unwrap();
+
+  //           if (!hasPending(updated)) {
+
+  //             dispatch(
+  //               showSnackbar({
+  //                 message: "NFR generation completed",
+  //                 type: "success",
+  //               })
+  //             );
+
+  //             clearInterval(pollingRef.current);
+  //             pollingRef.current = null;
+  //           }
+
+  //         } catch (err) {
+  //           console.error("Polling failed", err);
+
+  //           dispatch(
+  //             showSnackbar({
+  //               message: "Polling failed",
+  //               type: "error",
+  //             })
+  //           );
+  //         }
+
+
+  //       }, 5000);
+
+  //     } catch (err) {
+
+  //       console.error("Initial fetch failed", err);
+
+  //       dispatch(
+  //         showSnackbar({
+  //           message: "Failed to fetch NFR data",
+  //           type: "error",
+  //         })
+  //       );
+  //     }
+
+  //   };
+
+  //   startPolling();
+
+  //   return () => {
+  //     if (pollingRef.current) {
+  //       clearInterval(pollingRef.current);
+  //       pollingRef.current = null;
+  //     }
+  //   };
+
+  // }, [dispatch, selectedProject]);
 
   useEffect(() => {
 
-    const hasPending = (list) =>
-      list.some(s => s.status === 'in_process' || s.status === 'draft' || s.status === 'pending');
+  if (!selectedProject?.id) return;
 
-    dispatch(resetWizard());
+  const isPending = (status: string) =>
+    status === "in_process" || status === "draft" || status === "pending";
 
-    console.log("Fetching NFR by project id in Useeffect Before polling")
+  dispatch(resetWizard());
 
-    const startPolling = async () => {
-      try {
+  console.log("Fetching NFR by project id in useEffect");
 
-        console.log("Fetching NFR by project id in Useeffect")
+  const startPolling = async () => {
+    try {
 
-        // const strategies = await dispatch(getNfrById(selectedProject.id)).unwrap();
-        const strategies = await dispatch(getNfrById(selectedProject?.id)).unwrap();
+      const strategies = await dispatch(
+        getNfrById(selectedProject.id)
+      ).unwrap();
 
-        if (!hasPending(strategies)) return;
+      // Track pending strategies
+      const pendingStrategies = strategies?.filter((s: any) =>
+        isPending(s.status)
+      );
 
+      pendingStrategies?.forEach((s: any) => {
+        nfrInProgressRef.current.set(s.id, s.display_name);
+      });
 
-        console.log("The application has pending status------------------------------");
+      if (pendingStrategies.length === 0) return;
 
-        // Prevent duplicate intervals
-        if (pollingRef.current) return;
+      console.log("Some strategies pending → start polling");
 
-        pollingRef.current = setInterval(async () => {
+      // Prevent duplicate polling
+      if (pollingRef.current) return;
 
-          try {
-            const updated = await dispatch(getNfrById(selectedProject.id)).unwrap();
+      pollingRef.current = setInterval(async () => {
 
-            if (!hasPending(updated)) {
+        try {
 
-              dispatch(
-                showSnackbar({
-                  message: "NFR generation completed",
-                  type: "success",
-                })
-              );
+          const updated = await dispatch(
+            getNfrById(selectedProject.id)
+          ).unwrap();
 
-              clearInterval(pollingRef.current);
-              pollingRef.current = null;
+          updated.forEach((strategy: any) => {
+
+            const trackedName = nfrInProgressRef.current.get(strategy.id);
+
+            if (trackedName && !isPending(strategy.status)) {
+
+              console.log("Strategy status updated:", trackedName);
+
+              if (strategy.status === "completed") {
+
+                dispatch(
+                  showSnackbar({
+                    message: `${trackedName} generated successfully`,
+                    type: "success",
+                  })
+                );
+
+              } else {
+
+                dispatch(
+                  showSnackbar({
+                    message: `${trackedName} generation failed`,
+                    type: "error",
+                  })
+                );
+
+              }
+
+              nfrInProgressRef.current.delete(strategy.id);
             }
 
-          } catch (err) {
-            console.error("Polling failed", err);
+          });
 
-            dispatch(
-              showSnackbar({
-                message: "Polling failed",
-                type: "error",
-              })
-            );
+          // Stop polling when everything finished
+          if (nfrInProgressRef.current.size === 0) {
+
+            console.log("All strategies finished → stop polling");
+
+            clearInterval(pollingRef.current!);
+            pollingRef.current = null;
+
           }
 
+        } catch (err) {
 
-        }, 5000);
+          console.error("Polling failed", err);
 
-      } catch (err) {
+          dispatch(
+            showSnackbar({
+              message: "Polling failed",
+              type: "error",
+            })
+          );
 
-        console.error("Initial fetch failed", err);
+        }
 
-        dispatch(
-          showSnackbar({
-            message: "Failed to fetch NFR data",
-            type: "error",
-          })
-        );
-      }
+      }, 5000);
 
-    };
+    } catch (err) {
 
-    startPolling();
+      console.error("Initial fetch failed", err);
 
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    };
+      dispatch(
+        showSnackbar({
+          message: "Failed to fetch NFR data",
+          type: "error",
+        })
+      );
 
-  }, [dispatch, selectedProject]);
+    }
+  };
 
+  startPolling();
+
+  return () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
+
+}, [dispatch, selectedProject]);
 
   const filteredStrategies = strategies?.filter((strategy) =>
     (strategy.display_name || "")
@@ -309,9 +463,8 @@ const NFRPage: React.FC = () => {
 
 
 
-      <div className="mb-8 flex items-center justify-between w-full">
+      <div   ref={ref} className="mb-8 flex items-center justify-between w-full">
 
-        {/* LEFT SIDE — TITLE */}
         <div className="flex flex-col">
           <h1 className="text-2xl font-bold text-gray-800">
             Performance Strategy Hub
@@ -321,88 +474,17 @@ const NFRPage: React.FC = () => {
           </p>
         </div>
 
-        {/* RIGHT SIDE — SEARCH + BUTTON */}
         <div className="flex items-center gap-3 ml-auto">
-
-          {/* <Tooltip title="Search applications" arrow>
-      <div style={{ width: 240, minWidth: 240 }}>
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Search applications..."
-          onSearch={(value) => console.log("Searching:", value)}                    
-        />
-      </div>
-    </Tooltip> */}
-
-          {/* <Tooltip title="Generate Performance Test Strategy" arrow>
-            <button
-              onClick={() => navigate("/nfr/wizard")}
-              className="
-      px-4 py-2 rounded-md text-white bg-blue-600
-      hover:bg-blue-700 transition
-      flex items-center gap-2
-    "
-              >
-              <AddIcon style={{ fontSize: 18 }} />
-              Generate Performance Test Strategy
-            </button>
-          </Tooltip> */}
-
-
-          {/* <div className="flex items-center gap-3 ml-auto">
-
-
-            {!showSearch && (
-              <Tooltip title="Search strategies" arrow>
-              <button
-                onClick={() => setShowSearch(prev => !prev)}
-                className=" rounded-md hover:bg-gray-100 transition"
-              >
-                <Search size={18} />
-              </button>
-            </Tooltip>
-            )}
-            
-
-            {showSearch && (
-              <input
-                type="text"
-                placeholder="Search by title..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                autoFocus
-              />
-            )}
-
-            <Tooltip title="Generate Performance Test Strategy" arrow>
-              <button
-                onClick={() => navigate("/nfr/wizard")}
-                className="
-        px-4 py-2 rounded-md text-white bg-blue-600
-        hover:bg-blue-700 transition
-        flex items-center gap-2
-      "
-              >
-                <AddIcon style={{ fontSize: 18 }} />
-                Generate Performance Test Strategy
-              </button>
-            </Tooltip>
-
-          </div> */}
 
 
           <div className="flex items-center gap-3 ml-auto">
 
-            {/* 🔍 Search */}
             <SearchBar
               value={search}
               onChange={setSearch}
               placeholder="Search strategies..." onSearch={undefined} />
 
-            {/* Generate Button */}
-            <Tooltip title="Generate Performance Test Strategy" arrow>
+            {/* <Tooltip title="Generate Performance Test Strategy" arrow>
               <button
                 onClick={() => navigate("/nfr/wizard")}
                 className="
@@ -414,7 +496,65 @@ const NFRPage: React.FC = () => {
                 <AddIcon style={{ fontSize: 18 }} />
                 Generate Performance Test Strategy
               </button>
-            </Tooltip>
+            </Tooltip> */}
+
+            {/* <Tooltip title="Generate Performance Test Strategy" arrow>
+  <button
+    onClick={() => navigate("/nfr/wizard")}
+    className="
+      px-3 sm:px-4 py-2 rounded-md text-white bg-blue-600
+      hover:bg-blue-700 transition
+      flex items-center justify-center gap-2
+    "
+  >
+    <AddIcon style={{ fontSize: 18 }} />
+
+    <span className="hidden lg:inline">
+      Generate Performance Test Strategy
+    </span>
+
+  </button>
+</Tooltip> */}
+
+{/* <Tooltip title="Generate Performance Test Strategy" arrow>
+  <button
+    onClick={() => navigate("/nfr/wizard")}
+    className="
+      px-3 py-2 rounded-md text-white bg-blue-600
+      hover:bg-blue-700 transition
+      flex items-center gap-2
+      whitespace-nowrap
+      flex-shrink-0
+    "
+  >
+    <AddIcon style={{ fontSize: 18 }} />
+
+    <span className="hidden 2xl:inline">
+      Generate Performance Test Strategy
+    </span>
+
+  </button>
+</Tooltip> */}
+
+
+<Tooltip title="Generate Performance Test Strategy" arrow>
+  <button
+    onClick={() => navigate("/nfr/wizard")}
+    className="
+      px-4 py-2 rounded-md text-white bg-blue-600
+      hover:bg-blue-700 transition
+      flex items-center gap-2
+    "
+  >
+    <AddIcon style={{ fontSize: 18 }} />
+
+    {!isCompressed ? (
+      <span>Generate Performance Test Strategy</span>
+    ) : (
+      <span>Generate Test Strategy</span>
+  )}
+  </button>
+</Tooltip>
 
           </div>
 
@@ -422,13 +562,56 @@ const NFRPage: React.FC = () => {
 
       </div>
 
+{/* <div className="mb-8 flex items-center justify-between w-full flex-wrap gap-3">
+
+  <div className="flex flex-col">
+    <h1 className="text-2xl font-bold text-gray-800">
+      Performance Strategy Hub
+    </h1>
+    <p className="text-gray-500 mt-1">
+      Generate Performance Test Strategy using AI
+    </p>
+  </div>
+
+  <div className="flex items-center gap-3 ml-auto flex-wrap">
+
+    <div className="w-56 sm:w-64">
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search strategies..."
+        onSearch={undefined}
+      />
+    </div>
+
+    <Tooltip title="Generate Performance Test Strategy" arrow>
+      <button
+        onClick={() => navigate("/nfr/wizard")}
+        className="
+          px-4 py-2 rounded-md text-white bg-blue-600
+          hover:bg-blue-700 transition
+          flex items-center gap-2
+          whitespace-nowrap
+        "
+      >
+        <AddIcon style={{ fontSize: 18 }} />
+        Generate Performance Test Strategy
+      </button>
+    </Tooltip>
+
+  </div>
+
+</div> */}
+
+
+{/* 
 
       <AppSnackbar
         open={snackbar.open}
         message={snackbar.message}
         type={snackbar.type}
         onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-      />
+      /> */}
 
       <div className="space-y-4 w-full mx-auto">
         {(filteredStrategies?.length ?? 0) > 0 ? (

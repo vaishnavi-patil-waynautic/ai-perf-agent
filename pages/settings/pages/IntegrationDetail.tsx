@@ -984,12 +984,17 @@ export default function IntegrationDetail() {
 
   /* ---------------- UI ---------------- */
   return (
-    <div className="max-w-6xl mx-auto">
+    // <div className="max-w-6xl mx-auto">
+    <div className="w-full px-6">
 
       <h1 className="text-2xl font-semibold text-gray-900 mb-8">Integrations</h1>
 
-      <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {integrations.map(integration => (
+      {/* <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"> */}
+        {/* <div className="grid gap-5 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]"> */}
+          <div className="grid gap-5 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+           {/* <div className="grid gap-5 grid-cols-[repeat(auto-fit,minmax(240px,240px))]"> */}
+          {/*<div className="grid gap-5 grid-cols-[repeat(auto-fill,minmax(240px,240px))] justify-start"> */}
+            {integrations.map(integration => (
           <div
             key={integration.id ?? integration.type}
             onMouseEnter={() => setHoveredCard(integration.id)}
@@ -1008,8 +1013,12 @@ export default function IntegrationDetail() {
           >
             <div className="p-5 flex flex-col h-full">
 
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-2 flex-1">
+              {/* <div className="flex items-start justify-between mb-4"> */}
+                <div className="flex flex-wrap items-start justify-between gap-2 mb-4">
+                  {/* <div className="flex items-center gap-2 flex-1">
+                   */}
+
+                   <div className="flex items-center gap-2 min-w-0 flex-1">
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDot(integration.status)}`} />
                   <h3 className="font-medium text-gray-900 text-base truncate">
                     {integration.name}
@@ -1017,7 +1026,8 @@ export default function IntegrationDetail() {
                 </div>
 
                 {(hoveredCard === integration.id || integration.status !== "active") && (
-                  <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                  // <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                  <div className="flex items-center gap-1 ml-auto flex-wrap">
 
                     {/* ACTIVE → EDIT */}
                     {integration.status === "active" ? (

@@ -248,6 +248,77 @@ import { showSnackbar } from '@/store/snackbarStore';
 //     </>
 // );
 
+
+// ----------------------------------------------------------------------
+
+// const IntegrationTile = ({
+//     title,
+//     active,
+//     link,
+//     onClick,
+// }: {
+//     title: string;
+//     active: boolean;
+//     link?: string | null;
+//     onClick?: () => void;
+// }) => {
+//     const handleClick = (e: React.MouseEvent) => {
+//         e.preventDefault();
+//         e.stopPropagation();
+
+//         if (!active) return;
+
+//         if (onClick) {
+//             onClick(); // Script download
+//             return;
+//         }
+
+//         if (link) {
+//             window.open(link, "_blank"); // Open external link
+//         }
+//     };
+
+//     return (
+//         <div onClick={handleClick} className="block cursor-pointer">
+//             <div className="max-w-xl">
+//                 <div
+//                     className={`
+//             p-4 rounded-2xl shadow-xl
+//             transition-transform transition-shadow duration-300 ease-out
+//             hover:scale-[1.03]
+
+//             ${active
+//                             ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white"
+//                             : "bg-white text-gray-800 border-2 border-yellow-400"
+//                         }
+//           `}
+//                 >
+//                     <div className="flex items-start justify-between">
+//                         <div>
+//                             <p className={`text-sm mb-2 ${active ? "text-white font-medium" : "text-gray-600"}`}>
+//                                 {title}
+//                             </p>
+
+//                             <span
+//                                 className={`px-2 py-1 rounded-full text-[11px] font-medium ${active ? "bg-white/20 text-white" : "bg-yellow-100 text-yellow-800"
+//                                     }`}
+//                             >
+//                                 {active ? "Configured" : "Not Configured"}
+//                             </span>
+//                         </div>
+
+//                         {active ? (
+//                             <CheckCircle className="text-green-300" fontSize="small" />
+//                         ) : (
+//                             <Cancel className="text-yellow-500" fontSize="small" />
+//                         )}
+//                     </div>
+//                 </div>
+//             </div>
+//         </div>
+//     );
+// };
+
 const IntegrationTile = ({
     title,
     active,
@@ -259,6 +330,7 @@ const IntegrationTile = ({
     link?: string | null;
     onClick?: () => void;
 }) => {
+
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -266,50 +338,59 @@ const IntegrationTile = ({
         if (!active) return;
 
         if (onClick) {
-            onClick(); // Script download
+            onClick();
             return;
         }
 
         if (link) {
-            window.open(link, "_blank"); // Open external link
+            window.open(link, "_blank");
         }
     };
 
     return (
-        <div onClick={handleClick} className="block cursor-pointer">
-            <div className="max-w-xl">
-                <div
-                    className={`
-            p-4 rounded-2xl shadow-xl
-            transition-transform transition-shadow duration-300 ease-out
-            hover:scale-[1.03]
+        <div
+            onClick={handleClick}
+            className="cursor-pointer h-full"
+        >
+            <div
+                className={`
+                h-full
+                p-4 rounded-2xl shadow-xl
+                transition-transform transition-shadow duration-300 ease-out
+                hover:scale-[1.03]
+                flex flex-col justify-between
 
-            ${active
-                            ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white"
-                            : "bg-white text-gray-800 border-2 border-yellow-400"
-                        }
-          `}
-                >
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <p className={`text-sm mb-2 ${active ? "text-white font-medium" : "text-gray-600"}`}>
-                                {title}
-                            </p>
+                ${active
+                    ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white"
+                    : "bg-white text-gray-800 border-2 border-yellow-400"
+                }
+            `}
+            >
+                <div className="flex items-start justify-between">
 
-                            <span
-                                className={`px-2 py-1 rounded-full text-[11px] font-medium ${active ? "bg-white/20 text-white" : "bg-yellow-100 text-yellow-800"
-                                    }`}
-                            >
-                                {active ? "Configured" : "Not Configured"}
-                            </span>
-                        </div>
+                    <div className="flex flex-col">
+                        <p className={`text-sm mb-2 font-medium ${active ? "text-white" : "text-gray-600"}`}>
+                            {title}
+                        </p>
 
-                        {active ? (
-                            <CheckCircle className="text-green-300" fontSize="small" />
-                        ) : (
-                            <Cancel className="text-yellow-500" fontSize="small" />
-                        )}
+                        <span
+                            className={`
+                                px-2 py-1 rounded-full text-[11px] font-medium w-fit
+                                ${active
+                                    ? "bg-white/20 text-white"
+                                    : "bg-yellow-100 text-yellow-800"}
+                            `}
+                        >
+                            {active ? "Configured" : "Not Configured"}
+                        </span>
                     </div>
+
+                    {active ? (
+                        <CheckCircle className="text-green-200" fontSize="small" />
+                    ) : (
+                        <Cancel className="text-yellow-500" fontSize="small" />
+                    )}
+
                 </div>
             </div>
         </div>
@@ -1299,28 +1380,19 @@ export const ConfigDetailsPage: React.FC = () => {
                     </Collapse> */}
 
 
-                        <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mt-4">
+                        {/* <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mt-4">
 
-                            {/* Script → download */}
                             <IntegrationTile
                                 title="Script"
                                 active={currentApp.config.script_id !== null || currentApp.config.script_file_configured == true}
                                 onClick={handleDownloadScript}
                             />
 
-                            {/* GitHub Integration - Use dynamic URL from config */}
-                            <IntegrationTile
+                           <IntegrationTile
                                 title="GitHub"
                                 active={currentApp.config.gha_repo_url !== null}
                                 link={currentApp.config.gha_repo_url}
                             />
-
-                            {/* Hardcoded URL removed - now using dynamic config */}
-                            {/* <IntegrationTile
-                                title="GitHub"
-                                active={true}
-                                link={"https://github.com/Pushpak03/test_service-workflow.git"}
-                            /> */}
 
                             <IntegrationTile
                                 title="BlazeMeter"
@@ -1328,34 +1400,56 @@ export const ConfigDetailsPage: React.FC = () => {
                                 link={currentApp.config.blazemeter_url}
                             />
 
-                            {/* Azure DevOps - Use dynamic URL from config */}
-                            <IntegrationTile
+                           <IntegrationTile
                                 title="Azure DevOps"
                                 active={currentApp.config.ado_url !== null}
                                 link={currentApp.config.ado_url}
                             />
 
-                            {/* Hardcoded ADO URL removed - now using dynamic config */}
-                            {/* <IntegrationTile
-                                title="Azure DevOps"
-                                active={true}
-                                link={"https://dev.azure.com/waynautic/ai-perf-agent/_workitems/recentlyupdated/"}
-                            /> */}
 
-                            {/* Datadog - Use dynamic URL from config */}
-                            <IntegrationTile
+                           <IntegrationTile
                                 title="Datadog"
                                 active={currentApp.config.datadog_url !== null}
                                 link={currentApp.config.datadog_url}
                             />
 
-                            {/* Hardcoded Datadog URL removed - now using dynamic config */}
-                            {/* <IntegrationTile
-                                title="Datadog"
-                                active={true}
-                                link={"https://app.datadoghq.com/software?env=%2A&fromUser=true&lens=Performance"}
-                            /> */}
-                        </div>
+                          
+                        </div> */}
+
+
+                        <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mt-4 items-stretch">
+
+    <IntegrationTile
+        title="Script"
+        active={currentApp.config.script_id !== null || currentApp.config.script_file_configured == true}
+        onClick={handleDownloadScript}
+    />
+
+    <IntegrationTile
+        title="GitHub"
+        active={currentApp.config.gha_repo_url !== null}
+        link={currentApp.config.gha_repo_url}
+    />
+
+    <IntegrationTile
+        title="BlazeMeter"
+        active={currentApp.config.blazemeter_url !== null}
+        link={currentApp.config.blazemeter_url}
+    />
+
+    <IntegrationTile
+        title="Azure DevOps"
+        active={currentApp.config.ado_url !== null}
+        link={currentApp.config.ado_url}
+    />
+
+    <IntegrationTile
+        title="Datadog"
+        active={currentApp.config.datadog_url !== null}
+        link={currentApp.config.datadog_url}
+    />
+
+</div>
                     </Collapse>
 
                 </div>
