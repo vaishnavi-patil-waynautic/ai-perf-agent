@@ -1290,19 +1290,19 @@ const isTerminalStatus = (status: string): boolean => {
 // ============================================================================
 const AutoScriptPage: React.FC = () => {
   const dispatch = useDispatch();
-  
+
   // ==================== STATE ====================
   const [file1, setFile1] = useState<File | null>(null);
   const [file2, setFile2] = useState<File | null>(null);
   const [history, setHistory] = useState<JMXRecord[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showFullLayout, setShowFullLayout] = useState(false);
-  
+
   // ==================== REFS ====================
   const fileRef1 = useRef<HTMLInputElement>(null);
   const fileRef2 = useRef<HTMLInputElement>(null);
   const tableRef = useRef<HTMLDivElement | null>(null);
-  
+
   // Polling state refs (persist across renders without triggering re-renders)
   const pollingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollingIntervalRef = useRef(POLLING_CONFIG.INITIAL_INTERVAL);
@@ -1310,11 +1310,11 @@ const AutoScriptPage: React.FC = () => {
   const previousHistoryRef = useRef<Map<number, string>>(new Map()); // id -> status
   const trackedScriptIdsRef = useRef<Set<number>>(new Set()); // Scripts we're actively tracking
   const abortControllerRef = useRef<AbortController | null>(null);
-  
+
   // ==================== SELECTORS ====================
   const { selectedProject } = useSelector((state: RootState) => state.project);
   const applicationId = useSelector((state: RootState) => state.project.selectedApp);
-  
+
   // ==================== LOCAL SNACKBAR ====================
 
 
@@ -1323,21 +1323,21 @@ const AutoScriptPage: React.FC = () => {
   // ============================================================================
   const detectStatusChanges = useCallback((newHistory: JMXRecord[]) => {
     const currentStatuses = new Map<number, string>();
-    
+
     newHistory.forEach(record => {
       currentStatuses.set(record.id, record.status);
-      
+
       // Check if this script is being tracked
       if (trackedScriptIdsRef.current.has(record.id)) {
         const previousStatus = previousHistoryRef.current.get(record.id);
-        
+
         // Status changed for a tracked script
         if (previousStatus && previousStatus !== record.status) {
           handleStatusTransition(record.id, previousStatus, record.status, record.name);
         }
       }
     });
-    
+
     // Update previous history
     previousHistoryRef.current = currentStatuses;
   }, []);
@@ -1348,7 +1348,7 @@ const AutoScriptPage: React.FC = () => {
   const handleStatusTransition = useCallback(
     (id: number, oldStatus: string, newStatus: string, scriptName: string) => {
       console.log(`[Status Change] Script ${id} (${scriptName}): ${oldStatus} → ${newStatus}`);
-      
+
       // Handle transitions to terminal states
       if (newStatus.toLowerCase() === 'completed' || newStatus.toLowerCase() === 'success') {
         dispatch(
@@ -1359,7 +1359,7 @@ const AutoScriptPage: React.FC = () => {
         );
         // Stop tracking this script
         trackedScriptIdsRef.current.delete(id);
-      } 
+      }
       else if (newStatus.toLowerCase() === 'failed' || newStatus.toLowerCase() === 'error') {
         dispatch(
           showSnackbar({
@@ -1379,48 +1379,48 @@ const AutoScriptPage: React.FC = () => {
   // ============================================================================
   const fetchHistory = useCallback(async () => {
     if (!selectedProject?.id) return false;
-    
+
     try {
       // Cancel previous request if still running
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
-      
+
       abortControllerRef.current = new AbortController();
-      
+
       const data = await autoScriptService.getHistory(
         selectedProject.id,
         { signal: abortControllerRef.current.signal }
       );
-      
+
       console.log('[Polling] Fetched history:', data.length, 'records');
-      
+
       // Detect status changes BEFORE updating state
       detectStatusChanges(data);
-      
+
       setHistory(data);
-      
+
       // Check if any scripts are still running
       const hasRunningScripts = data.some(s => isRunningStatus(s.status));
-      
+
       return hasRunningScripts;
-      
+
     } catch (error: any) {
       // Ignore abort errors - they're intentional
       if (error?.name === 'AbortError') {
         console.log('[Polling] Request aborted');
         return false;
       }
-      
+
       console.error('[Polling] Error:', error);
-      
+
       dispatch(
         showSnackbar({
           message: 'Failed to fetch script history',
           type: 'error',
         })
       );
-      
+
       return false;
     }
   }, [selectedProject?.id, detectStatusChanges, dispatch]);
@@ -1433,11 +1433,11 @@ const AutoScriptPage: React.FC = () => {
     if (pollingTimeoutRef.current) {
       clearTimeout(pollingTimeoutRef.current);
     }
-    
+
     // Reset polling state
     pollingIntervalRef.current = POLLING_CONFIG.INITIAL_INTERVAL;
     pollingStartTimeRef.current = Date.now();
-    
+
     const poll = async () => {
       // Check max duration
       const elapsed = Date.now() - (pollingStartTimeRef.current || 0);
@@ -1451,22 +1451,22 @@ const AutoScriptPage: React.FC = () => {
         );
         return;
       }
-      
+
       const hasRunningScripts = await fetchHistory();
-      
+
       if (hasRunningScripts) {
         // Schedule next poll with exponential backoff
         pollingIntervalRef.current = calculateNextInterval(pollingIntervalRef.current);
-        
+
         console.log(`[Polling] Next poll in ${pollingIntervalRef.current}ms`);
-        
+
         pollingTimeoutRef.current = setTimeout(poll, pollingIntervalRef.current);
       } else {
         console.log('[Polling] No running scripts, stopping');
         pollingStartTimeRef.current = null;
       }
     };
-    
+
     // Start immediately
     poll();
   }, [fetchHistory, dispatch]);
@@ -1479,12 +1479,12 @@ const AutoScriptPage: React.FC = () => {
       clearTimeout(pollingTimeoutRef.current);
       pollingTimeoutRef.current = null;
     }
-    
+
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    
+
     pollingStartTimeRef.current = null;
   }, []);
 
@@ -1493,20 +1493,20 @@ const AutoScriptPage: React.FC = () => {
   // ============================================================================
   useEffect(() => {
     if (!selectedProject?.id) return;
-    
+
     console.log('[Effect] Project changed, fetching initial history');
-    
+
     const initialFetch = async () => {
       const hasRunning = await fetchHistory();
-      
+
       if (hasRunning) {
         console.log('[Effect] Found running scripts, starting poll');
         startPolling();
       }
     };
-    
+
     initialFetch();
-    
+
     return () => {
       console.log('[Effect] Cleanup - stopping polling');
       stopPolling();
@@ -1526,11 +1526,21 @@ const AutoScriptPage: React.FC = () => {
       );
       return;
     }
-    
+
     if (!selectedProject?.id) {
       dispatch(
         showSnackbar({
           message: 'No project selected',
+          type: 'error',
+        })
+      );
+      return;
+    }
+
+    if (file1.name == file2.name) {
+      dispatch(
+        showSnackbar({
+          message: 'Please select a different HAR file',
           type: 'error',
         })
       );
@@ -1547,18 +1557,18 @@ const AutoScriptPage: React.FC = () => {
         selectedProject.id,
         applicationId?.id ?? undefined
       );
-      
+
       console.log('[Generate] Response:', response);
-      
+
       // Extract script ID from response (handles different formats)
       const newScriptId = extractScriptId(response);
-      
+
       if (newScriptId) {
         console.log('[Generate] New script ID:', newScriptId);
-        
+
         // Track this script for status updates
         trackedScriptIdsRef.current.add(newScriptId);
-        
+
         // Optimistic update: add to history immediately
         const optimisticRecord: JMXRecord = {
           id: newScriptId,
@@ -1567,9 +1577,9 @@ const AutoScriptPage: React.FC = () => {
           created_on: new Date().toISOString(),
           application_name: applicationId?.name,
         };
-        
+
         setHistory(prev => [optimisticRecord, ...prev]);
-        
+
         // Store initial status
         previousHistoryRef.current.set(newScriptId, 'pending');
       } else {
@@ -1591,7 +1601,7 @@ const AutoScriptPage: React.FC = () => {
       setFile2(null);
       if (fileRef1.current) fileRef1.current.value = '';
       if (fileRef2.current) fileRef2.current.value = '';
-      
+
     } catch (err: any) {
       console.error('[Generate] Error:', err);
 
@@ -1616,7 +1626,7 @@ const AutoScriptPage: React.FC = () => {
       // Remove from tracking
       trackedScriptIdsRef.current.delete(id);
       previousHistoryRef.current.delete(id);
-      
+
       setHistory(h => h.filter(x => x.id !== id));
 
       dispatch(
@@ -1756,6 +1766,15 @@ const AutoScriptPage: React.FC = () => {
     return () => cancelAnimationFrame(id);
   }, [showFullLayout, history.length]);
 
+  const handleFile1Click = () => {// allow reselect same file
+    fileRef1.current.click();
+  };
+
+  const handleFile2Click = () => {
+    fileRef2.current.click();
+  };
+
+
   // ============================================================================
   // RENDER: NO PROJECT SELECTED
   // ============================================================================
@@ -1777,8 +1796,8 @@ const AutoScriptPage: React.FC = () => {
         <UploadSection
           file1={file1}
           file2={file2}
-          onFile1={() => fileRef1.current?.click()}
-          onFile2={() => fileRef2.current?.click()}
+          onFile1={() => handleFile1Click()}
+          onFile2={() => handleFile2Click()}
           onCancelFile1={cancelFile1}
           onCancelFile2={cancelFile2}
           onGenerate={generate}
@@ -1868,7 +1887,12 @@ const AutoScriptPage: React.FC = () => {
         ref={fileRef1}
         type="file"
         accept=".har"
-        onChange={e => setFile1(e.target.files?.[0] || null)}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            setFile1(file);
+          }
+        }}
       />
 
       <input
@@ -1876,7 +1900,12 @@ const AutoScriptPage: React.FC = () => {
         ref={fileRef2}
         type="file"
         accept=".har"
-        onChange={e => setFile2(e.target.files?.[0] || null)}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            setFile2(file);
+          }
+        }}
       />
     </div>
   );

@@ -361,9 +361,9 @@ const IntegrationTile = ({
                 flex flex-col justify-between
 
                 ${active
-                    ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white"
-                    : "bg-white text-gray-800 border-2 border-yellow-400"
-                }
+                        ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white"
+                        : "bg-white text-gray-800 border-2 border-yellow-400"
+                    }
             `}
             >
                 <div className="flex items-start justify-between">
@@ -1281,8 +1281,14 @@ export const ConfigDetailsPage: React.FC = () => {
 
             <Button
                 startIcon={<ArrowBack />}
-                onClick={() => navigate('/autoanalysis')}
-                sx={{ mb: 2 }}
+                onClick={() => navigate('/nfr')}
+                sx={{
+                    mb: 2,
+                    color: "#5c5f66",
+                    textTransform: "none",
+                    fontWeight: 500,
+                    paddingBottom: 1,
+                }}
             >
                 Back to Dashboard
             </Button>
@@ -1294,14 +1300,35 @@ export const ConfigDetailsPage: React.FC = () => {
                 onClose={() => setSnackbar(s => ({ ...s, open: false }))}
             />
 
-            <Paper sx={{ p: 6 }}>
+            <Paper sx={{ p: 6, borderRadius: 4 }}>
 
-                <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 5 }}>
+                {/* <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 5 }}>
                     Configuration: {currentApp.config.application_name}
-                </Typography>
+                </Typography> */}
+{/* 
+                <Typography
+  variant="h5"
+  sx={{
+    fontWeight: 700,
+    mb: 3,
+    color: "primary.main",
+    letterSpacing: 0.5,
+  }}
+>
+  Configuration: {currentApp.config.application_name}
+</Typography> */}
+
+
+
+<Typography variant="h5" sx={{ fontWeight: 700, mb: 4 }}>
+  Configuration:{" "}
+  <span style={{ color: "#0a5de2ff" }}>
+    {currentApp.config.application_name}
+  </span>
+</Typography>
 
                 {/* ================= Integrations ================= */}
-                <div className='border-b pb-6'>
+                <div className='border-b pb-6 text-gray-800'>
                     <SectionHeader
                         title="Integrations Overview"
                         open={openIntegrations}
@@ -1312,10 +1339,10 @@ export const ConfigDetailsPage: React.FC = () => {
 
 
                         {/* ================= Compact Status Messages ================= */}
-                        {(currentApp?.failures?.length>0 || currentApp?.warnings?.length>0) && ( 
-                           <div className="mt-5 space-y-2 mb-5"> 
+                        {(currentApp?.failures?.length > 0 || currentApp?.warnings?.length > 0) && (
+                            <div className="mt-5 space-y-2 mb-5">
 
-                                 {currentApp.failures?.map((f, idx) => (
+                                {currentApp.failures?.map((f, idx) => (
                                     <div
                                         key={`fail-${idx}`}
                                         className="
@@ -1337,9 +1364,9 @@ export const ConfigDetailsPage: React.FC = () => {
                                             </span>
                                         </div>
                                     </div>
-                                ))} 
+                                ))}
 
-                                 {currentApp?.warnings?.map((w, idx) => (
+                                {currentApp?.warnings?.map((w, idx) => (
                                     <div
                                         key={`warn-${idx}`}
                                         className="
@@ -1349,7 +1376,7 @@ export const ConfigDetailsPage: React.FC = () => {
                                             text-xs
                                             flex items-start gap-2
                                             "
-                                                                        >
+                                    >
                                         <div className="w-1.5 rounded bg-yellow-500 mt-0.5" />
 
                                         <div className="leading-snug">
@@ -1361,10 +1388,10 @@ export const ConfigDetailsPage: React.FC = () => {
                                             </span>
                                         </div>
                                     </div>
-                                ))} 
+                                ))}
 
-                             </div>
-                        )} 
+                            </div>
+                        )}
 
 
 
@@ -1419,43 +1446,43 @@ export const ConfigDetailsPage: React.FC = () => {
 
                         <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mt-4 items-stretch">
 
-    <IntegrationTile
-        title="Script"
-        active={currentApp.config.script_id !== null || currentApp.config.script_file_configured == true}
-        onClick={handleDownloadScript}
-    />
+                            <IntegrationTile
+                                title="Script"
+                                active={currentApp.config.script_id !== null || currentApp.config.script_file_configured == true}
+                                onClick={handleDownloadScript}
+                            />
 
-    <IntegrationTile
-        title="GitHub"
-        active={currentApp.config.gha_repo_url !== null}
-        link={currentApp.config.gha_repo_url}
-    />
+                            <IntegrationTile
+                                title="GitHub"
+                                active={currentApp.config.gha_repo_url !== null}
+                                link={currentApp.config.gha_repo_url}
+                            />
 
-    <IntegrationTile
-        title="BlazeMeter"
-        active={currentApp.config.blazemeter_url !== null}
-        link={currentApp.config.blazemeter_url}
-    />
+                            <IntegrationTile
+                                title="BlazeMeter"
+                                active={currentApp.config.blazemeter_url !== null}
+                                link={currentApp.config.blazemeter_url}
+                            />
 
-    <IntegrationTile
-        title="Azure DevOps"
-        active={currentApp.config.ado_url !== null}
-        link={currentApp.config.ado_url}
-    />
+                            <IntegrationTile
+                                title="Azure DevOps"
+                                active={currentApp.config.ado_url !== null}
+                                link={currentApp.config.ado_url}
+                            />
 
-    <IntegrationTile
-        title="Datadog"
-        active={currentApp.config.datadog_url !== null}
-        link={currentApp.config.datadog_url}
-    />
+                            <IntegrationTile
+                                title="Datadog"
+                                active={currentApp.config.datadog_url !== null}
+                                link={currentApp.config.datadog_url}
+                            />
 
-</div>
+                        </div>
                     </Collapse>
 
                 </div>
 
                 {/* ================= Build History ================= */}
-                <div className='border-b py-6'>
+                <div className='border-b py-6  text-gray-800'>
                     <SectionHeader
                         title="Build History"
                         open={openBuilds}
@@ -1594,7 +1621,7 @@ export const ConfigDetailsPage: React.FC = () => {
                     </Collapse>
                 </div>
 
-                <div className='border-b py-6'>
+                <div className='border-b py-6  text-gray-800'>
                     <SectionHeader
                         title="Execution Strategy"
                         open={openExecution}
@@ -1629,7 +1656,7 @@ export const ConfigDetailsPage: React.FC = () => {
                 </div>
 
                 {currentApp.config.nfrLink && (
-                    <div className='border-b py-6'>
+                    <div className='border-b py-6 text-gray-800'>
                         <SectionHeader
                             title="Performance Test Strategy"
                             open={openPerf}
@@ -1644,7 +1671,7 @@ export const ConfigDetailsPage: React.FC = () => {
                     </div>
                 )}
 
-                <div className='py-6'>
+                <div className='py-6  text-gray-800'>
                     <SectionHeader
                         title="Email Recipients"
                         open={openEmails}

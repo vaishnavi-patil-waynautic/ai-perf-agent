@@ -75,8 +75,8 @@ const WizardStep4_Generate: React.FC = () => {
     try {
       const payload = buildGenerateNfrPayload(
         wizardState,
-        selectedProject.id,
-        selectedApp.id || null,
+        selectedProject?.id,
+        selectedApp?.id || null,
       );
 
       await dispatch(generateNfr(payload)).unwrap();

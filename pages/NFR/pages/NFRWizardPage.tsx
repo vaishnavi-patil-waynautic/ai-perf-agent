@@ -28,11 +28,19 @@ import CloseIcon from '@mui/icons-material/Close';
 const NFRWizardPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
+  const [isStep3Valid, setIsStep3Valid] = useState(true);
 
   const steps = [
     { label: 'Fetch & Select', component: <WizardStep1_Fetch /> },
     { label: 'Add Documents', component: <WizardStep2_Docs /> },
-    { label: 'Questionnaire', component: <WizardStep3_Questionnaire /> },
+    {
+      label: 'Questionnaire',
+      component: (
+        <WizardStep3_Questionnaire
+          onValidationChange={setIsStep3Valid}
+        />
+      ),
+    },
     { label: 'Generate', component: <WizardStep4_Generate /> },
   ];
 
@@ -157,6 +165,7 @@ const NFRWizardPage: React.FC = () => {
                 endIcon={<ChevronRightIcon />}
                 variant="contained"
                 onClick={handleNext}
+                disabled={activeTab === 2 && !isStep3Valid}
                 className="bg-blue-600 hover:bg-blue-700"
                 sx={{
                   textTransform: "none",

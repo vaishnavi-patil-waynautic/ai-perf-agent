@@ -40,8 +40,17 @@ export default function AddApplicationDialog({
 
   const handleSubmit = () => {
     onSubmit({ name, description });
+    setName("");
+    setDescription("");
     onClose();
   };
+
+  const handleClose =() => {
+    setName("");
+    setDescription("");
+    onClose();
+
+  }
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
@@ -72,7 +81,7 @@ export default function AddApplicationDialog({
   </DialogContent>
 
   <DialogActions sx={{ justifyContent: "space-between", paddingX: 3, paddingY: 2 }}>
-  <Button onClick={onClose}>Cancel</Button>
+  <Button onClick={handleClose}>Cancel</Button>
 
   <Button
     variant="contained"

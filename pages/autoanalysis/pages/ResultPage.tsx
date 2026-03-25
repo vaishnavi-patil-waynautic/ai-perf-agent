@@ -326,7 +326,7 @@
 
 
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Paper, Typography, Button, CircularProgress, Alert, TableCell, TableHead, Table, TableRow, TableBody, TableContainer, Chip } from '@mui/material';
 import { ArrowBack, Download } from '@mui/icons-material';
@@ -335,7 +335,9 @@ import { fetchBuildReport } from '../services/mockService';
 import { BuildReport } from '../types';
 import { useLocation } from 'react-router-dom';
 import { BarChart3, Boxes, Clock, Folder } from 'lucide-react';
-
+import html2pdf from "html2pdf.js";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
 
 interface InfoCardProps {
   title: string;
@@ -393,14 +395,51 @@ const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
 
 
 export const ResultPage: React.FC = () => {
+
+
+const pageRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const { projectName, appName } = location.state || {};
   const { projectId, appId, buildId } = useParams();
   const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
 
   const [report, setReport] = useState<BuildReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const copyTableAsCSV = () => {
+  const header = [
+    'Transaction',
+    'Total Hits',
+    'TPS (req/s)',
+    'Avg RT (ms)',
+    'P90 RT (ms)',
+    'P95 RT (ms)',
+    'Max RT (ms)',
+    'Error Rate (%)'
+  ];
+
+  const rows = report.result_data.map(r => [
+    r.transaction_name,
+    r.total_hits,
+    formatTPS(r.tps),
+    formatRT(r.avg_rt),
+    formatRT(r.rt_90th),
+    formatRT(r.rt_95th),
+    formatRT(r.max_rt),
+    r.error_rate
+  ]);
+
+  const csv = [header, ...rows]
+    .map(row => row.map(String).join(','))
+    .join('\n');
+
+  navigator.clipboard.writeText(csv).then(() => {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  });
+};
 
   useEffect(() => {
     if (!projectId || !appId || !buildId) return;
@@ -506,15 +545,140 @@ export const ResultPage: React.FC = () => {
     link.click();
   };
 
+const handleDownloadHTML = () => {
+  if (!pageRef.current) return;
+
+  const cloned = pageRef.current.cloneNode(true) as HTMLElement;
+
+  // Remove back/download nav buttons only
+  cloned.querySelectorAll(".no-export").forEach(el => el.remove());
+
+  // ✅ Replace MUI copy button with a self-contained vanilla HTML button
+  const wrapperEl = cloned.querySelector('#copy-btn-wrapper');
+  if (wrapperEl) {
+    const vanillaBtn = document.createElement('button');
+    vanillaBtn.id = 'copy-csv-btn';
+    vanillaBtn.textContent = '⎘ Copy CSV';
+    vanillaBtn.setAttribute('style', `
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      font-family: Roboto, Arial, sans-serif;
+      color: #64748b;
+      background-color: rgba(100, 116, 139, 0.08);
+      border: 1px solid rgba(226, 232, 240, 1);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    `);
+
+    // Replace whatever MUI rendered inside the wrapper
+    const existingBtn = wrapperEl.querySelector('button');
+    if (existingBtn) existingBtn.replaceWith(vanillaBtn);
+  }
+
+  // Extract all live MUI/app styles
+  let allStyles = '';
+  try {
+    Array.from(document.styleSheets).forEach(sheet => {
+      try {
+        Array.from(sheet.cssRules || []).forEach(rule => {
+          allStyles += rule.cssText + '\n';
+        });
+      } catch {
+        // Skip cross-origin sheets (e.g. Google Fonts CDN)
+      }
+    });
+  } catch {
+    // Silently ignore
+  }
+
+  // ✅ Self-contained copy script for the downloaded file
+  const copyScript = `
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var btn = document.getElementById('copy-csv-btn');
+        if (!btn) return;
+
+        btn.addEventListener('click', function () {
+          var table = document.querySelector('table');
+          if (!table) return;
+
+          var rows = Array.from(table.querySelectorAll('tr'));
+          var csv = rows.map(function (row) {
+            var cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(function (cell) {
+              // Strip inner html noise, trim whitespace, escape commas
+              var text = cell.innerText.trim().replace(/\\n/g, ' ');
+              return text.includes(',') ? '"' + text + '"' : text;
+            }).join(',');
+          }).join('\\n');
+
+          navigator.clipboard.writeText(csv).then(function () {
+            btn.textContent = '✓ Copied!';
+            btn.style.color = '#16a34a';
+            btn.style.backgroundColor = 'rgba(34, 197, 94, 0.08)';
+            btn.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+
+            setTimeout(function () {
+              btn.textContent = '⎘ Copy CSV';
+              btn.style.color = '#64748b';
+              btn.style.backgroundColor = 'rgba(100, 116, 139, 0.08)';
+              btn.style.borderColor = 'rgba(226, 232, 240, 1)';
+            }, 2000);
+          }).catch(function () {
+            alert('Copy failed. Your browser may not support clipboard access.');
+          });
+        });
+      });
+    </script>
+  `;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Build Report - #${report?.build_number}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <style>
+          *, *::before, *::after { box-sizing: border-box; }
+          body {
+            font-family: Roboto, Arial, sans-serif;
+            background: #f8fafc;
+            margin: 0;
+            padding: 0;
+          }
+          ${allStyles}
+        </style>
+      </head>
+      <body>
+        ${cloned.outerHTML}
+        ${copyScript}
+      </body>
+    </html>
+  `;
+
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Build_${report?.build_number}_Report.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
   return (
-    <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh' }}>
+    <Box ref={pageRef} sx={{ bgcolor: '#f8fafc', minHeight: '100vh' }} className = " max-w-6xl m-auto p-10">
       {/* Centered Content Wrapper */}
       <Box
         sx={{
           maxWidth: '1200px',
-          mx: 'auto',
-          px: 3,
-          py: 4
+          mx: 'auto'
         }}
       >
         {/* Header */}
@@ -527,6 +691,7 @@ export const ResultPage: React.FC = () => {
           }}
         >
           <Button
+          className="no-export"
             startIcon={<ArrowBack />}
             onClick={() => navigate(-1)}
             sx={{
@@ -543,18 +708,19 @@ export const ResultPage: React.FC = () => {
           </Button>
 
           <Button
+          className="no-export"
             variant="contained"
             startIcon={<Download />}
-            onClick={() => exportToCSV(report)}
+            onClick={handleDownloadHTML}
             sx={{
-              bgcolor: '#3b82f6',
+              bgcolor: '#0b62eeff',
               textTransform: 'none',
               fontWeight: 500,
               borderRadius: 2,
               px: 3,
               boxShadow: '0 1px 3px 0 rgba(59, 130, 246, 0.3)',
               '&:hover': {
-                bgcolor: '#2563eb',
+                bgcolor: '#0549deff',
                 boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.4)'
               }
             }}
@@ -714,6 +880,51 @@ export const ResultPage: React.FC = () => {
             overflow: 'hidden'
           }}
         >
+<Box
+  id="copy-btn-wrapper"
+  sx={{
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    px: 3,
+    py: 1.5,
+    borderBottom: '1px solid rgba(226, 232, 240, 1)',
+    bgcolor: '#ffffff'
+  }}
+>
+  <Typography
+    variant="body2"
+    sx={{ fontWeight: 600, color: '#1e293b', fontSize: '0.875rem' }}
+  >
+    Transaction Metrics
+  </Typography>
+
+  <Button
+    id="copy-csv-btn"
+    size="small"
+    startIcon={copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+    onClick={copyTableAsCSV}
+    sx={{
+      textTransform: 'none',
+      fontWeight: 500,
+      fontSize: '0.8rem',
+      color: copied ? '#16a34a' : '#64748b',
+      bgcolor: copied ? 'rgba(34, 197, 94, 0.08)' : 'rgba(100, 116, 139, 0.08)',
+      border: '1px solid',
+      borderColor: copied ? 'rgba(34, 197, 94, 0.3)' : 'rgba(226, 232, 240, 1)',
+      borderRadius: 1.5,
+      px: 1.5,
+      transition: 'all 0.2s ease',
+      '&:hover': {
+        bgcolor: copied ? 'rgba(34, 197, 94, 0.12)' : 'rgba(100, 116, 139, 0.14)',
+      }
+    }}
+  >
+    {copied ? 'Copied!' : 'Copy CSV'}
+  </Button>
+</Box>
+
+ 
           <TableContainer>
             <Table stickyHeader>
               <TableHead>
@@ -881,6 +1092,7 @@ export const ResultPage: React.FC = () => {
               </TableBody>
             </Table>
           </TableContainer>
+
         </Paper>
       </Box>
     </Box>

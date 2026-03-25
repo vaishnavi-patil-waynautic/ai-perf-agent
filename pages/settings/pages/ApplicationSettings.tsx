@@ -57,12 +57,15 @@ export default function ApplicationSettings() {
         type: "success",
       })
     );
+
+    setEditingApp(null);
+    
   } catch (err: any) {
     console.error("[UI] Create failed:", err);
 
     dispatch(
       showSnackbar({
-        message: err?.message || "Failed to create application",
+        message: err || err?.message || "Failed to create application",
         type: "error",
       })
     );

@@ -1,6 +1,8 @@
 // export async function getUserApplication(appId: number) {
 //   const token = localStorage.getItem("access_token");
 
+import { config } from "@/config/backendConfig";
+
 //   console.log("TOKEN SENT:", token); // must NOT be null
 
 //   const res = await fetch(
@@ -37,7 +39,7 @@ export async function getUserApplication(appId: number) {
     }
 
     const res = await fetch(
-      `http://127.0.0.1:8000/api/v1/users/application/${appId}/`,  // Added trailing slash
+      `${config.baseUrl}/users/application/${appId}/`,  // Added trailing slash
       {
         method: "GET",
         headers: {

@@ -37,6 +37,7 @@ const initialState: ChatState = {
   error: null,
   isFullScreen: false,
   chatLoading: false,
+  chatMode: 'collapsed'
 };
 
 const chatSlice = createSlice({
@@ -50,6 +51,9 @@ const chatSlice = createSlice({
       state.messages.push(action.payload);
       state.chatLoading = true;
     },
+    setChatMode: (state, action) => {
+  state.chatMode = action.payload;
+},
     // Streaming: Add a placeholder bot message that will be updated
     // addStreamingBotMessage: (state, action: PayloadAction<{ id: string }>) => {
     //   state.messages.push({
@@ -272,7 +276,8 @@ export const {
   toggleMessageReaction,
   clearMessages,
   setCurrentChat,
-  toggleScreenView
+  toggleScreenView,
+  setChatMode
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

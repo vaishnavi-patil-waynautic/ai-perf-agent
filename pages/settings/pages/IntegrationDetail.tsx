@@ -1025,8 +1025,6 @@ export default function IntegrationDetail() {
                   </h3>
                 </div>
 
-                {(hoveredCard === integration.id || integration.status !== "active") && (
-                  // <div className="flex items-center gap-1 ml-2 flex-shrink-0">
                   <div className="flex items-center gap-1 ml-auto flex-wrap">
 
                     {/* ACTIVE → EDIT */}
@@ -1082,7 +1080,6 @@ export default function IntegrationDetail() {
                     )}
 
                   </div>
-                )}
               </div>
 
               <div className="mb-3">

@@ -1,3 +1,4 @@
+import { config } from "@/config/backendConfig";
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 
 interface Application {
@@ -31,7 +32,10 @@ export const fetchProject = createAsyncThunk(
     const token = localStorage.getItem("access_token");
     if (!token) throw new Error("Missing token");
 
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/users/project/${projectId}`, {
+
+
+
+    const res = await fetch(`${config.baseUrl}/users/project/${projectId}`, {
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${token}`,

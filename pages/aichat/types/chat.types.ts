@@ -110,6 +110,7 @@ export interface ChatState {
   error: string | null; 
   isFullScreen : boolean;
   chatLoading: boolean;
+  chatMode: 'closed' | 'collapsed' | 'fullscreen'
 }
 
 export interface APIError {

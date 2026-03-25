@@ -69,11 +69,30 @@ export const projectService = {
     const json = await res.json();
     console.log("[API] Create Application Response:", json);
 
+    // if (!res.ok) {
+    //   const err =
+    //     json?.data?.error ||
+    //     json?.data?.error?.name?.[0] ||
+    //     json?.data?.error?.project?.[0] ||
+    //     "Failed to create application";
+
+    //   throw new Error(err);
+    // }
+
+
     if (!res.ok) {
-      const err =
-        json?.data?.error?.name?.[0] ||
-        json?.data?.error?.project?.[0] ||
-        "Failed to create application";
+      let err = "Failed to create application";
+
+      if (json?.data?.error) {
+        if (typeof json.data.error === "string") {
+          err = json.data.error;
+        } else if (typeof json.data.error === "object") {
+          err =
+            json.data.error.name?.[0] ||
+            json.data.error.project?.[0] ||
+            JSON.stringify(json.data.error);
+        }
+      }
 
       throw new Error(err);
     }
@@ -89,22 +108,22 @@ export const projectService = {
 
     const token = localStorage.getItem("access_token");
 
-  const body = {
-    id: appId,
-    ...payload
-  };
+    const body = {
+      id: appId,
+      ...payload
+    };
 
-  console.log("[PUT] Request Body:", body);
+    console.log("[PUT] Request Body:", body);
 
-  const res = await fetch(`${config.baseUrl}/users/application/`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-  });
+    const res = await fetch(`${config.baseUrl}/users/application/`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
 
     const json = await res.json();
     console.log("[API] Update Application Response:", json);

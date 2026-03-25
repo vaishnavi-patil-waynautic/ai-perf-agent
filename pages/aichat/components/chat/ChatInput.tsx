@@ -543,7 +543,7 @@ const ChatInput: React.FC = () => {
       IconComponent={() => null}
       renderValue={(selected) => {
         const m = models.find((x) => x.id === selected);
-        return <div className="text-purple-600">{m?.icon}</div>;
+        return <div className="text-purple-600">{m?.icon || <Brain size={16} />}</div>;
       }}
       MenuProps={{
         PaperProps: {
@@ -605,7 +605,7 @@ const ChatInput: React.FC = () => {
               }}
             >
               <span className={selectedModel === model.id ? "text-purple-600" : "text-purple-500"}>
-                {model?.icon} || <Brain size={16} />
+                {model?.icon || <Brain size={16} />}
               </span>
             </div>
             <div className="flex-1">

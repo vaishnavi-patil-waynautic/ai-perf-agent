@@ -384,6 +384,7 @@ const handleChangePassword = async () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                             <TextField
                                 label="Full Name"
+                                type='text'
                                 value={
                                     editMode
                                         ? `${formData.first_name || ""} ${formData.last_name || ""}`.trim()
@@ -419,24 +420,40 @@ const handleChangePassword = async () => {
                             />
 
                             <TextField
-                                label="Phone Number"
-                                value={editMode ? formData.phone_no : user?.phone_no || ""}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, phone_no: e.target.value })
-                                }
-                                disabled={!editMode}
-                                fullWidth
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Phone className="text-gray-400" fontSize="small" />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
+  label="Phone Number"
+  type="tel"
+  value={editMode ? formData.phone_no : user?.phone_no || ""}
+  onChange={(e) => {
+    let value = e.target.value;
+
+    // Allow only digits + optional leading "+"
+    value = value.replace(/[^\d+]/g, "");
+
+    // Ensure only one "+" and only at start
+    if (value.includes("+")) {
+      value = "+" + value.replace(/\+/g, "");
+    }
+
+    setFormData({ ...formData, phone_no: value });
+  }}
+  disabled={!editMode}
+  fullWidth
+  inputProps={{
+    maxLength: 14, // enough for +91XXXXXXXXXX
+    inputMode: "tel",
+  }}
+  InputProps={{
+    startAdornment: (
+      <InputAdornment position="start">
+        <Phone className="text-gray-400" fontSize="small" />
+      </InputAdornment>
+    ),
+  }}
+/>
 
                             <TextField
                                 label="Location"
+                                type='text'
                                 value={editMode ? `${formData.location}` : user?.location || ""}
                                 disabled={!editMode}
                                 onChange={(e) =>
@@ -453,6 +470,7 @@ const handleChangePassword = async () => {
                             />
                             <TextField
                                 label="Company"
+                                type='text'
                                 value={editMode ? formData.company : user?.company}
                                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                                 disabled={!editMode}
@@ -467,6 +485,7 @@ const handleChangePassword = async () => {
                             />
                             <TextField
                                 label="Role"
+                                type='text'
                                 value={editMode ? formData.role : user?.role}
                                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                 disabled={!editMode}
@@ -476,6 +495,7 @@ const handleChangePassword = async () => {
 
                         <TextField
                             label="Bio"
+                            type='text'
                             value={editMode ? formData.bio : user?.bio}
                             onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                             disabled={!editMode}

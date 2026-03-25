@@ -1,4 +1,6 @@
-const API_BASE = "http://127.0.0.1:8000/api/v1/users/ai-model";
+import { config } from "@/config/backendConfig";
+
+const API_BASE = `${config.baseUrl}/users/ai-model`;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("access_token");

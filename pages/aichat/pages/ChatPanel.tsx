@@ -7,10 +7,11 @@ import ChatHistory from '../components/chat/ChatHistory';
 import { useAppSelector } from '../store/hooks';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
-import { toggleScreenView } from '../store/slices/chat.slice';
+import { setCurrentChat, toggleScreenView } from '../store/slices/chat.slice';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { measureMemory } from 'vm';
 import { ChatMessage } from '../types/chat.types';
+import { fetchChatMessages } from '../services/chat.service';
 
 interface ChatPanelProps {
   onClose: () => void;
@@ -34,7 +35,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     (state: RootState) => state.chat?.isFullScreen
   )
   const chatLoading = useAppSelector((state: RootState) => state.chat.chatLoading);
-
+  const isInitializedRef = useRef(false);
 
 
   const firstMessage: ChatMessage = {
@@ -51,6 +52,38 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   // console.log("Messages : ", messages)
   console.log("ChatPanel : ", messages)
 
+
+  useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const chatParam = params.get('chat');
+
+  if (chatParam) {
+    const id = chatParam;
+
+    // ✅ set chatId FIRST
+    if (String(chatId) !== id) {
+      dispatch(setCurrentChat(id));
+    }
+
+    // ✅ ensure fullscreen
+    if (!isFullScreen) {
+      dispatch(toggleScreenView());
+    } 
+  }
+
+  // ✅ mark initialization complete
+  isInitializedRef.current = true;
+}, []);
+
+
+  useEffect(() => {
+  localStorage.setItem('chat_fullscreen', JSON.stringify(isFullScreen));
+}, [isFullScreen]);
+
+useEffect(() => {
+  localStorage.setItem('chat_id', String(chatId));
+}, [chatId]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -60,39 +93,41 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   }, [messages.length]);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
+  if (!isInitializedRef.current) return; // 🚨 prevent early override
 
-    if (isFullScreen) {
-      params.set('chat', String(chatId ?? 0));
-    } else {
-      params.delete('chat');
-    }
+  const params = new URLSearchParams(location.search);
 
-    navigate(
-      {
-        pathname: location.pathname,
-        search: params.toString(),
-      },
-      { replace: true }
-    );
-  }, [isFullScreen, chatId]);
+  if (isFullScreen) {
+    params.set('chat', String(chatId ?? 0));
+  } else {
+    params.delete('chat');
+  }
+
+  navigate(
+    {
+      pathname: location.pathname,
+      search: params.toString(),
+    },
+    { replace: true }
+  );
+}, [isFullScreen, chatId]);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const chatParam = params.get('chat');
+  if (!isInitializedRef.current) return; // 🚨 critical
 
-    // If URL no longer has chat=1 but Redux says fullscreen is open
-    if (!chatParam && isFullScreen) {
-      dispatch(toggleScreenView());
-    }
+  const params = new URLSearchParams(location.search);
+  const chatParam = params.get('chat');
 
-    // If URL has chat=1 but Redux says it's closed
-    if (chatParam && !isFullScreen) {
-      dispatch(toggleScreenView());
-    }
+  if (!chatParam && isFullScreen) {
+    dispatch(toggleScreenView());
+  }
 
-  }, [location.pathname, location.search, chatId]);
+  if (chatParam && !isFullScreen) {
+    dispatch(toggleScreenView());
+  }
+}, [location.search]);
 
+  
   const handleToggle = () => {
     dispatch(toggleScreenView());
   }

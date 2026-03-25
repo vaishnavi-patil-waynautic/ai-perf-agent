@@ -148,29 +148,55 @@ export default function AISettings() {
     provider: "",
   });
 
-useEffect(() => {
-  dispatch(fetchModels());
-}, [dispatch]);
+  const [showFormError, setShowFormError] = useState(false);
 
-const handleAdd = () => {
-  if (!form.name || !form.rateLimit) return;
+  useEffect(() => {
+    dispatch(fetchModels());
+  }, [dispatch]);
 
-  dispatch(
-    createModel({
-      name: form.name,
-      rate_limit: form.rateLimit,
-      provider: form.provider,
-      api_token: form.api_token
-    })
-  );
+  const validateField = (name: string, value: string) => {
+    if (!value) return "This field is required";
 
-  setForm({ name: "", api_token: "", rateLimit: "", provider: "" });
-  setOpen(false);
-};
+    if (name === "rateLimit") {
+      const num = Number(value);
+      if (isNaN(num)) return "Enter a valid number";
+      if (num < 0) return "Value cannot be negative";
+    }
 
-const handleDelete = (id) => {
-  dispatch(deleteModel(id));
-};
+    return "";
+  };
+
+  const isRateLimitInvalid =
+  form.rateLimit !== "" && Number(form.rateLimit) < 0;
+
+  const isFormValid =
+  form.name &&
+  form.provider &&
+  form.api_token &&
+  form.rateLimit &&
+  !isRateLimitInvalid;
+
+  const handleAdd = () => {
+  if (!isFormValid) {
+    setShowFormError(true);
+    return;
+  }
+    dispatch(
+      createModel({
+        name: form.name,
+        rate_limit: form.rateLimit,
+        provider: form.provider,
+        api_token: form.api_token
+      })
+    );
+
+    setForm({ name: "", api_token: "", rateLimit: "", provider: "" });
+    setOpen(false);
+  };
+
+  const handleDelete = (id) => {
+    dispatch(deleteModel(id));
+  };
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -247,13 +273,18 @@ const handleDelete = (id) => {
             </h2>
 
             <input
-              placeholder="Model Name"
-              value={form.name}
-              onChange={(e) =>
-                setForm({ ...form, name: e.target.value })
-              }
-              className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
-            />
+  placeholder="Model Name"
+  value={form.name}
+  onChange={(e) =>
+    setForm({ ...form, name: e.target.value })
+  }
+  className={`w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+  }`}
+/>
+
+            {/* {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )} */}
 
             <input
               placeholder="Provider"
@@ -264,6 +295,7 @@ const handleDelete = (id) => {
               className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
             />
 
+            
             <input
               placeholder="API Token"
               value={form.api_token}
@@ -274,15 +306,32 @@ const handleDelete = (id) => {
               className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
             />
 
+            
             <input
-              placeholder="Rate Limit"
-              type="number"
-              value={form.rateLimit}
-              onChange={(e) =>
-                setForm({ ...form, rateLimit: e.target.value })
-              }
-              className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
-            />
+  placeholder="Rate Limit"
+  type="number"
+  value={form.rateLimit}
+  onChange={(e) =>
+    setForm({ ...form, rateLimit: e.target.value })
+  }
+  className={`w-full border rounded-lg p-2.5 outline-none ${
+    isRateLimitInvalid
+      ? "border-red-500"
+      : "focus:ring-2 focus:ring-blue-500"
+  }`}
+/>
+
+{isRateLimitInvalid && (
+  <p className="text-red-500 text-xs">
+    Value cannot be negative
+  </p>
+)}
+
+{showFormError && (
+  <p className="text-red-500 text-sm">
+    Please fill all required fields correctly
+  </p>
+)}
 
             <div className="flex justify-end gap-3 pt-2">
               <button
@@ -293,11 +342,17 @@ const handleDelete = (id) => {
               </button>
 
               <button
-                onClick={handleAdd}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm"
-              >
-                Add
-              </button>
+  onClick={handleAdd}
+  disabled={!isFormValid}
+  title={!isFormValid ? "Please Fill all fields correctly !" : "Add Model"}
+  className={`px-4 py-2 rounded-lg shadow-sm text-white ${
+    isFormValid
+      ? "bg-blue-600 hover:bg-blue-700"
+      : "bg-gray-400 cursor-not-allowed"
+  }`}
+>
+  Add
+</button>
             </div>
           </div>
         </div>
