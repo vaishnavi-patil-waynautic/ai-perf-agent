@@ -9,13 +9,6 @@ export const fetchModels = createAsyncThunk(
     try {
       const data = await aiModelService.getAll();
 
-      dispatch(
-        showSnackbar({
-          message: "Models fetched successfully",
-          type: "success",
-        })
-      );
-
       console.log("API RESPONSE:", data);
 
       return data;

@@ -48,6 +48,7 @@ export const DashboardPage: React.FC = () => {
   const [stage, setStage] = useState<"new" | "in_progress">("new")
   const pollingUrlRef = useRef<string | null>(null);
   const inProgressAppsRef = useRef<Map<string, string>>(new Map());
+  const pollingStartTimeRef = useRef<number | null>(null);
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -66,6 +67,7 @@ export const DashboardPage: React.FC = () => {
     if (appsPollingRef.current) {
       clearInterval(appsPollingRef.current);
       appsPollingRef.current = null;
+      pollingStartTimeRef.current = null; 
       console.log("Stopeed Polling !!! ");
     }
   };
@@ -156,6 +158,8 @@ export const DashboardPage: React.FC = () => {
 
   if (appsPollingRef.current) return;
 
+  pollingStartTimeRef.current = Date.now();
+
   console.log("Starting apps polling...");
 
   pollingUrlRef.current = window.location.pathname;
@@ -164,6 +168,27 @@ export const DashboardPage: React.FC = () => {
 
   appsPollingRef.current = setInterval(async () => {
     try {
+
+
+       if (
+      pollingStartTimeRef.current &&
+      Date.now() - pollingStartTimeRef.current > 120000
+    ) {
+      console.log("Polling timeout reached → stopping polling");
+
+      clearInterval(appsPollingRef.current!);
+      appsPollingRef.current = null;
+      pollingStartTimeRef.current = null;
+
+      dispatch(
+        showSnackbar({
+          message: "Polling has stopped. Some apps may still be processing.",
+          type: "error",
+        })
+      );
+
+      return;
+    }
 
       // Stop polling if URL changed
       if (window.location.pathname !== pollingUrlRef.current) {
@@ -309,7 +334,7 @@ export const DashboardPage: React.FC = () => {
 
       dispatch(
         showSnackbar({
-          message: "Failed to create application",
+          message: err || err.message || "Failed to create application",
           type: "error",
         })
       );

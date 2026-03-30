@@ -174,22 +174,6 @@
 // };
 
 
-export const getFAQs = (): Promise<FAQ[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        { id: '1', question: 'How to fix 504 Gateway errors?', category: 'Troubleshooting' },
-        { id: '2', question: 'Generate Load Test Strategy', category: 'Testing' },
-        { id: '3', question: 'Analyze Report #402', category: 'Analysis' },
-        { id: '4', question: 'What are NFR best practices?', category: 'Performance' },
-        { id: '5', question: 'Explain JMX scripting basics', category: 'Development' },
-        { id: '6', question: 'How to optimize database queries?', category: 'Performance' },
-        { id: '7', question: 'Understanding error logs', category: 'Troubleshooting' },
-        { id: '8', question: 'Setup monitoring dashboard', category: 'Monitoring' },
-      ]);
-    }, 300);
-  });
-};
 
 import { config } from '@/config/backendConfig';
 // // Dummy Chat Histories
@@ -316,6 +300,25 @@ import { ChatMessage, ChatHistory, FAQ } from '../types/chat.types';
 
 const BASE_URL = `${config.baseUrl}/aichatbot`;
 
+
+
+export const getFAQs = (): Promise<FAQ[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        { id: '1', question: 'How to fix 504 Gateway errors?', category: 'Troubleshooting' },
+        { id: '2', question: 'Generate Load Test Strategy', category: 'Testing' },
+        { id: '3', question: 'Analyze Report #402', category: 'Analysis' },
+        { id: '4', question: 'What are NFR best practices?', category: 'Performance' },
+        { id: '5', question: 'Explain JMX scripting basics', category: 'Development' },
+        { id: '6', question: 'How to optimize database queries?', category: 'Performance' },
+        { id: '7', question: 'Understanding error logs', category: 'Troubleshooting' },
+        { id: '8', question: 'Setup monitoring dashboard', category: 'Monitoring' },
+      ]);
+    }, 300);
+  });
+};
+
 /* ---------------- SEND MESSAGE (CREATE / EXISTING CHAT) ---------------- */
 export const sendMessageToAPI = async (
   text: string,
@@ -359,7 +362,7 @@ export const sendMessageToAPI = async (
     sender: "bot",
     type: hasVisualization ? "visualization" : "text",
     content,
-    timestamp: new Date(),
+    timestamp: new Date().toISOString(),
     data,
   };
 
@@ -384,7 +387,7 @@ export const fetchChatHistories = async (): Promise<ChatHistory[]> => {
     id: String(c.id),
     title: c.title,
     lastMessage: c.last_message,
-    timestamp: new Date(c.updated_on),
+    timestamp: new Date(c.updated_on).toISOString(),
     messageCount: c.message_count,
   }));
 };
@@ -405,7 +408,7 @@ export const fetchChatMessages = async (chatId: string): Promise<ChatMessage[]> 
     sender: "user",
     type: "text",
     content: m.natural_language_query,
-    timestamp: new Date(m.created_on),
+    timestamp: new Date(m.created_on).toISOString(),
   })).flatMap((userMsg: ChatMessage, i: number) => {
     const m = msgs[i];
 
@@ -414,7 +417,7 @@ export const fetchChatMessages = async (chatId: string): Promise<ChatMessage[]> 
       sender: "bot",
       type: m.visualization_type ? "visualization" : "text",
       content: m.summary ?? "",
-      timestamp: new Date(m.created_on),
+      timestamp: new Date(m.created_on).toISOString(),
       liked: m.user_feedback?.is_liked ?? false,
       disliked: m.user_feedback?.is_disliked ?? false,
       data: {

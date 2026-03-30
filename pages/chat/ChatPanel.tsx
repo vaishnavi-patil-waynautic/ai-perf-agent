@@ -27,7 +27,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ onClose }) => {
     // Mock Messages
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
-            id: '1', sender: 'bot', type: 'text', timestamp: new Date(),
+            id: '1', sender: 'bot', type: 'text', timestamp: new Date().toISOString(),
             content: "Hello! I'm your Performance Engineering Assistant.\n\nI can help you analyze NFRs, debug JMX scripts, or explain error logs."
         }
     ]);
@@ -38,10 +38,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ onClose }) => {
     }, [messages]);
 
     const handleSend = (text: string, model: string) => {
-        setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'user', type: 'text', content: text, timestamp: new Date() }]);
+        setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'user', type: 'text', content: text, timestamp: new Date().toISOString() }]);
 
         setTimeout(() => {
-            setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'bot', type: 'text', content: `[${model}] Analyzing: ${text}...`, timestamp: new Date() }]);
+            setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'bot', type: 'text', content: `[${model}] Analyzing: ${text}...`, timestamp: new Date().toISOString() }]);
         }, 1000);
     };
 

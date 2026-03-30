@@ -28,6 +28,7 @@ import { fetchCurrentUser } from './pages/settings/store/user.thunk';
 import GlobalAppSnackbar from './components/GlobalAppSnackbar';
 import { authChecked } from './store/authSlice';
 import { BotMessageSquare } from 'lucide-react';
+import ResetPassword from './pages/authentication/ResetPassword';
 
 
 
@@ -251,6 +252,7 @@ if (authLoading) {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
 
 

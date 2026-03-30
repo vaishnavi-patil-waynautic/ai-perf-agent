@@ -55,14 +55,14 @@ export interface ChatMessage {
   sender: MessageSender;
   type: MessageType;
   content: string;
-  timestamp: Date;
+  timestamp: string;
 
   liked?: boolean;
   disliked?: boolean;
 
   data?: ChatMessageData;
   isStreaming?: boolean; //
-
+  modelName ?: string;
 
   streamParams?: StreamParams;
 }
@@ -85,7 +85,7 @@ export interface ChatHistory {
   id: string;
   title: string;
   lastMessage: string;
-  timestamp: Date;
+  timestamp: string;
   messageCount: number;
 }
 export interface MessageReactionPayload {
@@ -110,7 +110,9 @@ export interface ChatState {
   error: string | null; 
   isFullScreen : boolean;
   chatLoading: boolean;
-  chatMode: 'closed' | 'collapsed' | 'fullscreen'
+  chatMode: 'closed' | 'collapsed' | 'fullscreen';
+   activeStreamId   : string | null;    // ← NEW
+    isStreamingActive: boolean;  
 }
 
 export interface APIError {

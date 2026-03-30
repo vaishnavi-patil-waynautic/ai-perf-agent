@@ -18,7 +18,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
         sender: 'bot',
         type: 'text',
         content: "Hello! I'm your Engineering Assistant. I can help you generate strategies, analyze logs, or draw architecture diagrams.",
-        timestamp: new Date()
+        timestamp: new Date().toISOString()
     }
   ]);
 
@@ -36,7 +36,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
         sender: 'user',
         type: 'text',
         content: text,
-        timestamp: new Date()
+        timestamp: new Date().toISOString()
     };
     setMessages(prev => [...prev, userMsg]);
 
@@ -47,7 +47,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
             sender: 'bot',
             type: 'text',
             content: `Response from ${modelId}: I received your query "${text}". Here is a sample response.`,
-            timestamp: new Date()
+            timestamp: new Date().toISOString()
         };
 
         // Mocking rich media based on keywords

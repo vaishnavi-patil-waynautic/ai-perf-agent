@@ -569,11 +569,11 @@
 /**
  * MessageBubble.tsx
  *
- * Renders a single chat message.
- * Key rule: if message.isStreaming is true, delegate to <StreamingBubble>.
- * That component owns the EventSource and local state.
- * Once streaming is done it dispatches finalizeStreamingMessage and returns null,
- * at which point Redux re-renders this component with the completed message.
+ * Single change from the original: bot avatar replaced with <ModelAvatar>
+ * which picks the branded icon/colour based on message.modelName.
+ *
+ * During streaming : reads message.modelName (set by addStreamingBotMessage)
+ * After finalized  : still reads message.modelName (preserved by finalizeStreamingMessage)
  */
 
 import React, { useState } from 'react';
@@ -583,52 +583,38 @@ import ThumbUpIcon            from '@mui/icons-material/ThumbUp';
 import ThumbDownOutlinedIcon  from '@mui/icons-material/ThumbDownOutlined';
 import ThumbDownIcon          from '@mui/icons-material/ThumbDown';
 import ContentCopyIcon        from '@mui/icons-material/ContentCopy';
+import { User }               from 'lucide-react';
 import { ChatMessage }        from '../../types/chat.types';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { useAppDispatch }     from '../../store/hooks';
 import ChatResponseCard       from './ChatResponseCard';
-import { loadChatMessages, sendFeedback } from '../../store/slices/chat.thunk';
+import { sendFeedback }       from '../../store/slices/chat.thunk';
 import MarkdownBlock          from './ChatResponse/MarkdownBlock';
 import StreamingBubble        from './StreamingBubble';
-import { Bot, User }          from 'lucide-react';
+import { ModelAvatar }        from '../Modelconfig'; 
 
-interface Props {
-  message: ChatMessage;
-}
+interface Props { message: ChatMessage; }
 
 const MessageBubble: React.FC<Props> = ({ message }) => {
-  const dispatch       = useAppDispatch();
+  const dispatch         = useAppDispatch();
   const [copied, setCopied] = useState(false);
-  const currentChatId  = useAppSelector((s) => s.chat.currentChatId);
-  const isUser         = message.sender === 'user';
+  const isUser           = message.sender === 'user';
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(message.content);
-    setCopied(true);
-  };
-
+  const handleCopy     = () => { navigator.clipboard.writeText(message.content); setCopied(true); };
   const handleReaction = (reaction: 'like' | 'dislike') => {
     dispatch(sendFeedback({ messageId: message.id, reaction }));
-    // dispatch(loadChatMessages(currentChatId));
   };
 
-  // ── Reaction / action buttons (only on finalized bot messages) ────────────
   const ActionBar = () => (
     <div className="flex items-center gap-1.5 mt-2 ml-1">
       <Tooltip title="Like" placement="top">
-        <IconButton
-          size="small"
-          onClick={() => handleReaction('like')}
-          sx={{
-            width: 32, height: 32, borderRadius: '10px',
-            background: message.liked
-              ? 'linear-gradient(135deg,rgba(59,130,246,.15),rgba(37,99,235,.15))'
-              : 'rgba(255,255,255,.5)',
-            border: message.liked
-              ? '1.5px solid rgba(59,130,246,.3)'
-              : '1px solid rgba(255,255,255,.4)',
-            '&:hover': { boxShadow: '0 4px 16px rgba(59,130,246,.25)' },
-          }}
-        >
+        <IconButton size="small" onClick={() => handleReaction('like')} sx={{
+          width: 32, height: 32, borderRadius: '10px',
+          background: message.liked
+            ? 'linear-gradient(135deg,rgba(59,130,246,.15),rgba(37,99,235,.15))'
+            : 'rgba(255,255,255,.5)',
+          border: message.liked ? '1.5px solid rgba(59,130,246,.3)' : '1px solid rgba(255,255,255,.4)',
+          '&:hover': { boxShadow: '0 4px 16px rgba(59,130,246,.25)' },
+        }}>
           {message.liked
             ? <ThumbUpIcon sx={{ fontSize: 16 }} className="text-blue-600" />
             : <ThumbUpOutlinedIcon sx={{ fontSize: 16 }} className="text-gray-500" />}
@@ -636,20 +622,14 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
       </Tooltip>
 
       <Tooltip title="Dislike" placement="top">
-        <IconButton
-          size="small"
-          onClick={() => handleReaction('dislike')}
-          sx={{
-            width: 32, height: 32, borderRadius: '10px',
-            background: message.disliked
-              ? 'linear-gradient(135deg,rgba(239,68,68,.15),rgba(220,38,38,.15))'
-              : 'rgba(255,255,255,.5)',
-            border: message.disliked
-              ? '1.5px solid rgba(239,68,68,.3)'
-              : '1px solid rgba(255,255,255,.4)',
-            '&:hover': { boxShadow: '0 4px 16px rgba(239,68,68,.25)' },
-          }}
-        >
+        <IconButton size="small" onClick={() => handleReaction('dislike')} sx={{
+          width: 32, height: 32, borderRadius: '10px',
+          background: message.disliked
+            ? 'linear-gradient(135deg,rgba(239,68,68,.15),rgba(220,38,38,.15))'
+            : 'rgba(255,255,255,.5)',
+          border: message.disliked ? '1.5px solid rgba(239,68,68,.3)' : '1px solid rgba(255,255,255,.4)',
+          '&:hover': { boxShadow: '0 4px 16px rgba(239,68,68,.25)' },
+        }}>
           {message.disliked
             ? <ThumbDownIcon sx={{ fontSize: 16 }} className="text-red-600" />
             : <ThumbDownOutlinedIcon sx={{ fontSize: 16 }} className="text-gray-500" />}
@@ -657,16 +637,12 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
       </Tooltip>
 
       <Tooltip title="Copy" placement="top">
-        <IconButton
-          size="small"
-          onClick={handleCopy}
-          sx={{
-            width: 32, height: 32, borderRadius: '10px',
-            background: 'rgba(255,255,255,.5)',
-            border: '1px solid rgba(255,255,255,.4)',
-            '&:hover': { boxShadow: '0 4px 16px rgba(139,92,246,.25)' },
-          }}
-        >
+        <IconButton size="small" onClick={handleCopy} sx={{
+          width: 32, height: 32, borderRadius: '10px',
+          background: 'rgba(255,255,255,.5)',
+          border: '1px solid rgba(255,255,255,.4)',
+          '&:hover': { boxShadow: '0 4px 16px rgba(139,92,246,.25)' },
+        }}>
           <ContentCopyIcon sx={{ fontSize: 16 }} className="text-gray-500" />
         </IconButton>
       </Tooltip>
@@ -676,43 +652,32 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
   return (
     <div className={`flex gap-3 mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
 
-      {/* ── Bot avatar ─────────────────────────────────────────────────────── */}
+      {/* ── Bot avatar — branded per model ───────────────────────────── */}
       {!isUser && (
-        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center mt-1">
-          <Bot size={18} color="blue" />
-        </div>
+        <ModelAvatar
+          modelId={message.modelName}   // set by addStreamingBotMessage & finalizeStreamingMessage
+          size={36}
+          className="mt-1"
+        />
       )}
 
-      {/* ── Bubble ─────────────────────────────────────────────────────────── */}
-      <div
-        className={`group px-4 py-2 rounded-2xl overflow-hidden
-          ${isUser ? 'bg-gray-100 text-black rounded-tr-sm max-w-[75%]' : 'max-w-[80%]'}`}
+      {/* ── Bubble ──────────────────────────────────────────────────── */}
+      <div className={`group px-4 py-2 rounded-2xl overflow-hidden
+        ${isUser ? 'bg-gray-100 text-black rounded-tr-sm max-w-[75%]' : 'max-w-[80%]'}`}
       >
+        {/* CASE 1: streaming */}
+        {message.isStreaming && <StreamingBubble message={message} />}
 
-        {/* ══ CASE 1: STREAMING ════════════════════════════════════════════
-            StreamingBubble owns the EventSource.
-            When it finalizes, Redux updates isStreaming → false and this
-            branch is replaced by CASE 2/3 on next render.
-        ══════════════════════════════════════════════════════════════════ */}
-        {message.isStreaming && (
-          <StreamingBubble message={message} />
-        )}
-
-        {/* ══ CASE 2: FINALIZED TEXT ═══════════════════════════════════════ */}
+        {/* CASE 2: finalized text */}
         {!message.isStreaming && message.type === 'text' && (
           <div className="text-sm leading-relaxed">
             <MarkdownBlock content={message.content} />
           </div>
         )}
 
-        {/* ══ CASE 3: FINALIZED VISUALIZATION ══════════════════════════════
-            ChatResponseCard renders summary markdown + chart/table.
-            The summary text inside the data is rendered inside the card,
-            so we do NOT render message.content separately here.
-        ══════════════════════════════════════════════════════════════════ */}
+        {/* CASE 3: visualization */}
         {!message.isStreaming && message.type === 'visualization' && (
           <>
-            {/* Plain-text content that arrived before visualization data */}
             {message.content && !message.data?.answer && !message.data?.summary && (
               <MarkdownBlock content={message.content} />
             )}
@@ -720,7 +685,7 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
           </>
         )}
 
-        {/* ══ CASE 4: IMAGE / DIAGRAM ══════════════════════════════════════ */}
+        {/* CASE 4: image / diagram */}
         {!message.isStreaming && message.type === 'image' && (
           <img src={message.content} alt="Response" className="max-w-full rounded-lg" />
         )}
@@ -730,29 +695,21 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
           </div>
         )}
 
-        {/* ── Action bar (only on finalized bot messages) ──────────────────── */}
         {!isUser && !message.isStreaming && message.id && <ActionBar />}
 
-        {/* ── Timestamp ────────────────────────────────────────────────────── */}
         <span className="text-xs text-gray-400 mt-1 block">
-          {new Date(message.timestamp).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
+          {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
 
-      {/* ── User avatar ────────────────────────────────────────────────────── */}
+      {/* ── User avatar ──────────────────────────────────────────────── */}
       {isUser && (
         <div className="flex-shrink-0 w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center">
           <User size={18} color="white" />
         </div>
       )}
 
-      <Snackbar
-        open={copied}
-        autoHideDuration={2000}
-        onClose={() => setCopied(false)}
+      <Snackbar open={copied} autoHideDuration={2000} onClose={() => setCopied(false)}
         message="Copied to clipboard!"
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
@@ -760,6 +717,4 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
   );
 };
 
-// ── React.memo — prevents sibling bubbles from re-rendering when Redux
-//   updates a different message (e.g. streaming text of the newest bubble) ──
 export default React.memo(MessageBubble);

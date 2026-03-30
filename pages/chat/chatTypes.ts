@@ -5,7 +5,7 @@ export interface ChatMessage {
   sender: 'user' | 'bot';
   type: MessageType;
   content: string; // Text content or Image URL
-  timestamp: Date;
+  timestamp: string;
 }
 
 export interface AIModel {

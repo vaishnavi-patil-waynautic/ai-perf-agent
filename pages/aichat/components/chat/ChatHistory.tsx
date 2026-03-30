@@ -157,11 +157,13 @@ import {
   createChat,
 } from '../../store/slices/chat.thunk';
 import { setCurrentChat, clearMessages } from '../../store/slices/chat.slice';
+import { store } from '@/store/store';
 
 const ChatHistory: React.FC = () => {
   const dispatch = useAppDispatch();
   const chatHistories = useAppSelector((state) => state.chat.chatHistories);
   const currentChatId = useAppSelector((state) => state.chat.currentChatId);
+  const isStreamingActive = useAppSelector((state) => state.chat.isStreamingActive);
 
   useEffect(() => {
     dispatch(loadChatHistories());
@@ -170,7 +172,11 @@ const ChatHistory: React.FC = () => {
   const handleChatSelect = (chatId: string) => {
     dispatch(setCurrentChat(chatId));
     // dispatch(clearMessages());
-    dispatch(loadChatMessages(chatId));
+    // dispatch(loadChatMessages(chatId));
+
+    if (!isStreamingActive) {
+      dispatch(loadChatMessages(chatId));
+    }
   };
 
   const handleNewChat = () => {
@@ -194,14 +200,14 @@ const ChatHistory: React.FC = () => {
     <div className="relative w-64 h-full flex flex-col overflow-hidden">
       {/* Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 opacity-80"></div>
-      
+
       {/* Glassmorphic Container */}
       <div className="relative h-full flex flex-col backdrop-blur-xl bg-white/40 border-r border-white/60 shadow-xl">
         {/* Header with Glass Effect */}
         <div className="relative p-4 border-b border-white/40">
           {/* Subtle gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10"></div>
-          
+
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 shadow-lg">
@@ -214,7 +220,7 @@ const ChatHistory: React.FC = () => {
                 Chats
               </Typography>
             </div>
-            
+
             <Tooltip title="New Chat" placement="bottom">
               <IconButton
                 size="small"
@@ -231,8 +237,8 @@ const ChatHistory: React.FC = () => {
                   transition: 'all 0.3s ease',
                 }}
               >
-                <AddIcon 
-                  fontSize="small" 
+                <AddIcon
+                  fontSize="small"
                   className="text-purple-600 transition-transform group-hover:rotate-90 duration-300"
                 />
               </IconButton>
@@ -247,19 +253,19 @@ const ChatHistory: React.FC = () => {
               <div className="relative mb-4">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
                 <div className="relative p-4 rounded-full bg-white/30 backdrop-blur-md border border-white/40">
-                  <ChatBubbleOutlineIcon 
-                    className="text-5xl bg-gradient-to-br from-purple-500 to-blue-500 bg-clip-text text-transparent" 
+                  <ChatBubbleOutlineIcon
+                    className="text-5xl bg-gradient-to-br from-purple-500 to-blue-500 bg-clip-text text-transparent"
                   />
                 </div>
               </div>
-              <Typography 
-                variant="body2" 
+              <Typography
+                variant="body2"
                 className="text-gray-600 font-medium"
               >
                 No conversations yet
               </Typography>
-              <Typography 
-                variant="caption" 
+              <Typography
+                variant="caption"
                 className="text-gray-400 mt-1"
               >
                 Start a new chat to begin
@@ -268,8 +274,8 @@ const ChatHistory: React.FC = () => {
           ) : (
             <List className="p-3 space-y-2">
               {chatHistories.map((chat, index) => (
-                <ListItem 
-                  key={chat.id} 
+                <ListItem
+                  key={chat.id}
                   disablePadding
                   sx={{
                     animation: `slideIn 0.3s ease ${index * 0.05}s both`,
@@ -288,11 +294,10 @@ const ChatHistory: React.FC = () => {
                   <ListItemButton
                     selected={currentChatId === chat.id}
                     onClick={() => handleChatSelect(chat.id)}
-                    className={`rounded-xl transition-all duration-300 ${
-                      currentChatId === chat.id
+                    className={`rounded-xl transition-all duration-300 ${currentChatId === chat.id
                         ? 'glass-active'
                         : 'glass-item'
-                    }`}
+                      }`}
                     sx={{
                       padding: '12px',
                       backdropFilter: 'blur(10px)',
@@ -322,11 +327,10 @@ const ChatHistory: React.FC = () => {
                       primary={
                         <Typography
                           variant="body2"
-                          className={`font-semibold truncate mb-1 ${
-                            currentChatId === chat.id
+                          className={`font-semibold truncate mb-1 ${currentChatId === chat.id
                               ? 'bg-gradient-to-r from-purple-700 to-blue-700 bg-clip-text text-transparent'
                               : 'text-gray-800'
-                          }`}
+                            }`}
                         >
                           {chat.title}
                         </Typography>
@@ -344,7 +348,8 @@ const ChatHistory: React.FC = () => {
                               variant="caption"
                               className="text-gray-500 font-medium"
                             >
-                              {formatTimestamp(chat.timestamp)}
+                              {/* {formatTimestamp(chat.timestamp)} */}
+                              {chat.timestamp}
                             </Typography>
                             <div
                               className="px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-sm"
@@ -395,8 +400,8 @@ const ChatHistory: React.FC = () => {
 
 
       {/* Custom Styles */}
-<style>
-{`
+      <style>
+        {`
   .glass-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
@@ -417,7 +422,7 @@ const ChatHistory: React.FC = () => {
     background: linear-gradient(180deg, rgba(139, 92, 246, 0.6), rgba(59, 130, 246, 0.6));
   }
 `}
-</style>
+      </style>
     </div>
   );
 };

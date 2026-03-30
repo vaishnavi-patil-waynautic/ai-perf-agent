@@ -9,7 +9,7 @@ import { FormControl, MenuItem, Select, Tooltip } from '@mui/material';
 import { fetchProjectById, fetchProjects } from '@/pages/project/store/project.thunks';
 import type { AppDispatch } from '../store/store';
 import { logoutService } from '@/pages/authentication/services/logoutService';
-import { fetchProject } from '@/services/application/slice';
+// import { fetchProject } from '@/services/application/slice';
 import {
   FileCode2,
   BarChart3,
@@ -56,7 +56,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
       console.log("PROJECTS : ", projects)
       console.log("FETCHING FIRST PROJECT")
       const lastId = projects[projects.length-1]?.id
-      dispatch(fetchProjectById(lastId));
+      if(lastId) dispatch(fetchProjectById(lastId));
+      
     }
   
     

@@ -1281,7 +1281,7 @@ export const ConfigDetailsPage: React.FC = () => {
 
             <Button
                 startIcon={<ArrowBack />}
-                onClick={() => navigate('/nfr')}
+                onClick={() => navigate('/autoanalysis')}
                 sx={{
                     mb: 2,
                     color: "#5c5f66",

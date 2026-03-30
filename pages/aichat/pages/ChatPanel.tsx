@@ -44,7 +44,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     type: 'text',
     content:
       "**Hello! I'm your Performance Engineering Assistant.**\nI can help you analyze NFRs, debug JMX scripts, or explain error logs.",
-    timestamp: new Date(),
+    timestamp: new Date().toISOString(),
   };
 
 
@@ -165,9 +165,9 @@ useEffect(() => {
             }
 
 
-            {chatLoading && (
+            {/* {chatLoading && (
               <BotTyping />
-            )}
+            )} */}
           </div>
         </div>
 

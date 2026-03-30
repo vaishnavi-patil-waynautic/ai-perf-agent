@@ -64,17 +64,53 @@ const NFRResultPage: React.FC = () => {
   }
 
   const handleCopy = () => {
-    if (!selectedReport?.nfr_content) return;
+  if (!selectedReport?.nfr_content) return;
 
-    navigator.clipboard.writeText(selectedReport.nfr_content);
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = selectedReport.nfr_content;
+
+    // Prevent scrolling to bottom
+    textarea.style.position = "fixed";
+    textarea.style.top = "0";
+    textarea.style.left = "0";
+    textarea.style.opacity = "0";
+
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    const success = document.execCommand("copy");
+    document.body.removeChild(textarea);
 
     dispatch(
       showSnackbar({
-        message: "Copied to clipboard",
-        type: "success",
+        message: success ? "Copied to clipboard" : "Copy failed",
+        type: success ? "success" : "error",
       })
     );
-  };
+  } catch (err) {
+    dispatch(
+      showSnackbar({
+        message: "Copy failed",
+        type: "error",
+      })
+    );
+  }
+};
+
+  // const handleCopy = () => {
+  //   if (!selectedReport?.nfr_content) return;
+
+  //   navigator.clipboard.writeText(selectedReport.nfr_content);
+
+  //   dispatch(
+  //     showSnackbar({
+  //       message: "Copied to clipboard",
+  //       type: "success",
+  //     })
+  //   );
+  // };
 
 
   // const handleDownload = async (id, application_name) => {

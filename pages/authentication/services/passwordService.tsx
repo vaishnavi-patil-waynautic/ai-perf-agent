@@ -50,14 +50,14 @@ export const changePassword = async (
     console.error("Change password API error:", json);
 
     // Try to extract backend error nicely
-const backendMessage =
-  json?.data?.error ||
-  json?.data?.old_password?.[0] ||
-  json?.data?.new_password?.[0] ||
-  json?.data?.confirm_password?.[0] ||
-  json?.message ||
-  json?.detail ||
-  (typeof json === "string" ? json : null);
+    const backendMessage =
+      json?.data?.error ||
+      json?.data?.old_password?.[0] ||
+      json?.data?.new_password?.[0] ||
+      json?.data?.confirm_password?.[0] ||
+      json?.message ||
+      json?.detail ||
+      (typeof json === "string" ? json : null);
 
 
     throw new Error(
@@ -66,6 +66,26 @@ const backendMessage =
   }
 
   console.log("Password change success:", json);
+};
+
+export const resetPassword = async (token: string, new_password: string, confirm_password: string): Promise<void> => {
+
+
+  const res = await fetch(`${config.baseUrl}/users/reset-password/`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ...(getCsrfTokenFromCookie() && {
+        "X-CSRFTOKEN": getCsrfTokenFromCookie(),
+      }),
+    },
+    body: JSON.stringify({
+      "token": token,
+      'new_password': new_password,
+      'confirm_password': confirm_password
+    }),
+  });
 };
 
 
