@@ -51,13 +51,17 @@ const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
 
 const AppLayout = ({ children }: { children?: React.ReactNode }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
   const { token } = useSelector((state: RootState) => state.auth);
   const isFullScreen = useSelector((state: RootState) => state.chat.isFullScreen)
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  // Auto-open chat if URL has ?chat= param (e.g. on page refresh)
+  const [isChatOpen, setIsChatOpen] = useState(
+    () => new URLSearchParams(window.location.search).has('chat')
+  );
   // const [isFullScreen, setIsFullScreen] = useState(false);
 
 //   useEffect(() => {

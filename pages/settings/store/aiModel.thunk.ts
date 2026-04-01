@@ -31,21 +31,10 @@ export const createModel = createAsyncThunk(
     try {
       const data = await aiModelService.create(payload);
 
-      dispatch(
-        showSnackbar({
-          message: "Model added successfully",
-          type: "success",
-        })
-      );
+
 
       return data;
     } catch (error: any) {
-      dispatch(
-        showSnackbar({
-          message: error.message,
-          type: "error",
-        })
-      );
       return rejectWithValue(error.message);
     }
   }

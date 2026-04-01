@@ -83,7 +83,7 @@ export const fetchConfig = createAsyncThunk<
 
 export const fetchJmx = 
 createAsyncThunk<
-[],
+any[],
 number
 >('autoAnalysis/fetchJmx',
 

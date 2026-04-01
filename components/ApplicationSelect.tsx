@@ -181,7 +181,7 @@ export default function ApplicationSelect() {
 
     return (
         <>
-            <FormControl size="small" fullWidth>
+            <FormControl size="small" sx={{ width: 200, minWidth: 200, maxWidth: 200 }}>
                 <InputLabel shrink id="application-select-label">
                     Application
                 </InputLabel>
@@ -192,13 +192,31 @@ export default function ApplicationSelect() {
                     onChange={handleChange}
                     input={<OutlinedInput notched label="Application" />}
                     displayEmpty
+                    renderValue={(selected) => {
+                        if (!selected) return <em>Default Application</em>;
+                        const app = applications?.find(a => a.id?.toString() === selected);
+                        return (
+                            <Box
+                                component="span"
+                                sx={{
+                                    display: 'block',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                }}
+                                title={app?.name ?? ''}
+                            >
+                                {app?.name ?? ''}
+                            </Box>
+                        );
+                    }}
                 >
                     <MenuItem value="">
                         <em>Default Application</em>
                     </MenuItem>
 
                     {applications?.map((app) => (
-                        <MenuItem key={app.id} value={app.id}>
+                        <MenuItem key={app.id} value={app.id} title={app.name}>
                             {app.name}
                         </MenuItem>
                     ))}

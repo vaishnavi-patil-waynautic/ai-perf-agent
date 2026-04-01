@@ -43,8 +43,10 @@ export const aiModelService = {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      throw new Error(data?.detail || "Failed to create model");
+      throw new Error(data?.detail || data?.error || "Failed to create model");
     }
+
+    console.log("created new model : ", data)
 
     return data;
   },

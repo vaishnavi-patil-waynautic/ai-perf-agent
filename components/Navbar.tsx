@@ -28,6 +28,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
+  const profileAvatar = useSelector((state: RootState) => state.user.profile?.avatar);
   const { projects, selectedProject } = useSelector((state: RootState) => state.project);
   const [profileOpen, setProfileOpen] = React.useState(false);
   const location = useLocation();
@@ -262,9 +263,9 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
                 className="flex items-center space-x-2 focus:outline-none hover:opacity-90"
               >
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-medium overflow-hidden border border-blue-200">
-                  {user?.avatar ? (
+                  {(profileAvatar || user?.avatar) ? (
                     <img
-                      src={user.avatar}
+                      src={profileAvatar || user?.avatar}
                       alt="Avatar"
                       className="w-full h-full object-cover"
                     />

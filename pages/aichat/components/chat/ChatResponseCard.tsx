@@ -418,53 +418,81 @@ import { useAppSelector } from "../../store/hooks";
 import { RootState } from "@/store/store";
 import { toggleScreenView } from "../../store/slices/chat.slice";
 import { useDispatch } from "react-redux";
-import { ClassNames } from "@emotion/react";
 import { useRef } from "react";
 
 interface Props {
   data: any;
 }
 
+/** Clean native table rendered from raw results array */
+function ResultsTable({ rows }: { rows: any[] }) {
+  if (!rows?.length) return null;
+  const columns = Object.keys(rows[0]);
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm my-3">
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr className="bg-gray-50 border-b border-gray-200">
+            {columns.map((col) => (
+              <th
+                key={col}
+                className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap"
+              >
+                {col.replace(/_/g, " ")}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr
+              key={i}
+              className={`border-b border-gray-100 last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                } hover:bg-blue-50/40 transition-colors`}
+            >
+              {columns.map((col) => (
+                <td key={col} className="px-4 py-2.5 text-gray-700 whitespace-nowrap">
+                  {row[col] ?? "—"}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400">
+        {rows.length} row{rows.length !== 1 ? "s" : ""}
+      </div>
+    </div>
+  );
+}
+
 export default function ChatResponseCard({ data }: Props) {
 
   const dispatch = useDispatch<any>();
 
-  const isFullScreen = useAppSelector((state: RootState) => state.chat.isFullScreen)
-    const chatLoading = useAppSelector((state: RootState) => state.chat.chatLoading)
+  const isFullScreen = useAppSelector((state: RootState) => state.chat.isFullScreen);
+  const chatLoading = useAppSelector((state: RootState) => state.chat.chatLoading);
 
-
-  console.log(" isFullScreen : ", isFullScreen)
-
-  const handleToggle = () => {
-    console.log("Toggling to full screeen----------")
-    dispatch(toggleScreenView());
-  }
+  const handleToggle = () => dispatch(toggleScreenView());
 
   if (!data) return null;
 
-  const ChatSkeleton = () => (
-  <div className="p-4 space-y-3">
-    <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded"></div>
-    <div className="h-6 w-2/3 bg-gray-200 animate-pulse rounded"></div>
-    <div className="h-6 w-1/2 bg-gray-200 animate-pulse rounded"></div>
-  </div>
-);
-
   if (chatLoading) {
-  return <ChatSkeleton />;
-}
+    return (
+      <div className="p-4 space-y-3">
+        <div className="h-4 w-3/4 bg-gray-200 animate-pulse rounded" />
+        <div className="h-4 w-2/3 bg-gray-200 animate-pulse rounded" />
+        <div className="h-4 w-1/2 bg-gray-200 animate-pulse rounded" />
+      </div>
+    );
+  }
 
-
-  console.log("Data in ChatResponse : ", data)
-
-
-  // ---------- TEXT ----------
   const hasSummary = !!data.summary;
   const hasAnswer = !!data.answer;
   const hasContent = !!data.content;
 
-  // ---------- DATA RESOLUTION ----------
-  const dataset =
+  const dataset: any[] =
     data.results ||
     data.bugs ||
     data.table ||
@@ -474,53 +502,67 @@ export default function ChatResponseCard({ data }: Props) {
 
   const hasData = Array.isArray(dataset) && dataset.length > 0;
 
+  // visualization_type "none" means: show text + raw table, no chart
+  const isNoneViz = data.visualization_type === "none" || !data.visualization_type;
+
   const visualization =
     data.visualization ||
-    (data.visualization_type && data.chart_metadata
-      ? {
-        type: data.visualization_type,
-        ...data.chart_metadata,
-      } : undefined) ;
-
-
-      console.log("data visualization : ", data.visualization, data.visualization_type)
-  
+    (!isNoneViz && data.visualization_type && data.chart_metadata
+      ? { type: data.visualization_type, ...data.chart_metadata }
+      : undefined);
 
   return (
-    // <div style={{ fontFamily: "inherit", width: "100%" }}>
     <div className="w-full max-w-full overflow-hidden">
-      {/* TEXT BLOCK */}
-      {hasSummary && <MarkdownBlock content={data.summary} />}
-      {hasAnswer && !hasSummary && <MarkdownBlock content={data.answer} />}
-      {hasContent && !hasAnswer && !hasSummary && <MarkdownBlock content={data.content} />}
 
-
-
-
-      {/* VISUALIZATION (works even if both table + chart data exist) */}
-      {isFullScreen && (hasData || visualization) && ( data.visualization_type !=='none') && (
-        <VisualizationBlock
-          data={dataset}
-          visualization={visualization}
-        />
+      {/* Answer / summary text */}
+      {hasSummary && <MarkdownBlock content={data.summary} suppressTable={hasData && isNoneViz} />}
+      {hasAnswer && !hasSummary && (
+        <MarkdownBlock content={data.answer} suppressTable={hasData && isNoneViz} />
       )}
-      
-      { !isFullScreen && (hasData || visualization) && (
-        < div className = "bg-blue-50 my-2 rounded-xl">
-        <div className="flex items-center justify-center h-full text-gray-500 text-sm pt-3 ">
-          To view the visualization
-          
-        </div>
-        <div
+      {hasContent && !hasAnswer && !hasSummary && (
+        <MarkdownBlock content={data.content} suppressTable={hasData && isNoneViz} />
+      )}
+
+
+      {/* Chart visualization (fullscreen only) */}
+      {!isNoneViz && (hasData || visualization) && isFullScreen && (
+        <VisualizationBlock data={dataset} visualization={visualization} />
+      )}
+
+      {/* Collapsed fullscreen prompt */}
+      {!isNoneViz && (hasData || visualization) && !isFullScreen && (
+        // <div className="bg-blue-50 border border-blue-100 my-2 rounded-xl px-4 py-3 flex items-center justify-between">
+        //   <span className="text-sm text-gray-500">Visualization available</span>
+        //   <button
+        //     onClick={handleToggle}
+        //     className="text-blue-600 font-medium text-sm hover:underline"
+        //   >
+        //     Switch to full screen →
+        //   </button>
+        // </div>
+        <div className="bg-blue-50 border border-blue-100 my-2 rounded-xl px-4 py-3 flex flex-col items-center text-center gap-2">
+          <span className="text-sm text-gray-500">
+            Visualization available
+          </span>
+
+          <button
             onClick={handleToggle}
-            className="flex items-center justify-center text-blue-600 font-medium text-sm hover:underline ml-1 pb-3 cursor-pointer"
+            className="text-blue-600 font-medium text-sm hover:underline"
           >
-            switch to full screen mode
-          </div></div>
+            Switch to full screen →
+          </button>
+        </div>
       )}
 
-      {/* FOOTER */}
       <MetaFooter data={data} />
     </div>
   );
+}
+
+/** Remove all markdown table blocks from a string */
+function stripMarkdownTable(text: string): string {
+  // Remove any line that starts with | (table rows, header, separator)
+  const lines = text.split("\n");
+  const filtered = lines.filter(line => !line.trim().startsWith("|"));
+  return filtered.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }

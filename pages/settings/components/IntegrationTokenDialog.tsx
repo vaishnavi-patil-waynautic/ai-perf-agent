@@ -255,6 +255,7 @@ export default function IntegrationTokenDialog({
       // ================= Handle Backend Errors =================
 
       const errors =
+        err?.message ||
         err?.errors ||
         err?.data?.errors ||
         err?.response?.data?.errors ||
@@ -300,6 +301,9 @@ export default function IntegrationTokenDialog({
           size="small"
           margin="normal"
           value={name}
+          inputProps={{ maxLength: 50 }}
+          helperText={name.length >= 50 ? "Name cannot exceed 50 characters" : ""}
+          FormHelperTextProps={{ sx: { color: 'error.main' } }}
           onChange={(e) => setName(e.target.value)}
         />
 
@@ -387,6 +391,9 @@ export default function IntegrationTokenDialog({
             size="small"
             margin="normal"
             value={username}
+            inputProps={{ maxLength: 50 }}
+            helperText={username.length >= 50 ? "Username cannot exceed 50 characters" : ""}
+            FormHelperTextProps={{ sx: { color: 'error.main' } }}
             onChange={(e) => setUsername(e.target.value)}
           />
         )}

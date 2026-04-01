@@ -41,6 +41,7 @@ import { RootState } from '@/store/store';
 import { fetchCurrentUser, updateCurrentUser } from '../store/user.thunk';
 import { changePassword } from '@/pages/authentication/services/passwordService';
 import { showSnackbar } from '@/store/snackbarStore';
+import { setAvatar } from '../store/user.slice';
 
 
 export default function UserProfileSettings() {
@@ -294,8 +295,20 @@ const handleChangePassword = async () => {
     };
 
     const handleAvatarUpload = () => {
-        // Simulate file upload
-        setSnackbar({ open: true, message: 'Avatar upload functionality would trigger here', severity: 'info' });
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e: any) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const dataUrl = ev.target?.result as string;
+                dispatch(setAvatar(dataUrl));
+            };
+            reader.readAsDataURL(file);
+        };
+        input.click();
     };
 
     if (loadingUser && !user) {
@@ -326,7 +339,7 @@ const handleChangePassword = async () => {
                             <div className="flex items-end gap-4">
                                 <div className="relative">
                                     <Avatar
-                                        src={"../../../public/img/exgenix.png"}
+                                        src={user?.avatar || "../../../public/img/exgenix.png"}
                                         sx={{ width: 80, height: 80, border: '4px solid white', boxShadow: 2 }}
                                     />
                                     <IconButton
@@ -393,15 +406,17 @@ const handleChangePassword = async () => {
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     const parts = value.split(" ");
-
+                                    const first = (parts[0] || "").slice(0, 25);
+                                    const last = (parts.slice(1).join(" ") || "").slice(0, 25);
                                     setFormData({
                                         ...formData,
-                                        first_name: parts[0] || "",
-                                        last_name: parts.slice(1).join(" ") || "",
+                                        first_name: first,
+                                        last_name: last,
                                     });
                                 }}
                                 disabled={!editMode}
                                 fullWidth
+                                helperText={editMode ? "First and last name, 25 chars each" : ""}
                             />
 
                             <TextField
@@ -460,6 +475,8 @@ const handleChangePassword = async () => {
                                     setFormData({ ...formData, location: e.target.value })
                                 }
                                 fullWidth
+                                inputProps={{ maxLength: 25 }}
+                                helperText={editMode && formData.location?.length >= 25 ? "Max 25 characters" : ""}
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
@@ -475,6 +492,8 @@ const handleChangePassword = async () => {
                                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                                 disabled={!editMode}
                                 fullWidth
+                                inputProps={{ maxLength: 25 }}
+                                helperText={editMode && formData.company?.length >= 25 ? "Max 25 characters" : ""}
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
@@ -490,6 +509,8 @@ const handleChangePassword = async () => {
                                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                 disabled={!editMode}
                                 fullWidth
+                                inputProps={{ maxLength: 25 }}
+                                helperText={editMode && formData.role?.length >= 25 ? "Max 25 characters" : ""}
                             />
                         </div>
 
@@ -503,6 +524,8 @@ const handleChangePassword = async () => {
                             multiline
                             rows={3}
                             sx={{ mt: 3 }}
+                            inputProps={{ maxLength: 200 }}
+                            helperText={editMode ? `${formData.bio?.length ?? 0}/200` : ""}
                         />
 
                         {editMode && (

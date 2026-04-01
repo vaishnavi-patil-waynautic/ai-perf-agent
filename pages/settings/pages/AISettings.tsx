@@ -136,6 +136,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createModel, deleteModel, fetchModels } from "../store/aiModel.thunk";
 import { AppDispatch, RootState } from "@/store/store";
+import { showSnackbar } from "@/store/snackbarStore";
 
 export default function AISettings() {
   const dispatch = useDispatch<AppDispatch>();
@@ -167,31 +168,56 @@ export default function AISettings() {
   };
 
   const isRateLimitInvalid =
-  form.rateLimit !== "" && Number(form.rateLimit) < 0;
+    form.rateLimit !== "" && Number(form.rateLimit) < 0;
 
   const isFormValid =
-  form.name &&
-  form.provider &&
-  form.api_token &&
-  form.rateLimit &&
-  !isRateLimitInvalid;
+    form.name &&
+    form.provider &&
+    form.api_token &&
+    form.rateLimit &&
+    !isRateLimitInvalid;
 
-  const handleAdd = () => {
-  if (!isFormValid) {
-    setShowFormError(true);
-    return;
-  }
-    dispatch(
-      createModel({
-        name: form.name,
-        rate_limit: form.rateLimit,
-        provider: form.provider,
-        api_token: form.api_token
-      })
-    );
+  const handleAdd = async () => {
 
-    setForm({ name: "", api_token: "", rateLimit: "", provider: "" });
-    setOpen(false);
+    if (!isFormValid) {
+      setShowFormError(true);
+      return;
+    }
+
+    try {
+
+      await dispatch(
+        createModel({
+          name: form.name,
+          rate_limit: form.rateLimit,
+          provider: form.provider,
+          api_token: form.api_token
+        })
+      );
+
+      console.log("Now fetching all ---------------------------------------")
+
+      setForm({ name: "", api_token: "", rateLimit: "", provider: "" });
+      setOpen(false);
+
+      dispatch(
+        showSnackbar({
+          message: "Model added successfully",
+          type: "success",
+        })
+      );
+
+      dispatch(fetchModels());
+
+    } catch (error: any) {
+      dispatch(
+        showSnackbar({
+          message: error.message,
+          type: "error",
+        })
+      );
+    }
+
   };
 
   const handleDelete = (id) => {
@@ -273,29 +299,33 @@ export default function AISettings() {
             </h2>
 
             <input
-  placeholder="Model Name"
-  value={form.name}
-  onChange={(e) =>
-    setForm({ ...form, name: e.target.value })
-  }
-  className={`w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Model Name"
+              value={form.name}
+              maxLength={50}
+              onChange={(e) =>
+                setForm({ ...form, name: e.target.value })
+              }
+              className={`w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500"
   }`}
-/>
-
-            {/* {errors.name && (
-              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-            )} */}
+            />
+            {form.name.length >= 50 && (
+              <p className="text-red-500 text-xs mt-1">Model name cannot exceed 50 characters</p>
+            )}
 
             <input
               placeholder="Provider"
               value={form.provider}
+              maxLength={50}
               onChange={(e) =>
                 setForm({ ...form, provider: e.target.value })
               }
               className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
             />
+            {form.provider.length >= 50 && (
+              <p className="text-red-500 text-xs mt-1">Provider cannot exceed 50 characters</p>
+            )}
 
-            
+
             <input
               placeholder="API Token"
               value={form.api_token}
@@ -306,32 +336,31 @@ export default function AISettings() {
               className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
             />
 
-            
+
             <input
-  placeholder="Rate Limit"
-  type="number"
-  value={form.rateLimit}
-  onChange={(e) =>
-    setForm({ ...form, rateLimit: e.target.value })
-  }
-  className={`w-full border rounded-lg p-2.5 outline-none ${
-    isRateLimitInvalid
-      ? "border-red-500"
-      : "focus:ring-2 focus:ring-blue-500"
-  }`}
-/>
+              placeholder="Rate Limit"
+              type="number"
+              value={form.rateLimit}
+              onChange={(e) =>
+                setForm({ ...form, rateLimit: e.target.value })
+              }
+              className={`w-full border rounded-lg p-2.5 outline-none ${isRateLimitInvalid
+                  ? "border-red-500"
+                  : "focus:ring-2 focus:ring-blue-500"
+                }`}
+            />
 
-{isRateLimitInvalid && (
-  <p className="text-red-500 text-xs">
-    Value cannot be negative
-  </p>
-)}
+            {isRateLimitInvalid && (
+              <p className="text-red-500 text-xs">
+                Value cannot be negative
+              </p>
+            )}
 
-{showFormError && (
-  <p className="text-red-500 text-sm">
-    Please fill all required fields correctly
-  </p>
-)}
+            {showFormError && (
+              <p className="text-red-500 text-sm">
+                Please fill all required fields correctly
+              </p>
+            )}
 
             <div className="flex justify-end gap-3 pt-2">
               <button
@@ -342,17 +371,16 @@ export default function AISettings() {
               </button>
 
               <button
-  onClick={handleAdd}
-  disabled={!isFormValid}
-  title={!isFormValid ? "Please Fill all fields correctly !" : "Add Model"}
-  className={`px-4 py-2 rounded-lg shadow-sm text-white ${
-    isFormValid
-      ? "bg-blue-600 hover:bg-blue-700"
-      : "bg-gray-400 cursor-not-allowed"
-  }`}
->
-  Add
-</button>
+                onClick={handleAdd}
+                disabled={!isFormValid}
+                title={!isFormValid ? "Please Fill all fields correctly !" : "Add Model"}
+                className={`px-4 py-2 rounded-lg shadow-sm text-white ${isFormValid
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-gray-400 cursor-not-allowed"
+                  }`}
+              >
+                Add
+              </button>
             </div>
           </div>
         </div>

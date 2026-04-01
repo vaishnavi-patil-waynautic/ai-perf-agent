@@ -10,6 +10,8 @@ import { fetchProjectById } from '../project/store/project.thunks';
 import { useAppDispatch } from '../settings/store/hooks';
 import { config } from '../../config/backendConfig';
 import { RootState } from '@/store/store';
+import { IconButton, InputAdornment, TextField } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 
 const Login: React.FC = () => {
@@ -20,6 +22,8 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState<Boolean>(false);
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+  const [showPassword, setShowPassword] = useState(false);
 
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -75,7 +79,7 @@ const Login: React.FC = () => {
 
           {error && <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm text-center border border-red-200">{error}</div>}
 
-          <form onSubmit={handleLogin}>
+          {/* <form onSubmit={handleLogin}>
             <Input
               label="Email Address"
               type="email"
@@ -86,14 +90,29 @@ const Login: React.FC = () => {
             />
 
             <div className="mb-6">
-              <Input
-                label="Password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
+
+
+<TextField
+  label="Password"
+  type={showPassword ? "text" : "password"}
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  placeholder="••••••••"
+  required
+  fullWidth
+  InputProps={{
+    endAdornment: (
+      <InputAdornment position="end">
+        <IconButton
+          onClick={() => setShowPassword((prev) => !prev)}
+          edge="end"
+        >
+          {showPassword ? <VisibilityOff /> : <Visibility />}
+        </IconButton>
+      </InputAdornment>
+    ),
+  }}
+/>
               <div className="flex justify-end -mt-3">
                 <Link to="/forgot-password" className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
                   Forgot Password?
@@ -102,6 +121,58 @@ const Login: React.FC = () => {
             </div>
 
             <Button type="submit" disabled={!!loading} fullWidth>Sign In</Button>
+          </form> */}
+
+          <form onSubmit={handleLogin}>
+            <TextField
+              label="Email Address"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="john@example.com"
+              required
+              fullWidth
+              variant="outlined"
+            />
+
+            <div className="mb-6 mt-4">
+              <TextField
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                fullWidth
+                variant="outlined"
+                // InputProps={{
+                //   endAdornment: (
+                //     <InputAdornment position="end">
+                //       <IconButton
+                //         onMouseDown={(e) => e.preventDefault()} // prevents focus loss
+                //         onClick={() => setShowPassword((prev) => !prev)}
+                //         edge="end"
+                //       >
+                //         {showPassword ? <VisibilityOff /> : <Visibility />}
+                //       </IconButton>
+                //     </InputAdornment>
+                //   ),
+                // }}
+              />
+
+              <div className="flex justify-end mt-1">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+            </div>
+
+            <Button type="submit" disabled={!!loading} fullWidth>
+              Sign In
+            </Button>
           </form>
 
           <div className="mt-6 text-center text-sm text-gray-600">

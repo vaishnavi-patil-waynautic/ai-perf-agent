@@ -60,13 +60,13 @@ const InfoCard: React.FC<InfoCardProps> = ({
   return (
     <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Left Section */}
-      <div>
+      <div className="min-w-0 flex-1 mr-4">
         <div className="flex items-center space-x-3 mb-1">
-          <div className="text-base font-semibold text-gray-900">{name}</div>
+          <div className="text-base font-semibold text-gray-900 truncate" title={name}>{name}</div>
           {status && <StatusBadge status={status} />}
         </div>
 
-        {desc && <div className="text-sm text-gray-500">{desc}</div>}
+        {desc && <div className="text-sm text-gray-500 break-words line-clamp-2" title={desc}>{desc}</div>}
 
         {createdOn && (
           <div className="text-xs text-gray-500 mt-1">Created On: {createdOn}</div>
@@ -90,7 +90,7 @@ const InfoCard: React.FC<InfoCardProps> = ({
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-3 flex-shrink-0">
         {onDownload && (
           <button
             onClick={onDownload}

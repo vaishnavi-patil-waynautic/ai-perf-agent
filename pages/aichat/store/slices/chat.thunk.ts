@@ -532,6 +532,7 @@
 
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
+  deleteChatById,
   fetchChatHistories,
   fetchChatMessages,
   getFAQs,
@@ -710,6 +711,18 @@ export const loadChatMessages = createAsyncThunk(
   async (chatId: string, { rejectWithValue }) => {
     try { return await fetchChatMessages(chatId); }
     catch (error: any) { return rejectWithValue(error.message); }
+  }
+);
+
+export const deleteByChatId = createAsyncThunk(
+  "chat/deleteByChatId",
+  async (chatId: string, { rejectWithValue }) => {
+    try {
+      await deleteChatById(chatId);
+      return chatId;
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Delete failed");
+    }
   }
 );
 

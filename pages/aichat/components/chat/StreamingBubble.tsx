@@ -1386,11 +1386,9 @@ const Cursor = () => (
 const StreamingBubble: React.FC<Props> = ({ message, onDone }) => {
   const dispatch = useAppDispatch();
 
-  // Read selectedModel from Redux — this is the model that was active when
-  // the message was sent. We use it for the SSE URL and to persist on finalize.
-  // message.modelName is already set by addStreamingBotMessage in the slice,
-  // so selectedModel here is just a safety fallback.
   const selectedModel = useAppSelector((s) => s.chat.selectedModel);
+  const isFullScreen = useAppSelector((s) => s.chat.isFullScreen);
+  const tableMaxW = isFullScreen ? "w-full" : "max-w-[320px]";
 
   const [displayedText, setDisplayedText] = useState("");
   const [statusText,    setStatusText]    = useState("");
@@ -1546,12 +1544,40 @@ const StreamingBubble: React.FC<Props> = ({ message, onDone }) => {
 
   /* ── Render ───────────────────────────────────────────────────────────── */
   return (
-    <div className="text-sm text-gray-800 leading-relaxed">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-        {displayedText}
-      </ReactMarkdown>
-
-      {isStreaming && !abortedRef.current && <Cursor />}
+    <div className="text-sm text-gray-800 leading-relaxed w-full min-w-0">
+      {/* During streaming: plain text + cursor to avoid broken markdown mid-stream */}
+      {isStreaming && !abortedRef.current ? (
+        <span className="whitespace-pre-wrap">
+          {displayedText}
+          <Cursor />
+        </span>
+      ) : (
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            table: ({ children }) => (
+              <div className={`overflow-x-auto my-3 rounded-lg border border-gray-200 shadow-sm ${tableMaxW}`}>
+                <table className="text-sm border-collapse" style={{ minWidth: "max-content" }}>
+                  {children}
+                </table>
+              </div>
+            ),
+            thead: ({ children }) => <thead className="bg-gray-50 text-gray-700">{children}</thead>,
+            tbody: ({ children }) => <tbody className="divide-y divide-gray-100">{children}</tbody>,
+            tr: ({ children }) => <tr className="hover:bg-gray-50 transition-colors">{children}</tr>,
+            th: ({ children }) => (
+              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide border-b border-gray-200 whitespace-nowrap">
+                {children}
+              </th>
+            ),
+            td: ({ children }) => (
+              <td className="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">{children}</td>
+            ),
+          }}
+        >
+          {displayedText}
+        </ReactMarkdown>
+      )}
 
       {abortedRef.current && (
         <span className="text-xs text-gray-400 ml-1 italic">— stopped</span>

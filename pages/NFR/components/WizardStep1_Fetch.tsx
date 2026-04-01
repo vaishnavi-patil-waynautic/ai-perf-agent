@@ -19,7 +19,7 @@ const WizardStep1_Fetch: React.FC = () => {
   const [source, setSource] = useState<'ADO'>('ADO');
   const [filterType, setFilterType] = useState<string>('All');
   const [searchText, setSearchText] = useState('');
-  const [filteredData, setFilteredData] = useState<any[]>([]);
+  const [filteredData, setFilteredData] = useState<any[]>(externalItems);
 
 
   const [expandedRows, setExpandedRows] = React.useState<Record<string, boolean>>({});
@@ -33,7 +33,12 @@ const WizardStep1_Fetch: React.FC = () => {
   };
 
   useEffect(() => {
-    dispatch(fetchAdoItems(selectedProject.id));
+    if (externalItems.length === 0) {
+      dispatch(fetchAdoItems(selectedProject.id));
+    } else {
+      setFilteredData(externalItems);
+      setItems(externalItems);
+    }
   }, []);
 
   const handleFetch = async () => {

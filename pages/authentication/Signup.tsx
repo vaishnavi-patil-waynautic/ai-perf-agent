@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { signup } from './services/signupService';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
+import { IconButton, InputAdornment, TextField } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +18,8 @@ const Signup: React.FC = () => {
   const [emailError, setEmailError] = useState('');
 const [nameError, setNameError] = useState('');
 const [passwordError, setPasswordError] = useState('');
+
+  const [showPassword, setShowPassword] = useState(false);
 
 const handleSignup = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -119,39 +123,64 @@ const handleSignup = async (e: React.FormEvent) => {
 
 
         <form onSubmit={handleSignup}>
-          <Input
+          <TextField
             label="Email Address"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            fullWidth
+            variant="outlined"
+            sx={{mb:2}}
           />
           {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
 
-          <Input
+          <TextField
             label="First Name"
             type="text"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             required
+            fullWidth
+              variant="outlined"
+              sx={{mb:2}}
           />
 
-          <Input
+          <TextField
             label="Last Name"
             type="text"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             required
+            fullWidth
+              variant="outlined"
+              sx={{mb:2}}
           />
 
           { nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p> }
-          <Input
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <TextField
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                fullWidth
+                variant="outlined"
+                // InputProps={{
+                //   endAdornment: (
+                //     <InputAdornment position="end">
+                //       <IconButton
+                //         onMouseDown={(e) => e.preventDefault()} // prevents focus loss
+                //         onClick={() => setShowPassword((prev) => !prev)}
+                //         edge="end"
+                //       >
+                //         {showPassword ? <VisibilityOff /> : <Visibility />}
+                //       </IconButton>
+                //     </InputAdornment>
+                //   ),
+                // }}
+              />
 
           {passwordError && <p className="text-red-500 text-sm mt-1">{passwordError}</p>}
           {/* <Input 

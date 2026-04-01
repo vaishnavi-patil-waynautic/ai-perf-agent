@@ -392,6 +392,18 @@ export const fetchChatHistories = async (): Promise<ChatHistory[]> => {
   }));
 };
 
+export const deleteChatById = async (chatId: string) => {
+  const token = localStorage.getItem("access_token");
+  const res = await fetch(`${BASE_URL}/chats/${chatId}/`, {
+    method: "DELETE",
+     headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete chat");
+  }
+};
+
 
 /* ---------------- CHAT MESSAGES ---------------- */
 export const fetchChatMessages = async (chatId: string): Promise<ChatMessage[]> => {
@@ -421,6 +433,7 @@ export const fetchChatMessages = async (chatId: string): Promise<ChatMessage[]> 
       liked: m.user_feedback?.is_liked ?? false,
       disliked: m.user_feedback?.is_disliked ?? false,
       data: {
+        answer: m.summary ?? m.answer ?? "",
         results: m.results || m.bugs || m.query_results,
         visualization_type: m.visualization_type,
         chart_metadata: m.chart_metadata,

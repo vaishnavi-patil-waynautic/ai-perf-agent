@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { measureMemory } from 'vm';
 import { ChatMessage } from '../types/chat.types';
 import { fetchChatMessages } from '../services/chat.service';
+import { loadChatHistories, loadChatMessages } from '../store/slices/chat.thunk';
 
 interface ChatPanelProps {
   onClose: () => void;
@@ -54,26 +55,21 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
 
   useEffect(() => {
-  const params = new URLSearchParams(location.search);
-  const chatParam = params.get('chat');
+    const params = new URLSearchParams(location.search);
+    const chatParam = params.get('chat');
 
-  if (chatParam) {
-    const id = chatParam;
-
-    // ✅ set chatId FIRST
-    if (String(chatId) !== id) {
-      dispatch(setCurrentChat(id));
+    if (chatParam) {
+      // Open collapsed on refresh — user can go fullscreen manually
+      if (isFullScreen) dispatch(toggleScreenView());
+      console.log("Before history : ", isFullScreen)
+      dispatch(setCurrentChat(chatParam));
+      dispatch(loadChatHistories());
+      dispatch(loadChatMessages(chatParam));
+      console.log("after history : ", isFullScreen)
     }
 
-    // ✅ ensure fullscreen
-    if (!isFullScreen) {
-      dispatch(toggleScreenView());
-    } 
-  }
-
-  // ✅ mark initialization complete
-  isInitializedRef.current = true;
-}, []);
+    isInitializedRef.current = true;
+  }, []);
 
 
   useEffect(() => {

@@ -606,11 +606,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   TextField, MenuItem, LinearProgress, Box, Typography, Alert,
-  IconButton
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { AppDispatch } from '../../../store/store';
 import { fetchJmx } from '../store/autoAnalysisSlice';
 import { configureApplication, getApplicationStatus, syncSecretsToGitHub } from '../services/mockService';
+import { showSnackbar } from '@/store/snackbarStore';
 import { X } from 'lucide-react';
 
 interface Props {
@@ -754,9 +756,33 @@ export const AddApplicationModal: React.FC<Props> = ({
 
   useEffect(() => {
     if (open) {
+
+      setFormData({
+      appName: selectedApplicationName,
+      jmxSource: 'auto',
+      jmxFile: null as File | null,
+      jmxScriptId: '',
+      users: 10,
+      duration: 30,
+      throughput: 100,
+      githubRepo: '',
+      datadogURL: '',
+      adoURL: ''
+    });
+
+      console.log("jmxOptions fetching-----------------------------------");
       dispatch(fetchJmx(Number(selectedApplicationId)));
+      console.log("jmxOptions : ", jmxOptions);
     }
   }, [open, dispatch]);
+
+  const completedOptions = jmxOptions?.filter(
+  (opt: any) => opt.status === "completed"
+);
+
+
+console.log("jmxOptions : ", jmxOptions);
+console.log("completedOptions : ",completedOptions)
 
   /* ================= STAGE HANDLER (MODIFIED) ================= */
 
@@ -848,7 +874,7 @@ export const AddApplicationModal: React.FC<Props> = ({
     } catch (err: any) {
       console.error(err);
       setStep('form');
-      alert(err.message || 'Configuration failed');
+      dispatch(showSnackbar({ message: err.message || 'Configuration failed', type: 'error' }));
     }
   };
 
@@ -970,18 +996,84 @@ export const AddApplicationModal: React.FC<Props> = ({
             </TextField>
 
             {formData.jmxSource === 'auto' ? (
+              // <TextField
+              //   select
+              //   label="Select Script"
+              //   fullWidth
+              //   size="small"
+              //   value={formData.jmxScriptId}
+              //   onChange={(e) => setFormData({ ...formData, jmxScriptId: e.target.value })}
+              //   sx={{ borderRadius: 2, boxShadow: 1 }}
+              // >
+
               <TextField
-                select
-                label="Select Script"
-                fullWidth
-                size="small"
-                value={formData.jmxScriptId}
-                onChange={(e) => setFormData({ ...formData, jmxScriptId: e.target.value })}
-                sx={{ borderRadius: 2, boxShadow: 1 }}
-              >
-                {jmxOptions.map((opt: any) => (
-                  <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
-                ))}
+  select
+  label="Select Script"
+  fullWidth
+  size="small"
+  value={formData.jmxScriptId}
+  onChange={(e) =>
+    setFormData({ ...formData, jmxScriptId: e.target.value })
+  }
+  SelectProps={{
+    MenuProps: {
+      PaperProps: {
+        style: {
+          width: 260,        // 👈 FIX: constrain dropdown width
+        },
+      },
+    },
+  }}
+>
+                {/* {jmxOptions.map((opt: any) => (
+                  opt.status=="completed" && <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
+                ))} */}
+                {/* {jmxOptions
+  .filter((opt: any) => opt.status === "completed")
+  .map((opt: any) => (
+    <MenuItem key={opt.id} value={opt.id}>
+      {opt.name}
+    </MenuItem>
+
+  ))} */}
+
+
+{/* {completedOptions.map((opt: any) => (
+  <Tooltip title={opt.name} arrow key={opt.id}>
+    <MenuItem
+    key={opt.id}
+      value={opt.id}
+      sx={{
+        overflow: "hidden",
+        whiteSpace: "nowrap",
+        textOverflow: "ellipsis",
+      }}
+    >
+      {opt.name.length > 48
+      ? opt.name.substring(0, 48) + "..."
+      : opt.name}
+    </MenuItem>
+  </Tooltip>
+))} */}
+
+
+{completedOptions.map((opt: any) => (
+ <MenuItem key={opt.id} value={opt.id} sx={{ maxWidth: 550 }}>
+  <Tooltip title={opt.name} arrow>
+    <span
+      style={{
+        display: "block",
+        width: "100%",
+        overflow: "hidden",
+        whiteSpace: "nowrap",
+        textOverflow: "ellipsis",
+      }}
+    >
+      {opt.name}
+    </span>
+  </Tooltip>
+</MenuItem>
+))}
               </TextField>
             ) : (
               // <Button

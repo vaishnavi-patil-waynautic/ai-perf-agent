@@ -155,9 +155,12 @@ import {
   loadChatHistories,
   loadChatMessages,
   createChat,
+  deleteByChatId,
 } from '../../store/slices/chat.thunk';
 import { setCurrentChat, clearMessages } from '../../store/slices/chat.slice';
 import { store } from '@/store/store';
+import { Delete, Trash2 } from 'lucide-react';
+import { showSnackbar } from '@/store/snackbarStore';
 
 const ChatHistory: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -171,9 +174,7 @@ const ChatHistory: React.FC = () => {
 
   const handleChatSelect = (chatId: string) => {
     dispatch(setCurrentChat(chatId));
-    // dispatch(clearMessages());
-    // dispatch(loadChatMessages(chatId));
-
+    dispatch(clearMessages());
     if (!isStreamingActive) {
       dispatch(loadChatMessages(chatId));
     }
@@ -182,6 +183,37 @@ const ChatHistory: React.FC = () => {
   const handleNewChat = () => {
     dispatch(setCurrentChat('0')); // temporary empty chat
     dispatch(clearMessages());
+  };
+
+  const handleDelete = async (chatId: string) => {
+    try {
+      await dispatch(deleteByChatId(chatId)).unwrap();
+
+      // optional: if current chat deleted → reset
+      if (currentChatId === chatId) {
+        dispatch(setCurrentChat(null)); // or '0' if that's your empty state
+        dispatch(clearMessages());
+
+      }
+
+      dispatch(
+        showSnackbar({
+          message: `Chat Deleted successfully`,
+          type: "success",
+        })
+      );
+
+    } catch (err: any) {
+
+      console.error("Delete failed:", err);
+
+      dispatch(
+        showSnackbar({
+          message: err || err?.message || `Chat Deletion failed`,
+          type: "error",
+        })
+      );
+    }
   };
 
   const formatTimestamp = (date: Date) => {
@@ -274,29 +306,106 @@ const ChatHistory: React.FC = () => {
           ) : (
             <List className="p-3 space-y-2">
               {chatHistories.map((chat, index) => (
+                // <ListItem
+                //   key={chat.id}
+                //   disablePadding
+                //   sx={{
+                //     animation: `slideIn 0.3s ease ${index * 0.05}s both`,
+                //     '@keyframes slideIn': {
+                //       from: {
+                //         opacity: 0,
+                //         transform: 'translateX(-20px)',
+                //       },
+                //       to: {
+                //         opacity: 1,
+                //         transform: 'translateX(0)',
+                //       },
+                //     },
+                //   }}
+                // >
+                // <ListItem
+                //   key={chat.id}
+                //   disablePadding
+                //   sx={{
+                //     position: "relative", // 👈 needed for absolute positioning
+                //     animation: `slideIn 0.3s ease ${index * 0.05}s both`,
+                //     '@keyframes slideIn': {
+                //       from: { opacity: 0, transform: 'translateX(-20px)' },
+                //       to: { opacity: 1, transform: 'translateX(0)' },
+                //     },
+                //     "&:hover .delete-btn": {
+                //       opacity: 1,
+                //     },
+                //   }}
+                // >
+                //   {/* 🗑 Delete Button */}
+                //   <div
+                //     className="delete-btn"
+                //     style={{
+                //       position: "absolute",
+                //       top: 6,
+                //       right: 6,
+                //       opacity: 0,
+                //       transition: "opacity 0.2s",
+                //       zIndex: 2,
+                //     }}
+                //   >
+                //     <IconButton
+                //       size="small"
+                //       onClick={(e) => {
+                //         e.stopPropagation(); // 👈 VERY IMPORTANT
+                //         handleDelete(chat.id);
+                //       }}
+                //       sx={{
+                //         background: "rgba(255,255,255,0.6)",
+                //         backdropFilter: "blur(6px)",
+                //         "&:hover": {
+                //           background: "rgba(255,0,0,0.1)",
+                //         },
+                //       }}
+                //     >
+                //       <Delete fontSize="small" />
+                //     </IconButton>
+                //   </div>
+
                 <ListItem
                   key={chat.id}
                   disablePadding
                   sx={{
+                    position: "relative", // 👈 needed for absolute positioning
                     animation: `slideIn 0.3s ease ${index * 0.05}s both`,
                     '@keyframes slideIn': {
-                      from: {
-                        opacity: 0,
-                        transform: 'translateX(-20px)',
-                      },
-                      to: {
-                        opacity: 1,
-                        transform: 'translateX(0)',
-                      },
+                      from: { opacity: 0, transform: 'translateX(-20px)' },
+                      to: { opacity: 1, transform: 'translateX(0)' },
+                    },
+                    "&:hover .deleteIcon": {
+                      opacity: 1,
                     },
                   }}
                 >
+                  <IconButton
+                    className="deleteIcon"
+                    onClick={(e) => {
+                      e.stopPropagation(); // 👈 VERY IMPORTANT
+                      handleDelete(chat.id);
+                    }}
+                    sx={{
+                      position: "absolute",
+                      top: 6,
+                      right: 6,
+                      opacity: 0,
+                      transition: "opacity 0.2s",
+                      zIndex: 10,
+                    }}
+                  >
+                    <Trash2 size={14} color="#aa0505ff" />
+                  </IconButton>
                   <ListItemButton
                     selected={currentChatId === chat.id}
                     onClick={() => handleChatSelect(chat.id)}
                     className={`rounded-xl transition-all duration-300 ${currentChatId === chat.id
-                        ? 'glass-active'
-                        : 'glass-item'
+                      ? 'glass-active'
+                      : 'glass-item'
                       }`}
                     sx={{
                       padding: '12px',
@@ -328,11 +437,12 @@ const ChatHistory: React.FC = () => {
                         <Typography
                           variant="body2"
                           className={`font-semibold truncate mb-1 ${currentChatId === chat.id
-                              ? 'bg-gradient-to-r from-purple-700 to-blue-700 bg-clip-text text-transparent'
-                              : 'text-gray-800'
+                            ? 'bg-gradient-to-r from-purple-700 to-blue-700 bg-clip-text text-transparent'
+                            : 'text-gray-800'
                             }`}
                         >
-                          {chat.title}
+                          {chat.title.length > 28 ? chat.title.slice(0,28)+'...' : chat.title}
+  
                         </Typography>
                       }
                       secondary={

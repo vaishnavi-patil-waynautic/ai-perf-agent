@@ -153,7 +153,8 @@ import {
     Box, Paper, Typography, Button, IconButton,
     List, ListItem, ListItemText, TextField, Divider,
     ListItemButton,
-    Collapse
+    Collapse,
+    Tooltip
 } from '@mui/material';
 import { CheckCircle, Cancel, ArrowBack, Delete, ExpandMore, ExpandLess, Add } from '@mui/icons-material';
 import { fetchConfig, updateRecipientsLocal } from '../store/autoAnalysisSlice';
@@ -1446,11 +1447,24 @@ export const ConfigDetailsPage: React.FC = () => {
 
                         <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mt-4 items-stretch">
 
-                            <IntegrationTile
+                            {/* <IntegrationTile
                                 title="Script"
                                 active={currentApp.config.script_id !== null || currentApp.config.script_file_configured == true}
                                 onClick={handleDownloadScript}
-                            />
+                            /> */}
+
+                            <Tooltip title={currentApp.config.script_file_name || "No script available"}>
+    <span>
+        <IntegrationTile
+            title="Script"
+            active={
+                currentApp.config.script_id !== null ||
+                currentApp.config.script_file_configured === true
+            }
+            onClick={handleDownloadScript}
+        />
+    </span>
+</Tooltip>
 
                             <IntegrationTile
                                 title="GitHub"

@@ -295,6 +295,7 @@ import {
   sendFeedback,
   loadFAQs,
   abortStream,
+  deleteByChatId,
 } from './chat.thunk';
 
 const initialState: ChatState = {
@@ -469,17 +470,7 @@ const chatSlice = createSlice({
       .addCase(loadChatMessages.fulfilled, (state, action) => {
         state.isLoading = false;
         if (state.isStreamingActive) return;
-
-
-        const existingIds = new Set(state.messages.map(m => m.id));
-
-        const merged = [
-          ...state.messages,
-          ...action.payload.filter(m => !existingIds.has(m.id))
-        ];
-
-        state.messages = merged;
-
+        state.messages = action.payload;
       })
       .addCase(loadChatMessages.rejected, (state, action) => {
         state.isLoading = false;
@@ -502,6 +493,11 @@ const chatSlice = createSlice({
         state.isLoading = false;
         state.chatLoading = false;
       })
+      .addCase(deleteByChatId.fulfilled, (state, action) => {
+  state.chatHistories = state.chatHistories.filter(
+    (chat) => chat.id !== action.payload
+  );
+});
       ;
   },
 });

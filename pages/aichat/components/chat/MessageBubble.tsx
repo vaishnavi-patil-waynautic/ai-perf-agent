@@ -248,7 +248,7 @@
 //             sx={{ fontSize: 16 }}
 //           />
 //         )}
-        
+
 //         {message.liked && (
 //           <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-20"></div>
 //         )}
@@ -297,7 +297,7 @@
 //             sx={{ fontSize: 16 }}
 //           />
 //         )}
-        
+
 //         {message.disliked && (
 //           <div className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-20"></div>
 //         )}
@@ -578,28 +578,52 @@
 
 import React, { useState } from 'react';
 import { IconButton, Tooltip, Snackbar } from '@mui/material';
-import ThumbUpOutlinedIcon    from '@mui/icons-material/ThumbUpOutlined';
-import ThumbUpIcon            from '@mui/icons-material/ThumbUp';
-import ThumbDownOutlinedIcon  from '@mui/icons-material/ThumbDownOutlined';
-import ThumbDownIcon          from '@mui/icons-material/ThumbDown';
-import ContentCopyIcon        from '@mui/icons-material/ContentCopy';
-import { User }               from 'lucide-react';
-import { ChatMessage }        from '../../types/chat.types';
-import { useAppDispatch }     from '../../store/hooks';
-import ChatResponseCard       from './ChatResponseCard';
-import { sendFeedback }       from '../../store/slices/chat.thunk';
-import MarkdownBlock          from './ChatResponse/MarkdownBlock';
-import StreamingBubble        from './StreamingBubble';
-import { ModelAvatar }        from '../Modelconfig'; 
+import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { User } from 'lucide-react';
+import { ChatMessage } from '../../types/chat.types';
+import { useAppDispatch } from '../../store/hooks';
+import ChatResponseCard from './ChatResponseCard';
+import { sendFeedback } from '../../store/slices/chat.thunk';
+import MarkdownBlock from './ChatResponse/MarkdownBlock';
+import StreamingBubble from './StreamingBubble';
+import { ModelAvatar } from '../Modelconfig';
 
 interface Props { message: ChatMessage; }
 
 const MessageBubble: React.FC<Props> = ({ message }) => {
-  const dispatch         = useAppDispatch();
+  const dispatch = useAppDispatch();
   const [copied, setCopied] = useState(false);
-  const isUser           = message.sender === 'user';
+  const isUser = message.sender === 'user';
 
-  const handleCopy     = () => { navigator.clipboard.writeText(message.content); setCopied(true); };
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.content);
+    } catch (err) {
+      // fallback
+      const textarea = document.createElement("textarea");
+      textarea.value = message.content;
+      textarea.style.position = "fixed"; // avoid scrolling
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+
+      try {
+        document.execCommand("copy");
+      } catch (e) {
+        console.error("Fallback copy failed", e);
+      }
+
+      document.body.removeChild(textarea);
+    }
+
+    setCopied(true);
+  };
+
+
   const handleReaction = (reaction: 'like' | 'dislike') => {
     dispatch(sendFeedback({ messageId: message.id, reaction }));
   };
@@ -677,12 +701,7 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
 
         {/* CASE 3: visualization */}
         {!message.isStreaming && message.type === 'visualization' && (
-          <>
-            {message.content && !message.data?.answer && !message.data?.summary && (
-              <MarkdownBlock content={message.content} />
-            )}
-            {message.data && <ChatResponseCard data={message.data} />}
-          </>
+          message.data && <ChatResponseCard data={message.data} />
         )}
 
         {/* CASE 4: image / diagram */}

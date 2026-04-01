@@ -54,6 +54,8 @@ export interface User {
   is_staff: boolean;
 
   date_joined: string;
+
+  avatar?: string | null;
 }
 
 

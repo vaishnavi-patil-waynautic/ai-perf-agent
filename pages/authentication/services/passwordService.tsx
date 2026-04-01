@@ -13,10 +13,14 @@ export const forgotPassword = async (email: string): Promise<void> => {
         "X-CSRFTOKEN": getCsrfTokenFromCookie(),
       }),
     },
-    body: JSON.stringify({
-      email
-    }),
+    body: JSON.stringify({ email }),
   });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data?.message || data?.data?.error || data?.error || data?.data?.errors?.email || "Something went wrong");
+  }
 };
 
 export const changePassword = async (

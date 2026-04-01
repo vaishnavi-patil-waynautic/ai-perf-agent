@@ -46,8 +46,8 @@ export const integrationService = {
 
   if (!res.ok) {
     throw {
-      message: json?.data?.error || "Failed to create integration",
-      errors: json?.data?.errors || null,
+      message: json?.data?.details ||  json?.data?.error || "Failed to create integration",
+      errors: json?.data?.errors || json?.data?.error || null,
       raw: json,
     };
   }

@@ -3,6 +3,8 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { resetPassword } from './services/passwordService';
+import { IconButton, InputAdornment, TextField } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 const ResetPassword: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -14,6 +16,28 @@ const ResetPassword: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const passwordChecks = {
+    length: newPassword.length >= 8,
+    uppercase: /[A-Z]/.test(newPassword),
+    lowercase: /[a-z]/.test(newPassword),
+    number: /[0-9]/.test(newPassword),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword),
+    match: newPassword === confirmPassword && newPassword.length > 0,
+  };
+
+  const isValidPassword =
+    passwordChecks.length &&
+    passwordChecks.uppercase &&
+    passwordChecks.lowercase &&
+    passwordChecks.number &&
+    passwordChecks.special;
+
+  const canSubmit = isValidPassword && passwordChecks.match && !!token;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,25 +100,84 @@ const ResetPassword: React.FC = () => {
               </div>
             )}
 
-            <Input
+            <TextField
               label="New Password"
-              type="password"
+              type={showNewPassword ? "text" : "password"}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="••••••••"
               required
+              fullWidth
+              variant="outlined"
+              // InputProps={{
+              //   endAdornment: (
+              //     <InputAdornment position="end">
+              //       <IconButton
+              //         onMouseDown={(e) => e.preventDefault()} // prevents focus loss
+              //         onClick={() => setShowNewPassword((prev) => !prev)}
+              //         edge="end"
+              //       >
+              //         {showNewPassword ? <VisibilityOff /> : <Visibility />}
+              //       </IconButton>
+              //     </InputAdornment>
+              //   ),
+              // }}
+              sx={{ mb: 3 }}
             />
 
-            <Input
+            <TextField
               label="Confirm Password"
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
               required
+              fullWidth
+              variant="outlined"
+            // InputProps={{
+            //   endAdornment: (
+            //     <InputAdornment position="end">
+            //       <IconButton
+            //         onMouseDown={(e) => e.preventDefault()} // prevents focus loss
+            //         onClick={() => setShowConfirmPassword((prev) => !prev)}
+            //         edge="end"
+            //       >
+            //         {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+            //       </IconButton>
+            //     </InputAdornment>
+            //   ),
+            // }}
             />
 
-            <Button type="submit" fullWidth className="mt-4">
+            <Button
+              type="submit"
+              fullWidth
+              className="mt-4"
+              disabled={!canSubmit}
+            >
               Confirm
             </Button>
+
+            <div className="mt-3 text-xs space-y-1">
+              <div className={passwordChecks.length ? "text-green-600" : "text-gray-400"}>
+                ✓ At least 8 characters
+              </div>
+              <div className={passwordChecks.uppercase ? "text-green-600" : "text-gray-400"}>
+                ✓ One uppercase letter
+              </div>
+              <div className={passwordChecks.lowercase ? "text-green-600" : "text-gray-400"}>
+                ✓ One lowercase letter
+              </div>
+              <div className={passwordChecks.number ? "text-green-600" : "text-gray-400"}>
+                ✓ One number
+              </div>
+              <div className={passwordChecks.special ? "text-green-600" : "text-gray-400"}>
+                ✓ One special character
+              </div>
+              <div className={passwordChecks.match ? "text-green-600" : "text-gray-400"}>
+                ✓ Passwords match
+              </div>
+            </div>
 
             <div className="mt-6 text-center">
               <Link

@@ -65,6 +65,8 @@ export default function AddApplicationDialog({
       size="small"
       margin="normal"
       value={name}
+      inputProps={{ maxLength: 50 }}
+      helperText={`${name.length}/50`}
       onChange={(e) => setName(e.target.value)}
     />
 
@@ -76,6 +78,8 @@ export default function AddApplicationDialog({
       minRows={3}
       margin="normal"
       value={description}
+      inputProps={{ maxLength: 100 }}
+      helperText={`${description.length}/100`}
       onChange={(e) => setDescription(e.target.value)}
     />
   </DialogContent>

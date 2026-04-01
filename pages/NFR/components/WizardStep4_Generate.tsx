@@ -112,6 +112,8 @@ const WizardStep4_Generate: React.FC = () => {
           maxRows={6}          // optional maximum height
           placeholder="Any specific focus areas for the AI model..."
           variant="outlined"
+          inputProps={{ maxLength: 500 }}
+          helperText={`${wizardState.additionalInstructions.length}/500`}
           value={wizardState.additionalInstructions}
           onChange={(e) => dispatch(setAdditionalInstructions(e.target.value))}
           className="bg-white"
