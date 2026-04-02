@@ -7,7 +7,7 @@ export default function MarkdownBlock({ content, suppressTable }: { content?: st
   if (!content) return null;
 
   const isFullScreen = useAppSelector((state: RootState) => state.chat.isFullScreen);
-  const tableMaxW = isFullScreen ? "w-full" : "w-80";
+  const tableMaxW = isFullScreen ? "w-full" : "max-w-80";
 
   return (
     <div className={`w-full min-w-0 overflow-x-auto break-words pt-1 ${tableMaxW}`}>
