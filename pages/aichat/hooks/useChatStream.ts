@@ -42,6 +42,8 @@ export function useChatStream() {
         ...(chatId ? { chat_id: chatId } : {}),
       });
 
+      console.log("This streaming is called -- startStream---------------------------------");
+
       const token = localStorage.getItem('access_token');
       const url = `${config.baseUrl}/aichatbot/ask/stream/?${params.toString()}`;
 

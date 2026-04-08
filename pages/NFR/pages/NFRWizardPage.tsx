@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Tabs,
@@ -23,12 +23,22 @@ import WizardStep2_Docs from '../components/WizardStep2_Docs';
 import WizardStep3_Questionnaire from '../components/WizardStep3_Questionnaire';
 import WizardStep4_Generate from '../components/WizardStep4_Generate';
 import CloseIcon from '@mui/icons-material/Close';
+import { useAppDispatch } from '@/pages/settings/store/hooks';
+import { resetWizard } from '../slices/nfrWizardSlice';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 
 
 const NFRWizardPage: React.FC = () => {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [isStep3Valid, setIsStep3Valid] = useState(true);
+  const { selectedProject } = useSelector((state: RootState) => state.project);
+
+    useEffect(() => {
+      dispatch(resetWizard());
+    }, [selectedProject?.id]);
 
   const steps = [
     { label: 'Fetch & Select', component: <WizardStep1_Fetch /> },

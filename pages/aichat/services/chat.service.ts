@@ -323,7 +323,9 @@ export const getFAQs = (): Promise<FAQ[]> => {
 export const sendMessageToAPI = async (
   text: string,
   modelId: string,
-  chatId?: string | null
+  projectId : Number,
+  chatId?: string | null,
+  
 ): Promise<{ message: ChatMessage; chatId: string }> => {
 
   const token = localStorage.getItem("access_token");
@@ -337,7 +339,7 @@ export const sendMessageToAPI = async (
     },
     body: JSON.stringify({
       nl_question: text,
-      project_id: 1,
+      project_id: projectId,
       ...(chatId ? { chat_id: Number(chatId) } : {}),
     }),
   });
@@ -374,9 +376,10 @@ export const sendMessageToAPI = async (
 
 
 /* ---------------- CHAT LIST ---------------- */
-export const fetchChatHistories = async (): Promise<ChatHistory[]> => {
+export const fetchChatHistories = async (projectId: number): Promise<ChatHistory[]> => {
+
   const token = localStorage.getItem("access_token");
-  const res = await fetch(`${BASE_URL}/chats/`, {
+  const res = await fetch(`${BASE_URL}/chats/?project_id=${projectId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 

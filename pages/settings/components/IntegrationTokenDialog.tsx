@@ -101,7 +101,7 @@ export default function IntegrationTokenDialog({
   const dispatch = useDispatch();
 
   const [token, setToken] = useState("");
-  const [name, setName] = useState("");
+  // const [name, setName] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [apiSecret, setApiSecret] = useState("");
   const [adoPat, setAdoPat] = useState("");
@@ -125,7 +125,7 @@ export default function IntegrationTokenDialog({
         setUrl("");
         setUsername("");
         setApplicationKey("");
-        setName("");
+        // setName("");
 
         return;
       }
@@ -142,7 +142,7 @@ export default function IntegrationTokenDialog({
         setUrl(data?.url || "");
         setUsername(data?.username || "");
         setApplicationKey(data?.application_key || "")
-        setName(data?.name || '')
+        // setName(data?.name || '')
 
 
       } catch (err) {
@@ -238,7 +238,6 @@ export default function IntegrationTokenDialog({
         projectId,
         payload
       );
-      // }
 
       dispatch(
         showSnackbar({
@@ -294,7 +293,7 @@ export default function IntegrationTokenDialog({
       </DialogTitle>
 
       <DialogContent sx={{ pt: 1 }}>
-
+{/* 
         <TextField
           label="Name"
           fullWidth
@@ -305,7 +304,7 @@ export default function IntegrationTokenDialog({
           helperText={name.length >= 50 ? "Name cannot exceed 50 characters" : ""}
           FormHelperTextProps={{ sx: { color: 'error.main' } }}
           onChange={(e) => setName(e.target.value)}
-        />
+        /> */}
 
         {/* GitHub / Jira / Datadog */}
         {(type === "github" || type === "jira" || type === "datadog") && (

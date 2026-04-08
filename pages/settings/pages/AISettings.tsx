@@ -150,10 +150,14 @@ export default function AISettings() {
   });
 
   const [showFormError, setShowFormError] = useState(false);
+  const { selectedProject } = useSelector((state: RootState) => state.project);
 
   useEffect(() => {
-    dispatch(fetchModels());
-  }, [dispatch]);
+    if (selectedProject?.id) {
+      dispatch(fetchModels(selectedProject?.id));
+    }
+
+  }, [dispatch, selectedProject]);
 
   const validateField = (name: string, value: string) => {
     if (!value) return "This field is required";
@@ -188,12 +192,15 @@ export default function AISettings() {
 
       await dispatch(
         createModel({
-          name: form.name,
-          rate_limit: form.rateLimit,
-          provider: form.provider,
-          api_token: form.api_token
+          payload: {
+            name: form.name,
+            rate_limit: form.rateLimit,
+            provider: form.provider,
+            api_token: form.api_token,
+          },
+          projectId: selectedProject?.id,
         })
-      );
+      ).unwrap();
 
       console.log("Now fetching all ---------------------------------------")
 
@@ -207,15 +214,21 @@ export default function AISettings() {
         })
       );
 
-      dispatch(fetchModels());
+      dispatch(fetchModels(selectedProject?.id));
 
     } catch (error: any) {
+
+      console.log("__________Error found AISEtting__________ : ", error);
+
       dispatch(
         showSnackbar({
-          message: error.message,
+          message: error,
           type: "error",
         })
       );
+
+      setForm({ name: "", api_token: "", rateLimit: "", provider: "" });
+      setOpen(false);
     }
 
   };
@@ -345,8 +358,8 @@ export default function AISettings() {
                 setForm({ ...form, rateLimit: e.target.value })
               }
               className={`w-full border rounded-lg p-2.5 outline-none ${isRateLimitInvalid
-                  ? "border-red-500"
-                  : "focus:ring-2 focus:ring-blue-500"
+                ? "border-red-500"
+                : "focus:ring-2 focus:ring-blue-500"
                 }`}
             />
 
@@ -364,7 +377,10 @@ export default function AISettings() {
 
             <div className="flex justify-end gap-3 pt-2">
               <button
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setForm({ name: "", api_token: "", rateLimit: "", provider: "" });
+                  setOpen(false);
+                }}
                 className="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-50"
               >
                 Cancel
@@ -375,8 +391,8 @@ export default function AISettings() {
                 disabled={!isFormValid}
                 title={!isFormValid ? "Please Fill all fields correctly !" : "Add Model"}
                 className={`px-4 py-2 rounded-lg shadow-sm text-white ${isFormValid
-                    ? "bg-blue-600 hover:bg-blue-700"
-                    : "bg-gray-400 cursor-not-allowed"
+                  ? "bg-blue-600 hover:bg-blue-700"
+                  : "bg-gray-400 cursor-not-allowed"
                   }`}
               >
                 Add

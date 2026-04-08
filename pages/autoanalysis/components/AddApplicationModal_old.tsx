@@ -606,11 +606,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   TextField, MenuItem, LinearProgress, Box, Typography, Alert,
-  IconButton
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { AppDispatch } from '../../../store/store';
 import { fetchJmx } from '../store/autoAnalysisSlice';
 import { configureApplication, getApplicationStatus, syncSecretsToGitHub } from '../services/mockService';
+import { showSnackbar } from '@/store/snackbarStore';
 import { X } from 'lucide-react';
 
 interface Props {
@@ -637,10 +639,9 @@ export const AddApplicationModal: React.FC<Props> = ({
   // @ts-ignore
   const jmxOptions = useSelector((state) => state.autoAnalysis.jmxOptions);
 
-  const [step, setStep] = useState<'form' | 'processing' | 'success' | 'error'>('form');
+  const [step, setStep] = useState<'form' | 'processing' | 'success'>('form');
   const [progress, setProgress] = useState(0);
   const [statusMsg, setStatusMsg] = useState(""); // ADDED
-  const [errorMsg, setErrorMsg] = useState(""); // ✅ NEW: For error display
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null); // ADDED
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -755,9 +756,33 @@ export const AddApplicationModal: React.FC<Props> = ({
 
   useEffect(() => {
     if (open) {
+
+      setFormData({
+      appName: selectedApplicationName,
+      jmxSource: 'auto',
+      jmxFile: null as File | null,
+      jmxScriptId: '',
+      users: 10,
+      duration: 30,
+      throughput: 100,
+      githubRepo: '',
+      datadogURL: '',
+      adoURL: ''
+    });
+
+      console.log("jmxOptions fetching-----------------------------------");
       dispatch(fetchJmx(Number(selectedApplicationId)));
+      console.log("jmxOptions : ", jmxOptions);
     }
   }, [open, dispatch]);
+
+  const completedOptions = jmxOptions?.filter(
+  (opt: any) => opt.status === "completed"
+);
+
+
+console.log("jmxOptions : ", jmxOptions);
+console.log("completedOptions : ",completedOptions)
 
   /* ================= STAGE HANDLER (MODIFIED) ================= */
 
@@ -818,7 +843,6 @@ export const AddApplicationModal: React.FC<Props> = ({
     try {
       setStep('processing');
       setProgress(0);
-      setErrorMsg(""); // ✅ Clear previous errors
 
       const payload = new FormData();
       payload.append('users', String(formData.users));
@@ -849,17 +873,8 @@ export const AddApplicationModal: React.FC<Props> = ({
       startPolling(); // ADDED ONLY THIS LINE
     } catch (err: any) {
       console.error(err);
-      setStep('error'); // ✅ NEW: Set error step
-      
-      // ✅ NEW: Extract error message from backend response
-      const errorData = err?.response?.data?.data;
-      if (errorData?.error === "Required integrations not configured") {
-        setErrorMsg(errorData.message || "Required integrations not configured");
-        setStatusMsg(errorData.action_required || "Please configure GitHub or BlazeMeter integration");
-      } else {
-        setErrorMsg(err.message || 'Configuration failed');
-        setStatusMsg("Please check your configuration and try again");
-      }
+      setStep('form');
+      dispatch(showSnackbar({ message: err.message || 'Configuration failed', type: 'error' }));
     }
   };
 
@@ -981,18 +996,84 @@ export const AddApplicationModal: React.FC<Props> = ({
             </TextField>
 
             {formData.jmxSource === 'auto' ? (
+              // <TextField
+              //   select
+              //   label="Select Script"
+              //   fullWidth
+              //   size="small"
+              //   value={formData.jmxScriptId}
+              //   onChange={(e) => setFormData({ ...formData, jmxScriptId: e.target.value })}
+              //   sx={{ borderRadius: 2, boxShadow: 1 }}
+              // >
+
               <TextField
-                select
-                label="Select Script"
-                fullWidth
-                size="small"
-                value={formData.jmxScriptId}
-                onChange={(e) => setFormData({ ...formData, jmxScriptId: e.target.value })}
-                sx={{ borderRadius: 2, boxShadow: 1 }}
-              >
-                {jmxOptions.map((opt: any) => (
-                  <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
-                ))}
+  select
+  label="Select Script"
+  fullWidth
+  size="small"
+  value={formData.jmxScriptId}
+  onChange={(e) =>
+    setFormData({ ...formData, jmxScriptId: e.target.value })
+  }
+  SelectProps={{
+    MenuProps: {
+      PaperProps: {
+        style: {
+          width: 260,        // 👈 FIX: constrain dropdown width
+        },
+      },
+    },
+  }}
+>
+                {/* {jmxOptions.map((opt: any) => (
+                  opt.status=="completed" && <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
+                ))} */}
+                {/* {jmxOptions
+  .filter((opt: any) => opt.status === "completed")
+  .map((opt: any) => (
+    <MenuItem key={opt.id} value={opt.id}>
+      {opt.name}
+    </MenuItem>
+
+  ))} */}
+
+
+{/* {completedOptions.map((opt: any) => (
+  <Tooltip title={opt.name} arrow key={opt.id}>
+    <MenuItem
+    key={opt.id}
+      value={opt.id}
+      sx={{
+        overflow: "hidden",
+        whiteSpace: "nowrap",
+        textOverflow: "ellipsis",
+      }}
+    >
+      {opt.name.length > 48
+      ? opt.name.substring(0, 48) + "..."
+      : opt.name}
+    </MenuItem>
+  </Tooltip>
+))} */}
+
+
+{completedOptions.map((opt: any) => (
+ <MenuItem key={opt.id} value={opt.id} sx={{ maxWidth: 550 }}>
+  <Tooltip title={opt.name} arrow>
+    <span
+      style={{
+        display: "block",
+        width: "100%",
+        overflow: "hidden",
+        whiteSpace: "nowrap",
+        textOverflow: "ellipsis",
+      }}
+    >
+      {opt.name}
+    </span>
+  </Tooltip>
+</MenuItem>
+))}
               </TextField>
             ) : (
               // <Button
@@ -1285,23 +1366,6 @@ export const AddApplicationModal: React.FC<Props> = ({
           </Box>
         )}
 
-        {/* ✅ NEW: Error display */}
-        {step === 'error' && (
-          <Box className="py-4">
-            <Alert severity="error" sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                {errorMsg}
-              </Typography>
-              <Typography variant="body2">
-                {statusMsg}
-              </Typography>
-            </Alert>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 2 }}>
-              Tip: Go to Settings → Integrations to configure GitHub PAT token or BlazeMeter API credentials
-            </Typography>
-          </Box>
-        )}
-
         {step === 'success' && (
           <Alert severity="success">
             Service configured successfully.
@@ -1321,15 +1385,23 @@ export const AddApplicationModal: React.FC<Props> = ({
             <Button onClick={handleCancel} color="inherit" sx={{ color: 'grey.700', fontWeight: '600' }}>
               Cancel
             </Button>
+            {/* <Button
+          variant="contained"
+          onClick={handleStart}
+          disabled={!formData.appName}
+          sx={{ textTransform: 'none' }}
+        >
+          Start Configuration
+        </Button> */}
             <Button
               variant="contained"
               onClick={handleStart}
               disabled={formData.githubRepo === '' || (formData.jmxFile === null && formData.jmxScriptId === '')}
               disableElevation
               sx={{
-                px: 4, py: 1.2, textTransform: 'none', bgcolor: '#1d4ed8',
+                px: 4, py: 1.2, textTransform: 'none', bgcolor: '#1d4ed8',      // blue-700
                 '&:hover': {
-                  bgcolor: '#1e40af'
+                  bgcolor: '#1e40af'     // blue-800
                 }
               }}
               className='bg-blue-700'
@@ -1338,27 +1410,6 @@ export const AddApplicationModal: React.FC<Props> = ({
             </Button>
           </>
         )}
-        
-        {/* ✅ NEW: Error step buttons */}
-        {step === 'error' && (
-          <>
-            <Button onClick={handleClose} color="inherit" sx={{ color: 'grey.700', fontWeight: '600' }}>
-              Close
-            </Button>
-            <Button
-              variant="contained"
-              onClick={() => {
-                setStep('form');
-                setErrorMsg("");
-                setStatusMsg("");
-              }}
-              sx={{ textTransform: 'none' }}
-            >
-              Try Again
-            </Button>
-          </>
-        )}
-        
         {step === 'processing' && (
           <Button
             variant="outlined"
@@ -1369,7 +1420,6 @@ export const AddApplicationModal: React.FC<Props> = ({
             Close
           </Button>
         )}
-        
         {step === 'success' && (
           <Button variant="contained" onClick={handleClose} sx={{ textTransform: 'none' }}>
             Done

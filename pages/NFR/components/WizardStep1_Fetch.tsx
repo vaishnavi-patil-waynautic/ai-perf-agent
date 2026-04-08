@@ -4,10 +4,11 @@ import { Button, MenuItem, Select, TextField, Checkbox, Table, TableBody, TableC
 import { fetchJiraItems } from '../services/jiraService';
 import { fetchADOItems } from '../services/adoService';
 import { ExternalItem } from '../types/nfrTypes';
-import { toggleItemId } from '../slices/nfrWizardSlice';
+import { toggleItemId, resetWizard } from '../slices/nfrWizardSlice';
 import { RootState } from '../../../store/store';
 import { useAppDispatch, useAppSelector } from '@/pages/settings/store/hooks';
 import { fetchAdoItems } from '../slices/nfr.thunks';
+import { showSnackbar } from '@/store/snackbarStore';
 
 const WizardStep1_Fetch: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -34,48 +35,62 @@ const WizardStep1_Fetch: React.FC = () => {
 
   useEffect(() => {
     if (externalItems.length === 0) {
-      dispatch(fetchAdoItems(selectedProject.id));
+      dispatch(fetchAdoItems(selectedProject?.id));
     } else {
       setFilteredData(externalItems);
       setItems(externalItems);
     }
   }, []);
 
+  // Reset all wizard state when project changes
+  useEffect(() => {
+    dispatch(resetWizard());
+    setFilteredData([]);
+    setItems([]);
+    setSearchText('');
+    setFilterType('All');
+  }, [selectedProject?.id]);
+
   const handleFetch = async () => {
+
     setLoading(true);
+    
+    try {
 
-    const response = await dispatch(fetchAdoItems(selectedProject.id)).unwrap();
-    const allRecords = response;
+      const response = await dispatch(fetchAdoItems(selectedProject.id)).unwrap();
+      const allRecords = response;
 
-    let result = [...allRecords];
+      let result = [...allRecords];
 
-    // 🔍 Apply search filter
-    if (searchText.trim() !== '') {
-      const search = searchText.toLowerCase();
+      if (searchText.trim() !== '') {
+        const search = searchText.toLowerCase();
+        result = result.filter((item: any) =>
+          item.tags && item.tags.some((tag: string) => tag.toLowerCase().includes(search))
+        );
+      }
 
-      result = result.filter((item: any) =>
-        item.tags &&
-        item.tags.some((tag: string) =>
-          tag.toLowerCase().includes(search)
-        )
-      );
+      if (filterType !== 'All') {
+        result = result.filter((item: any) =>
+          item.type?.toLowerCase() === filterType.toLowerCase()
+        );
+      }
+
+      setItems(allRecords);
+      setFilteredData(result);
+
+
+    } catch (err: any) {
+
+      dispatch(showSnackbar({
+        message: err?.message || err?.error || 'Failed to fetch ADO items',
+        type: 'error',
+      }));
+
+    } finally {
+
+      setLoading(false);
+
     }
-
-    // 🎯 Apply work item type filter
-    if (filterType !== 'All') {
-
-      console.log("filter Type : ", filterType, " result : ", result)
-      result = result.filter((item: any) =>
-        item.type?.toLowerCase() === filterType.toLowerCase()
-      );
-    }
-
-    setItems(allRecords);        // original data
-    setFilteredData(result);     // filtered data
-
-    setLoading(false);
-
-    console.log("Final Result:", result);
   };
 
 

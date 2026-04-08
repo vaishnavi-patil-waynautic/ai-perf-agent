@@ -5,9 +5,9 @@ import { showSnackbar } from "@/store/snackbarStore";
 // GET
 export const fetchModels = createAsyncThunk(
   "aiModel/fetchAll",
-  async (_, { dispatch, rejectWithValue }) => {
+  async ( projectId : Number, { dispatch, rejectWithValue }) => {
     try {
-      const data = await aiModelService.getAll();
+      const data = await aiModelService.getAll(projectId);
 
       console.log("API RESPONSE:", data);
 
@@ -24,21 +24,25 @@ export const fetchModels = createAsyncThunk(
   }
 );
 
-// POST
 export const createModel = createAsyncThunk(
   "aiModel/create",
-  async (payload: any, { dispatch, rejectWithValue }) => {
+  async (
+    { payload, projectId }: { payload: any; projectId: number },
+    { rejectWithValue }
+  ) => {
     try {
-      const data = await aiModelService.create(payload);
+      const data = await aiModelService.create(payload, projectId);
 
-
+      console.log("__________Data return__________ : ", data);
 
       return data;
     } catch (error: any) {
+      console.log("__________Error found service__________ : ", error);
       return rejectWithValue(error.message);
     }
   }
 );
+
 
 // DELETE
 export const deleteModel = createAsyncThunk(

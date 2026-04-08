@@ -328,71 +328,388 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Paper, Typography, Button, CircularProgress, Alert, TableCell, TableHead, Table, TableRow, TableBody, TableContainer, Chip } from '@mui/material';
+import { Box, Paper, Typography, Button, CircularProgress, Alert, TableCell, TableHead, Table, TableRow, TableBody, TableContainer, Chip, Collapse, IconButton } from '@mui/material';
 import { ArrowBack, Download } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import { fetchBuildReport } from '../services/mockService';
 import { BuildReport } from '../types';
 import { useLocation } from 'react-router-dom';
-import { BarChart3, Boxes, Clock, Folder } from 'lucide-react';
+import { BarChart3, Boxes, ChevronDown, ChevronUp, Clock, Folder } from 'lucide-react';
 import html2pdf from "html2pdf.js";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
+import rehypeRaw from 'rehype-raw';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 
 interface InfoCardProps {
   title: string;
   value: string;
 }
 
+// const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
+//   const hasData = value && value.trim().length > 0;
+
+//   return (
+//     <Paper
+//       elevation={0}
+//       sx={{
+//         p: 3,
+//         borderRadius: 2,
+//         border: '1px solid',
+//         borderColor: hasData ? 'rgba(59, 130, 246, 0.2)' : 'rgba(226, 232, 240, 1)',
+//         backgroundColor: hasData ? 'rgba(239, 246, 255, 0.4)' : '#fafafa',
+//         transition: 'all 0.2s ease-in-out',
+//         '&:hover': {
+//           borderColor: hasData ? 'rgba(59, 130, 246, 0.4)' : 'rgba(226, 232, 240, 1)',
+//           backgroundColor: hasData ? 'rgba(239, 246, 255, 0.6)' : '#f5f5f5',
+//         }
+//       }}
+//     >
+//       <Typography
+//         variant="caption"
+//         sx={{
+//           fontSize: '0.75rem',
+//           fontWeight: 600,
+//           letterSpacing: '0.5px',
+//           textTransform: 'uppercase',
+//           color: hasData ? '#3b82f6' : '#94a3b8',
+//           mb: 1,
+//           display: 'block'
+//         }}
+//       >
+//         {title}
+//       </Typography>
+
+//       <Typography
+//         variant="body2"
+//         sx={{
+//           whiteSpace: 'pre-line',
+//           color: hasData ? '#1e293b' : '#94a3b8',
+//           fontSize: '0.875rem',
+//           lineHeight: 1.6
+//         }}
+//       >
+//         {hasData ? value : 'No data available'}
+//       </Typography>
+//     </Paper>
+//   );
+// };
+
+
+// const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
+//   const [open, setOpen] = useState(true);
+//   const hasData = value && value.trim().length > 0;
+
+//   return (
+//     <Paper
+//       elevation={0}
+//       sx={{
+//         borderRadius: 3,
+//         border: '1px solid rgba(226, 232, 240, 1)',
+//         overflow: 'hidden',
+//         background: '#fff'
+//       }}
+//     >
+//       {/* Header */}
+//       <Box
+//         onClick={() => setOpen(!open)}
+//         sx={{
+//           cursor: 'pointer',
+//           display: 'flex',
+//           justifyContent: 'space-between',
+//           alignItems: 'center',
+//           px: 2.5,
+//           py: 1.8,
+//           bgcolor: '#f8fafc'
+//         }}
+//       >
+//         <Typography
+//           sx={{
+//             fontSize: '0.8rem',
+//             fontWeight: 700,
+//             letterSpacing: '0.5px',
+//             textTransform: 'uppercase',
+//             color: '#334155'
+//           }}
+//         >
+//           {title}
+//         </Typography>
+
+//         <IconButton size="small">
+//           {
+//             open ? <ChevronUp 
+//           /> : <ChevronDown 
+//           />
+//           }
+//         </IconButton>
+//       </Box>
+
+//       {/* Content */}
+//       <Collapse in={open}>
+//         <Box sx={{ p: 2.5 }}>
+//           {hasData ? (
+//             <ReactMarkdown
+//               components={{
+//                 li: ({ node, ...props }) => (
+//                   <li style={{ marginBottom: 6, color: '#1e293b' }} {...props} />
+//                 ),
+//                 strong: ({ node, ...props }) => (
+//                   <strong style={{ color: '#0f172a' }} {...props} />
+//                 ),
+//               }}
+//             >
+//               {value}
+//             </ReactMarkdown>
+//           ) : (
+//             <Typography sx={{ color: '#94a3b8' }}>
+//               No data available
+//             </Typography>
+//           )}
+//         </Box>
+//       </Collapse>
+//     </Paper>
+//   );
+// };
+
+// const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
+//   const [expanded, setExpanded] = useState(false);
+
+//   const hasData = value && value.trim().length > 0;
+
+//   // Normalize + clean value (remove duplicated titles)
+//   const cleanValue = React.useMemo(() => {
+//   if (!value) return '';
+
+//   let result = value.trim();
+
+//   // Escape title for regex safety
+//   const escapeRegex = (str: string) =>
+//     str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+//   const normalizedTitle = escapeRegex(title.trim());
+
+//   // Remove ONLY if title is at the very start
+//   const patterns = [
+//     new RegExp(`^${normalizedTitle}\\s*[:\\-]*\\s*`, 'i'),
+//     /^(observations|ado defects|datadog remarks)\s*[:\-]*\s*/i
+//   ];
+
+//   patterns.forEach((pattern) => {
+//     result = result.replace(pattern, '');
+//   });
+
+//   return result.trim();
+// }, [value, title]);
+
+//   return (
+//     <Paper
+//       onClick={() => setExpanded(!expanded)}
+//       sx={{
+//         border: '1px solid #e2e8f0',
+//         borderRadius: 2,
+//         px: 3,
+//         py: 3,
+//         cursor: 'pointer',
+//         transition: 'all 0.25s ease'
+//       }}
+//     >
+//       <Box
+//         sx={{
+//           display: 'flex',
+//           alignItems: 'flex-start',
+//           justifyContent: 'space-between',
+//           gap: 2
+//         }}
+//       >
+//         {/* TEXT */}
+//         <Box sx={{ flex: 1 }}>
+//           <Typography
+//             component="div"
+//             sx={{
+//               fontSize: '0.85rem',
+//               color: '#1e293b',
+//               lineHeight: 1.6
+//             }}
+//           >
+//             {/* TITLE */}
+//             <Box
+//               component="span"
+//               sx={{
+//                 fontWeight: 700,
+//                 textTransform: 'uppercase',
+//                 color: expanded ? '#2563eb' : '#0f172a',
+//                 transition: 'color 0.25s ease',
+//                 marginBottom: 3,
+//                 py: 7
+//               }}
+//             >
+//               {title}
+//             </Box>{' '}
+//             -{' '}
+
+//             {/* VALUE */}
+//             <Box
+//               component="span"
+//               sx={{
+//                 display: 'block',
+//                 overflow: 'hidden',
+//                 transition: 'all 0.5s ease',
+//                 py:2,
+//                 ...(expanded
+//                   ? {
+//                       maxHeight: '500px',
+//                       opacity: 1
+//                     }
+//                   : {
+//                       display: '-webkit-box',
+//                       WebkitLineClamp: 2,
+//                       WebkitBoxOrient: 'vertical',
+//                       maxHeight: '4.5em',
+//                       opacity: 0.9
+//                     })
+//               }}
+//             >
+//               <ReactMarkdown>
+//                 {hasData ? cleanValue : 'No data available'}
+//               </ReactMarkdown>
+//             </Box>
+//           </Typography>
+//         </Box>
+
+//         {/* ARROW */}
+//         <Box
+//           sx={{
+//             transition: 'transform 0.25s ease',
+//             transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
+//           }}
+//         >
+//           <ChevronDown />
+//         </Box>
+//       </Box>
+//     </Paper>
+//   );
+// };
+
 const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
+  const [expanded, setExpanded] = useState(false);
+
   const hasData = value && value.trim().length > 0;
+
+  const cleanValue = React.useMemo(() => {
+    if (!value) return '';
+
+    let result = value.trim();
+
+    const escapeRegex = (str: string) =>
+      str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const normalizedTitle = escapeRegex(title.trim());
+
+    const patterns = [
+      new RegExp(`^${normalizedTitle}\\s*[:\\-]*\\s*`, 'i'),
+      /^(observations|ado defects|datadog remarks)\s*[:\-]*\s*/i
+    ];
+
+    patterns.forEach((pattern) => {
+      result = result.replace(pattern, '');
+    });
+
+    return result.trim();
+  }, [value, title]);
 
   return (
     <Paper
-      elevation={0}
+    data-infocard 
+      onClick={() => setExpanded(!expanded)}
       sx={{
-        p: 3,
+        border: '1px solid #e2e8f0',
         borderRadius: 2,
-        border: '1px solid',
-        borderColor: hasData ? 'rgba(59, 130, 246, 0.2)' : 'rgba(226, 232, 240, 1)',
-        backgroundColor: hasData ? 'rgba(239, 246, 255, 0.4)' : '#fafafa',
-        transition: 'all 0.2s ease-in-out',
-        '&:hover': {
-          borderColor: hasData ? 'rgba(59, 130, 246, 0.4)' : 'rgba(226, 232, 240, 1)',
-          backgroundColor: hasData ? 'rgba(239, 246, 255, 0.6)' : '#f5f5f5',
-        }
+        px: 2,
+        py: 1.5,
+        cursor: 'pointer'
       }}
     >
-      <Typography
-        variant="caption"
+      <Box
         sx={{
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          letterSpacing: '0.5px',
-          textTransform: 'uppercase',
-          color: hasData ? '#3b82f6' : '#94a3b8',
-          mb: 1,
-          display: 'block'
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 2,
+          py:2,
+          px:2
         }}
       >
-        {title}
-      </Typography>
+        <Box sx={{ flex: 1 }}>
+          <Typography
+            component="div"
+            sx={{
+              fontSize: '0.85rem',
+              lineHeight: 1.6
+            }}
+          >
+            {/* TITLE */}
+            <Box
+              component="span"
+              sx={{
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                color: !hasData
+                  ? '#94a3b8' // gray if no data
+                  : '#2563eb' ,
+                transition: 'color 0.25s ease',
 
-      <Typography
-        variant="body2"
-        sx={{
-          whiteSpace: 'pre-line',
-          color: hasData ? '#1e293b' : '#94a3b8',
-          fontSize: '0.875rem',
-          lineHeight: 1.6
-        }}
-      >
-        {hasData ? value : 'No data available'}
-      </Typography>
+              }}
+            >
+              {title}
+            </Box>{' '}
+            -{' '}
+
+            {/* VALUE WRAPPER (animation container) */}
+            <Box
+            data-content
+              sx={{
+                overflow: 'hidden',
+                transition: 'max-height 0.35s ease',
+                maxHeight: expanded ? '500px' : '6em' ,// ~2 lines
+                py:1
+              }}
+            >
+              {/* INNER CONTENT */}
+              <Box
+              data-inner
+                sx={
+                  !expanded
+                    ? {
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }
+                    : {}
+                }
+              >
+                <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                  {hasData ? cleanValue : 'No data available'}
+                </ReactMarkdown>
+              </Box>
+            </Box>
+          </Typography>
+        </Box>
+
+        {/* ARROW */}
+        <Box
+          sx={{
+            transition: 'transform 0.25s ease',
+            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
+          }}
+        >
+          <ChevronDown />
+        </Box>
+      </Box>
     </Paper>
   );
 };
-
 
 export const ResultPage: React.FC = () => {
 
@@ -402,11 +719,27 @@ export const ResultPage: React.FC = () => {
   const { projectName, appName } = location.state || {};
   const { projectId, appId, buildId } = useParams();
   const navigate = useNavigate();
+  const prevProjectId = useRef<number | null>(null);
   const [copied, setCopied] = useState(false);
+   const { selectedProject } = useSelector((state: RootState) => state.project);
 
   const [report, setReport] = useState<BuildReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+
+useEffect(() => {
+    if (!selectedProject?.id) return;
+
+    if (
+        prevProjectId.current !== null &&
+        prevProjectId.current !== selectedProject.id
+    ) {
+        navigate("/autoanalysis");
+    }
+
+    prevProjectId.current = selectedProject.id;
+}, [selectedProject?.id]);
 
   const copyTableAsCSV = async () => {
     const header = [
@@ -587,6 +920,27 @@ export const ResultPage: React.FC = () => {
 
     const cloned = pageRef.current.cloneNode(true) as HTMLElement;
 
+// ✅ FORCE FULL EXPANSION (NO HEIGHT LIMITS AT ALL)
+cloned.querySelectorAll('[data-infocard]').forEach((card) => {
+  const content = card.querySelector('[data-content]') as HTMLElement;
+  const inner = card.querySelector('[data-inner]') as HTMLElement;
+
+  if (content) {
+    content.style.maxHeight = 'none';
+    content.style.height = 'auto';
+    content.style.overflow = 'visible';
+    content.style.transition = 'none';
+  }
+
+  if (inner) {
+    inner.style.display = 'block';
+    inner.style.overflow = 'visible';
+
+    // Remove line clamp completely
+    inner.style.webkitLineClamp = 'unset';
+    inner.style.webkitBoxOrient = 'unset';
+  }
+});
     // Remove back/download nav buttons only
     cloned.querySelectorAll(".no-export").forEach(el => el.remove());
 
@@ -895,7 +1249,7 @@ export const ResultPage: React.FC = () => {
         </Paper>
 
         {/* Observation Cards */}
-        <Box
+        {/* <Box
           sx={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
@@ -906,7 +1260,20 @@ export const ResultPage: React.FC = () => {
           <InfoCard title="Observations" value={report.observations} />
           <InfoCard title="Datadog Remarks" value={report.datadog_remarks} />
           <InfoCard title="ADO Defects" value={report.ado_defects} />
-        </Box>
+        </Box> */}
+
+        <Box
+  sx={{
+    display: 'flex',
+    flexDirection: 'column',   // 🔥 KEY CHANGE
+    gap: 2,
+    mb: 3
+  }}
+>
+  <InfoCard title="Observations" value={report.observations} />
+  <InfoCard title="Datadog Remarks" value={report.datadog_remarks} />
+  <InfoCard title="ADO Defects" value={report.ado_defects} />
+</Box>
 
         {/* Metrics Table */}
         <Paper

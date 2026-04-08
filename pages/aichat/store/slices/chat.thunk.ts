@@ -552,6 +552,7 @@ import {
   addUserMessage,
   addStreamingBotMessage,
   setActiveStreamId,
+  addOptimisticChat,
 } from './chat.slice';
 import { config } from '../../../../config/backendConfig';
 
@@ -607,13 +608,14 @@ export const sendMessageWithStreaming = createAsyncThunk<
   async (payload, { dispatch, getState, rejectWithValue }) => {
     try {
 
-      console.log("Sending chat request 2-----------------------------------------------");
+      console.log("Sending message 2---------------------------------");
 
       const state        = getState() as any;
       const chatId       = state.chat.currentChatId;
       const selectedModel: string = state.chat.selectedModel;
+      const chatKey = chatId && chatId !== '0' ? chatId : 'new';
 
-      // 1. Add user message immediately
+      // 1. Add user message scoped to this chat
       const userMessage: ChatMessage = {
         id       : `user-${Date.now()}`,
         sender   : 'user',
@@ -621,23 +623,29 @@ export const sendMessageWithStreaming = createAsyncThunk<
         content  : payload.text,
         timestamp: new Date().toISOString(),
       };
-      dispatch(addUserMessage(userMessage));
+      dispatch(addUserMessage({ ...userMessage, chatId: chatKey } as any));
 
-      // 2. Add streaming placeholder
-      //    modelName is top-level so it doesn't affect the StreamParams type
+      console.log("Sending message 4---------------------------------");
+
+      // 2. Add streaming placeholder scoped to this chat
       const botMessageId = `bot-${Date.now()}`;
       dispatch(
         addStreamingBotMessage({
           id        : botMessageId,
-          modelName : selectedModel,               // ← top-level, not in streamParams
+          modelName : selectedModel,
+          chatId    : chatKey,
           streamParams: {
             nlQuestion: payload.text,
             projectId : 1,
             chatId    : chatId && chatId !== '0' ? chatId : null,
-            // StreamParams type is UNCHANGED — only these 3 fields
           },
         })
       );
+
+      // If new chat, add optimistic placeholder to sidebar immediately
+      if (!chatId || chatId === '0') {
+        dispatch(addOptimisticChat({ id: 'new', title: payload.text.slice(0, 40) || 'New Chat' }));
+      }
 
       // 3. StreamingBubble takes over from here
       return { botMessageId };
@@ -661,6 +669,7 @@ export const sendMessage = createAsyncThunk<
     try {
       const state : any = getState();
       const chatId       = state.chat.currentChatId;
+      const projectId    = state.project?.selectedProject?.id;
 
       const userMessage: ChatMessage = {
         id       : Date.now().toString(),
@@ -674,10 +683,11 @@ export const sendMessage = createAsyncThunk<
       const { message, chatId: newChatId } = await sendMessageToAPI(
         payload.text,
         payload.modelId,
+        projectId,
         chatId && chatId !== '0' ? chatId : undefined
       );
 
-      if (!chatId || chatId === '0') dispatch(loadChatHistories());
+      if (!chatId || chatId === '0') dispatch(loadChatHistories(projectId));
 
       return { message, chatId: newChatId };
     } catch (error: any) {
@@ -696,10 +706,10 @@ export const loadFAQs = createAsyncThunk<FAQ[], void, { rejectValue: APIError }>
   }
 );
 
-export const loadChatHistories = createAsyncThunk<ChatHistory[], void, { rejectValue: APIError }>(
+export const loadChatHistories = createAsyncThunk<ChatHistory[], number, { rejectValue: APIError }>(
   'chat/loadChatHistories',
-  async (_, { rejectWithValue }) => {
-    try { return await fetchChatHistories(); }
+  async (projectId, { rejectWithValue }) => {
+    try { return await fetchChatHistories(projectId); }
     catch (error: any) {
       return rejectWithValue({ message: error?.message });
     }

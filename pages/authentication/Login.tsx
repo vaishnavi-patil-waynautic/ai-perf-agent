@@ -53,8 +53,8 @@ const Login: React.FC = () => {
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       {/* Left Side - Image */}
-      <div className="hidden lg:flex lg:w-1/2 bg-blue-600 items-center justify-center relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-700 to-blue-900 opacity-90"></div>
+      <div className="hidden lg:flex lg:w-1/2 bg-blue-900 items-center justify-center relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-blue-1000 opacity-90"></div>
         <img
           // src="https://picsum.photos/1000/1000?grayscale" 
           src="public/img/19197363.jpg"
@@ -70,10 +70,12 @@ const Login: React.FC = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
-        <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-xl border border-gray-100">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-blue-800">Waynautic AI Perf Agent</h2>
+      {/* <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50"> */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+      {/* <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-xl border border-gray-100"> */}
+        <div className="w-full max-w-lg bg-white p-8">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl font-bold text-blue-800">Waynautic AI Perf Agent</h2>
             <p className="text-gray-500 mt-2">Sign in to access your dashboard</p>
           </div>
 
@@ -123,6 +125,8 @@ const Login: React.FC = () => {
             <Button type="submit" disabled={!!loading} fullWidth>Sign In</Button>
           </form> */}
 
+          <div className="w-full max-w-sm mx-auto">
+
           <form onSubmit={handleLogin}>
             <TextField
               label="Email Address"
@@ -135,7 +139,7 @@ const Login: React.FC = () => {
               variant="outlined"
             />
 
-            <div className="mb-6 mt-4">
+            <div className="mb-10 mt-6">
               <TextField
                 label="Password"
                 type={showPassword ? "text" : "password"}
@@ -175,10 +179,14 @@ const Login: React.FC = () => {
             </Button>
           </form>
 
+         
+
           <div className="mt-6 text-center text-sm text-gray-600">
             Don't have an account?
             <Link to="/signup" className="ml-1 text-blue-600 font-medium hover:underline">Sign up</Link>
           </div>
+
+           </div>
         </div>
       </div>
     </div>

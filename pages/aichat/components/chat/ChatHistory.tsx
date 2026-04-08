@@ -158,31 +158,37 @@ import {
   deleteByChatId,
 } from '../../store/slices/chat.thunk';
 import { setCurrentChat, clearMessages } from '../../store/slices/chat.slice';
-import { store } from '@/store/store';
-import { Delete, Trash2 } from 'lucide-react';
+import { RootState, store } from '@/store/store';
+import { Delete, MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { showSnackbar } from '@/store/snackbarStore';
+import { PanelLeftClose } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
-const ChatHistory: React.FC = () => {
+const ChatHistory: React.FC<{ collapsed?: boolean; onCollapse?: () => void }> = ({ collapsed = false, onCollapse }) => {
   const dispatch = useAppDispatch();
   const chatHistories = useAppSelector((state) => state.chat.chatHistories);
   const currentChatId = useAppSelector((state) => state.chat.currentChatId);
-  const isStreamingActive = useAppSelector((state) => state.chat.isStreamingActive);
+  // isStreamingActive is now per-chat in chatMap, no global flag needed
+    const { selectedProject } = useSelector((state: RootState) => state.project);
 
   useEffect(() => {
-    dispatch(loadChatHistories());
+    if(selectedProject){
+      dispatch(loadChatHistories(selectedProject?.id));
+    }
+    
   }, [dispatch]);
 
   const handleChatSelect = (chatId: string) => {
     dispatch(setCurrentChat(chatId));
-    dispatch(clearMessages());
-    if (!isStreamingActive) {
+    // Load messages only if not already cached in chatMap
+    const chatEntry = (store.getState() as any).chat?.chatMap?.[chatId];
+    if (!chatEntry || chatEntry.messages.length === 0) {
       dispatch(loadChatMessages(chatId));
     }
   };
 
   const handleNewChat = () => {
-    dispatch(setCurrentChat('0')); // temporary empty chat
-    dispatch(clearMessages());
+    dispatch(setCurrentChat('0'));
   };
 
   const handleDelete = async (chatId: string) => {
@@ -191,7 +197,7 @@ const ChatHistory: React.FC = () => {
 
       // optional: if current chat deleted → reset
       if (currentChatId === chatId) {
-        dispatch(setCurrentChat(null)); // or '0' if that's your empty state
+        dispatch(setCurrentChat(String(0))); // or '0' if that's your empty state
         dispatch(clearMessages());
 
       }
@@ -228,313 +234,75 @@ const ChatHistory: React.FC = () => {
     return new Date(date).toLocaleDateString();
   };
 
+
   return (
-    <div className="relative w-64 h-full flex flex-col overflow-hidden">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 opacity-80"></div>
+    <div
+      className="relative h-full flex flex-col bg-white border-r border-slate-100 overflow-hidden flex-shrink-0"
+      style={{
+        width: collapsed ? 0 : 288,
+        minWidth: collapsed ? 0 : 288,
+        opacity: collapsed ? 0 : 1,
+        transition: 'width 280ms cubic-bezier(0.4,0,0.2,1), min-width 280ms cubic-bezier(0.4,0,0.2,1), opacity 200ms ease',
+        pointerEvents: collapsed ? 'none' : 'auto',
+      }}
+    >
+      <div className="p-4 flex flex-col h-full" style={{ width: 288 }}>
 
-      {/* Glassmorphic Container */}
-      <div className="relative h-full flex flex-col backdrop-blur-xl bg-white/40 border-r border-white/60 shadow-xl">
-        {/* Header with Glass Effect */}
-        <div className="relative p-4 border-b border-white/40">
-          {/* Subtle gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10"></div>
+        {/* Header � logo + title + collapse + new chat */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <img src="/ai-perf-agent/img/exgenix.png" alt="Waynautic" className="h-7 w-auto" />
+            <span className="font-bold text-lg text-slate-800 tracking-tight">Waynautic AI</span>
+          </div>
+          <div className="flex items-center gap-1">
 
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 shadow-lg">
-                <AutoAwesomeIcon className="text-white text-sm" />
-              </div>
-              <Typography
-                variant="h6"
-                className="font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent"
-              >
-                Chats
-              </Typography>
-            </div>
-
-            <Tooltip title="New Chat" placement="bottom">
-              <IconButton
-                size="small"
-                onClick={handleNewChat}
-                className="glass-button group relative overflow-hidden"
-                sx={{
-                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(59, 130, 246, 0.25))',
-                    transform: 'scale(1.05)',
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                <AddIcon
-                  fontSize="small"
-                  className="text-purple-600 transition-transform group-hover:rotate-90 duration-300"
-                />
-              </IconButton>
-            </Tooltip>
+            <button onClick={onCollapse} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors" title="Collapse sidebar">
+              <PanelLeftClose size={16} />
+            </button>
           </div>
         </div>
 
-        {/* Chat List with Custom Scrollbar */}
-        <div className="flex-1 overflow-y-auto glass-scrollbar">
+        <button
+          onClick={handleNewChat}
+          className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-2xl transition-all duration-200 mb-6 group"
+        >
+          <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+          New Chat
+        </button>
+
+
+
+
+        {/* Chat List */}
+        <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 px-2">Recent Sessions</h3>
           {chatHistories.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center h-full">
-              <div className="relative mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
-                <div className="relative p-4 rounded-full bg-white/30 backdrop-blur-md border border-white/40">
-                  <ChatBubbleOutlineIcon
-                    className="text-5xl bg-gradient-to-br from-purple-500 to-blue-500 bg-clip-text text-transparent"
-                  />
-                </div>
-              </div>
-              <Typography
-                variant="body2"
-                className="text-gray-600 font-medium"
-              >
-                No conversations yet
-              </Typography>
-              <Typography
-                variant="caption"
-                className="text-gray-400 mt-1"
-              >
-                Start a new chat to begin
-              </Typography>
+            <div className="text-center py-12 px-4">
+              <p className="text-slate-300 text-sm font-medium italic">No history yet</p>
             </div>
           ) : (
-            <List className="p-3 space-y-2">
-              {chatHistories.map((chat, index) => (
-                // <ListItem
-                //   key={chat.id}
-                //   disablePadding
-                //   sx={{
-                //     animation: `slideIn 0.3s ease ${index * 0.05}s both`,
-                //     '@keyframes slideIn': {
-                //       from: {
-                //         opacity: 0,
-                //         transform: 'translateX(-20px)',
-                //       },
-                //       to: {
-                //         opacity: 1,
-                //         transform: 'translateX(0)',
-                //       },
-                //     },
-                //   }}
-                // >
-                // <ListItem
-                //   key={chat.id}
-                //   disablePadding
-                //   sx={{
-                //     position: "relative", // 👈 needed for absolute positioning
-                //     animation: `slideIn 0.3s ease ${index * 0.05}s both`,
-                //     '@keyframes slideIn': {
-                //       from: { opacity: 0, transform: 'translateX(-20px)' },
-                //       to: { opacity: 1, transform: 'translateX(0)' },
-                //     },
-                //     "&:hover .delete-btn": {
-                //       opacity: 1,
-                //     },
-                //   }}
-                // >
-                //   {/* 🗑 Delete Button */}
-                //   <div
-                //     className="delete-btn"
-                //     style={{
-                //       position: "absolute",
-                //       top: 6,
-                //       right: 6,
-                //       opacity: 0,
-                //       transition: "opacity 0.2s",
-                //       zIndex: 2,
-                //     }}
-                //   >
-                //     <IconButton
-                //       size="small"
-                //       onClick={(e) => {
-                //         e.stopPropagation(); // 👈 VERY IMPORTANT
-                //         handleDelete(chat.id);
-                //       }}
-                //       sx={{
-                //         background: "rgba(255,255,255,0.6)",
-                //         backdropFilter: "blur(6px)",
-                //         "&:hover": {
-                //           background: "rgba(255,0,0,0.1)",
-                //         },
-                //       }}
-                //     >
-                //       <Delete fontSize="small" />
-                //     </IconButton>
-                //   </div>
-
-                <ListItem
-                  key={chat.id}
-                  disablePadding
-                  sx={{
-                    position: "relative", // 👈 needed for absolute positioning
-                    animation: `slideIn 0.3s ease ${index * 0.05}s both`,
-                    '@keyframes slideIn': {
-                      from: { opacity: 0, transform: 'translateX(-20px)' },
-                      to: { opacity: 1, transform: 'translateX(0)' },
-                    },
-                    "&:hover .deleteIcon": {
-                      opacity: 1,
-                    },
-                  }}
-                >
-                  <IconButton
-                    className="deleteIcon"
-                    onClick={(e) => {
-                      e.stopPropagation(); // 👈 VERY IMPORTANT
-                      handleDelete(chat.id);
-                    }}
-                    sx={{
-                      position: "absolute",
-                      top: 6,
-                      right: 6,
-                      opacity: 0,
-                      transition: "opacity 0.2s",
-                      zIndex: 10,
-                    }}
-                  >
-                    <Trash2 size={14} color="#aa0505ff" />
-                  </IconButton>
-                  <ListItemButton
-                    selected={currentChatId === chat.id}
-                    onClick={() => handleChatSelect(chat.id)}
-                    className={`rounded-xl transition-all duration-300 ${currentChatId === chat.id
-                      ? 'glass-active'
-                      : 'glass-item'
-                      }`}
-                    sx={{
-                      padding: '12px',
-                      backdropFilter: 'blur(10px)',
-                      background:
-                        currentChatId === chat.id
-                          ? 'linear-gradient(135deg, rgba(219, 206, 250, 0.2), rgba(246, 248, 252, 0.2))'
-                          : 'rgba(255, 255, 255, 0.25)',
-                      border:
-                        currentChatId === chat.id
-                          ? '1.5px solid rgba(139, 92, 246, 0.4)'
-                          : '1px solid rgba(255, 255, 255, 0.3)',
-                      boxShadow:
-                        currentChatId === chat.id
-                          ? '0 8px 32px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-                          : '0 4px 16px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
-                      '&:hover': {
-                        background:
-                          currentChatId === chat.id
-                            ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(59, 130, 246, 0.25))'
-                            : 'rgba(255, 255, 255, 0.4)',
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
-                      },
-                    }}
-                  >
-                    <ListItemText
-                      primary={
-                        <Typography
-                          variant="body2"
-                          className={`font-semibold truncate mb-1 ${currentChatId === chat.id
-                            ? 'bg-gradient-to-r from-purple-700 to-blue-700 bg-clip-text text-transparent'
-                            : 'text-gray-800'
-                            }`}
-                        >
-                          {chat.title.length > 28 ? chat.title.slice(0,28)+'...' : chat.title}
-  
-                        </Typography>
-                      }
-                      secondary={
-                        <div className="flex flex-col gap-1.5">
-                          <Typography
-                            variant="caption"
-                            className="text-gray-600 truncate leading-relaxed"
-                          >
-                            {chat.lastMessage}
-                          </Typography>
-                          <div className="flex justify-between items-center">
-                            <Typography
-                              variant="caption"
-                              className="text-gray-500 font-medium"
-                            >
-                              {/* {formatTimestamp(chat.timestamp)} */}
-                              {chat.timestamp}
-                            </Typography>
-                            <div
-                              className="px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-sm"
-                              style={{
-                                background: currentChatId === chat.id
-                                  ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))'
-                                  : 'rgba(255, 255, 255, 0.5)',
-                                border: '1px solid rgba(255, 255, 255, 0.4)',
-                                color: currentChatId === chat.id ? '#7c3aed' : '#6b7280',
-                              }}
-                            >
-                              {chat.messageCount}
-                            </div>
-                          </div>
-                        </div>
-                      }
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
+            chatHistories.map((chat) => (
+              <div
+                key={chat.id}
+                onClick={() => handleChatSelect(chat.id)}
+                className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all duration-200 ${currentChatId === chat.id ? "bg-blue-50 text-blue-700 shadow-sm" : "hover:bg-slate-50 text-slate-600"}`}
+              >
+                <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
+                  <MessageSquare size={15} className={`flex-shrink-0 ${currentChatId === chat.id ? "text-blue-500" : "text-slate-400"}`} />
+                  <span className="truncate text-sm">{chat.title || "New Chat"}</span>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); handleDelete(chat.id); }} className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all flex-shrink-0">
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ))
           )}
         </div>
       </div>
-
-      {/* Custom Styles
-      <style jsx>{`
-        .glass-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .glass-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-          margin: 8px 0;
-        }
-
-        .glass-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, rgba(139, 92, 246, 0.4), rgba(59, 130, 246, 0.4));
-          border-radius: 10px;
-          backdrop-filter: blur(10px);
-        }
-
-        .glass-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, rgba(139, 92, 246, 0.6), rgba(59, 130, 246, 0.6));
-        }
-      `}</style> */}
-
-
-      {/* Custom Styles */}
-      <style>
-        {`
-  .glass-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .glass-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    margin: 8px 0;
-  }
-
-  .glass-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(139, 92, 246, 0.4), rgba(59, 130, 246, 0.4));
-    border-radius: 10px;
-    backdrop-filter: blur(10px);
-  }
-
-  .glass-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, rgba(139, 92, 246, 0.6), rgba(59, 130, 246, 0.6));
-  }
-`}
-      </style>
+      <style>{`.custom-scrollbar::-webkit-scrollbar{width:4px}.custom-scrollbar::-webkit-scrollbar-track{background:transparent}.custom-scrollbar::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px}.custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#cbd5e1}`}</style>
     </div>
   );
+
 };
 
 export default ChatHistory;

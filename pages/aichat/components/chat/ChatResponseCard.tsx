@@ -523,6 +523,9 @@ export default function ChatResponseCard({ data }: Props) {
         <MarkdownBlock content={data.content} suppressTable={hasData && isNoneViz} />
       )}
 
+      {/* Native table for visualization_type "none" — rendered once, not duplicated */}
+      {hasData && isNoneViz && <ResultsTable rows={dataset} />}
+
 
       {/* Chart visualization (fullscreen only) */}
       {!isNoneViz && (hasData || visualization) && isFullScreen && (

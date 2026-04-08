@@ -7,80 +7,103 @@ export default function MarkdownBlock({ content, suppressTable }: { content?: st
   if (!content) return null;
 
   const isFullScreen = useAppSelector((state: RootState) => state.chat.isFullScreen);
-  const tableMaxW = isFullScreen ? "w-full" : "max-w-80";
+  const tableMaxW = isFullScreen ? "w-full" : "max-w-[320px]";
 
   return (
-    <div className={`w-full min-w-0 overflow-x-auto break-words pt-1 ${tableMaxW}`}>
+    <div className="w-full min-w-0 overflow-x-auto">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
+          // ── Tables ──────────────────────────────────────────────────────
           table: suppressTable
             ? () => null
             : ({ children }) => (
-                <div className={`overflow-x-auto my-3 rounded-lg border border-gray-200 shadow-sm ${tableMaxW}`}>
-                  <table className="text-sm border-collapse" style={{ minWidth: "max-content" }}>
-                    {children}
-                  </table>
+                <div className={`overflow-x-auto my-6 border border-slate-200 shadow-lg shadow-slate-200/40 bg-white rounded-2xl ${tableMaxW}`}>
+                  <table className="w-full text-left border-collapse">{children}</table>
                 </div>
               ),
           thead: ({ children }) => (
-            <thead className="bg-gray-50 text-gray-700">{children}</thead>
+            <thead className="bg-slate-50 border-b border-slate-200">{children}</thead>
           ),
           tbody: ({ children }) => (
-            <tbody className="divide-y divide-gray-100">{children}</tbody>
+            <tbody>{children}</tbody>
           ),
           tr: ({ children }) => (
-            <tr className="hover:bg-gray-50 transition-colors">{children}</tr>
+            <tr className="border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors">{children}</tr>
           ),
           th: ({ children }) => (
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide border-b border-gray-200 whitespace-nowrap">
+            <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">{children}</td>
+            <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{children}</td>
           ),
+
+          // ── Headings ────────────────────────────────────────────────────
           h1: ({ children }) => (
-            <h1 className="text-base font-bold mt-3 mb-1 text-gray-900">{children}</h1>
+            <h1 className="text-xl font-bold text-slate-900 mb-4 mt-6 first:mt-0 break-words">{children}</h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-sm font-bold mt-3 mb-1 text-gray-900">{children}</h2>
+            <h2 className="text-lg font-bold text-slate-800 mb-3 mt-5 first:mt-0 break-words">{children}</h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-sm font-semibold mt-2 mb-1 text-gray-800">{children}</h3>
+            <h3 className="text-base font-bold text-slate-800 mb-2 mt-4 first:mt-0 break-words">{children}</h3>
           ),
+
+          // ── Paragraph ───────────────────────────────────────────────────
           p: ({ children }) => (
-            <p className="text-sm leading-relaxed my-1.5 text-gray-800 break-words">{children}</p>
+            <p className="mb-4 last:mb-0 leading-relaxed text-slate-700 break-words text-sm">{children}</p>
           ),
-          li: ({ children }) => (
-            <li className="text-sm mb-1 text-gray-800 leading-relaxed">{children}</li>
-          ),
+
+          // ── Lists ───────────────────────────────────────────────────────
           ul: ({ children }) => (
-            <ul className="list-disc list-outside pl-5 my-1.5 space-y-0.5">{children}</ul>
+            <ul className="list-disc list-outside pl-5 mb-4 space-y-1.5">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal list-outside pl-5 my-1.5 space-y-0.5">{children}</ol>
+            <ol className="list-decimal list-outside pl-5 mb-4 space-y-1.5">{children}</ol>
           ),
-          a: ({ href, children }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer"
-              className="text-blue-600 underline hover:text-blue-800">
-              {children}
-            </a>
+          li: ({ children }) => (
+            <li className="text-sm text-slate-700 leading-relaxed">{children}</li>
           ),
+
+          // ── Inline code & code blocks ────────────────────────────────────
           code: ({ inline, children, ...props }: any) =>
             inline ? (
-              <code className="bg-gray-100 text-pink-600 text-xs px-1.5 py-0.5 rounded font-mono">{children}</code>
+              <code className="px-1.5 py-0.5 bg-slate-100 text-blue-600 rounded-md font-mono text-xs font-bold">
+                {children}
+              </code>
             ) : (
-              <pre className="bg-gray-900 text-gray-100 text-xs rounded-lg p-3 my-2 overflow-x-auto font-mono leading-relaxed">
+              <pre className="bg-slate-900 text-slate-100 text-xs rounded-xl p-4 my-3 overflow-x-auto font-mono leading-relaxed">
                 <code {...props}>{children}</code>
               </pre>
             ),
+
+          // ── Blockquote ───────────────────────────────────────────────────
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-blue-300 pl-3 my-2 text-gray-600 italic text-sm">{children}</blockquote>
+            <blockquote className="border-l-4 border-blue-500 bg-blue-50/50 px-4 py-3 rounded-r-2xl italic text-slate-600 my-4 break-words">
+              {children}
+            </blockquote>
           ),
+
+          // ── Links ────────────────────────────────────────────────────────
+          a: ({ href, children }) => (
+            <a href={href} target="_blank" rel="noopener noreferrer"
+              className="text-blue-600 underline underline-offset-2 hover:text-blue-800 transition-colors">
+              {children}
+            </a>
+          ),
+
+          // ── Emphasis ─────────────────────────────────────────────────────
           strong: ({ children }) => (
-            <strong className="font-semibold text-gray-900">{children}</strong>
+            <strong className="font-bold text-slate-900">{children}</strong>
           ),
+          em: ({ children }) => (
+            <em className="italic text-slate-600">{children}</em>
+          ),
+
+          // ── HR ───────────────────────────────────────────────────────────
+          hr: () => <hr className="my-4 border-slate-200" />,
         }}
       >
         {content}

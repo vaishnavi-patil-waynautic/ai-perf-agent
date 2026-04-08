@@ -28,6 +28,11 @@ export interface AppConfiguration {
   script_file_configured : boolean;
   script_file_name : string | null;
 
+  github_configured: boolean;
+  blazemeter_configured: boolean;
+  ado_configured: boolean;
+  datadog_configured: boolean;
+
 
   blazemeter_url: string | null;
   gha_repo_url: string | null;

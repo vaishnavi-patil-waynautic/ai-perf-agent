@@ -107,10 +107,10 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
               // src="../static/exgenix.png"
               src="/ai-perf-agent/img/exgenix.png"
               alt="Exgenix"
-              className="h-6 w-auto"
+              className="h-8 w-auto"
             />
 
-            <span className="text-xl font-bold text-gray-800 tracking-tight">
+            <span className="text-l font-semibold text-gray-800 tracking-tight">
 
               Waynautic AI Perf Agent
             </span>

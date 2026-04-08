@@ -371,6 +371,7 @@ import { setSelectedModel } from '../../store/slices/chat.slice';
 import { RootState } from '@/store/store';
 import { Rocket, Brain, Sparkles } from "lucide-react";
 import { abortStream } from '../../store/slices/chat.thunk';
+import { showSnackbar } from '@/store/snackbarStore';
 
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -393,9 +394,19 @@ export const getModelIcon = (provider: string) => {
   }
 };
 
-const ChatInput: React.FC = () => {
+interface ChatInputProps {
+  inputValue?: string;
+  onInputChange?: (val: string) => void;
+}
+
+const ChatInput: React.FC<ChatInputProps> = ({ inputValue, onInputChange }) => {
   const dispatch = useAppDispatch();
-  const [input, setInput] = useState('');
+  const [localInput, setLocalInput] = useState('');
+  const input = inputValue !== undefined ? inputValue : localInput;
+  const setInput = (val: string) => {
+    if (onInputChange) onInputChange(val);
+    else setLocalInput(val);
+  };
   const [isFocused, setIsFocused] = useState(false);
   const [streamStatus, setStreamStatus] = useState('');
   const selectedModel = useAppSelector((state) => state.chat.selectedModel);
@@ -403,8 +414,18 @@ const ChatInput: React.FC = () => {
   const isLoading = useAppSelector((state) => state.chat.isLoading);
   const isFullScreen = useAppSelector((state: RootState) => state.chat.isFullScreen);
   const chatLoading = useAppSelector((state: RootState) => state.chat.chatLoading);
-  const isStreamingActive = useAppSelector((s) => s.chat.isStreamingActive);
+  const isStreamingActive = useAppSelector((s) => s.chat.activeStreamId !== null);
   const activeStreamId = useAppSelector((s) => s.chat.activeStreamId);
+  const currentChatId = useAppSelector((s) => s.chat.currentChatId);
+  const chatHistories = useAppSelector((s) => s.chat.chatHistories);
+
+  // Only freeze input if THIS chat is currently streaming
+  const isCurrentChatStreaming = useAppSelector((s) => {
+    const cid = s.chat.currentChatId;
+    const key = (!cid || cid === '0') ? 'new' : cid;
+    return s.chat.chatMap[key]?.isStreaming ?? false;
+  });
+  const { selectedProject } = useAppSelector((state: RootState) => state.project);
 
   console.log("ChatPanel chat is loading : ", chatLoading, " ");
 
@@ -458,10 +479,10 @@ const ChatInput: React.FC = () => {
 }, [input]);
 
   useEffect(() => {
-    if (!models.length) {
-      dispatch(fetchModels());
+    if (selectedProject?.id) {
+      dispatch(fetchModels(selectedProject?.id));
     }
-  }, [dispatch]);
+  }, [dispatch, selectedProject?.id]);
 
   useEffect(() => {
     if (models.length && !models.find(m => String(m.id) === String(selectedModel))) {
@@ -476,21 +497,21 @@ const ChatInput: React.FC = () => {
   };
 
   const handleSend = () => {
-
-    console.log("Sending chat request-----------------------------------------------");
-
     if (input.trim()) {
-      // Use streaming version
+
+      console.log("Sending message 1---------------------------------");
       dispatch(sendMessageWithStreaming({
         text: input.trim(),
         modelId: selectedModel,
-        onStatus: (msg) => setStreamStatus(msg)
-      })).then(() => {
-        // Clear status when done
+        onStatus: (msg) => setStreamStatus(msg),
+      })).unwrap().then(() => {
         setStreamStatus('');
-      }).catch(() => {
-        // Clear status on error too
+      }).catch((err: any) => {
         setStreamStatus('');
+        dispatch(showSnackbar({
+          message: err?.message || err?.error || 'Failed to send message',
+          type: 'error',
+        }));
       });
       setInput('');
     }
@@ -508,19 +529,33 @@ const ChatInput: React.FC = () => {
     // <div className={`relative ${isFullScreen ? 'px-[280px] py-4' : 'p-4'}`}>
 
     <div
-      className={`relative py-4 w-full ${isFullScreen
-        ? 'px-4 flex justify-center'
-        : 'px-4'
-        }`}
+      className={`relative py-4 w-full ${isFullScreen ? 'px-8' : 'px-4'}`}
     >
+  <div className={`relative group ${isFullScreen ? 'w-full max-w-4xl mx-auto' : 'w-full'}`}>
+    {/* Animated Ring Background */}
+    <div className="absolute -inset-[2px] rounded-[30px] overflow-hidden opacity-100 transition-opacity duration-500">
+      <div
+        style={{
+          width: '200%',
+          aspectRatio: '1/1',
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'conic-gradient(from 0deg, transparent 0deg, transparent 120deg, #93c5fd 150deg, #2563eb 180deg, #60a5fa 210deg, transparent 240deg, transparent 360deg)',
+          animation: 'spinRing 5s linear infinite',
+        }}
+      />
+      <style>{`@keyframes spinRing { to { transform: translate(-50%, -50%) rotate(360deg); } }`}</style>
+    </div>
+
       {/* <div className={isFullScreen ? "w-full max-w-5xl" : "w-full"}> */}
-      <div className={isFullScreen ? "w-full max-w-3xl mx-auto" : "w-full"}>
+      <div className="w-full">
         {/* Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-t from-purple-50/50 via-blue-50/30 to-transparent pointer-events-none"></div>
 
         {/* Glass Container */}
-        <div className="relative backdrop-blur-md bg-white/60 rounded-2xl border border-white/60 shadow-xl p-4 transition-all duration-300">
-          {/* <div className="flex items-end gap-3"> */}
+        <div className="relative bg-white rounded-[28px] p-4 border border-slate-100 focus-within:border-transparent transition-all shadow-sm group-focus-within:shadow-lg"> {/* <div className="flex items-end gap-3"> */}
           <div className="flex items-end gap-3 w-full min-w-0">
             {/* Model Selector with Glass Effect */}
             {/* <FormControl size="small">
@@ -584,29 +619,49 @@ const ChatInput: React.FC = () => {
                   value={selectedModel}
                   onChange={(e) => dispatch(setSelectedModel(e.target.value))}
                   variant="outlined"
+                  // sx={{
+                  //   width: 48,
+                  //   height: 48,
+                  //   background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))',
+                  //   backdropFilter: 'blur(10px)',
+                  //   border: '1.5px solid rgba(139, 92, 246, 0.3)',
+                  //   borderRadius: '12px',
+                  //   transition: 'all 0.3s ease',
+                  //   "& .MuiSelect-select": {
+                  //     display: "flex",
+                  //     alignItems: "center",
+                  //     justifyContent: "center",
+                  //     padding: "12px !important",
+                  //   },
+                  //   "& .MuiOutlinedInput-notchedOutline": {
+                  //     border: 'none',
+                  //   },
+                  //   '&:hover': {
+                  //     background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))',
+                  //     transform: 'scale(1.05)',
+                  //     boxShadow: '0 8px 24px rgba(139, 92, 246, 0.2)',
+                  //   },
+                  // }}
                   sx={{
-                    width: 48,
-                    height: 48,
-                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))',
-                    backdropFilter: 'blur(10px)',
-                    border: '1.5px solid rgba(139, 92, 246, 0.3)',
-                    borderRadius: '12px',
-                    transition: 'all 0.3s ease',
-                    "& .MuiSelect-select": {
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "12px !important",
-                    },
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      border: 'none',
-                    },
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))',
-                      transform: 'scale(1.05)',
-                      boxShadow: '0 8px 24px rgba(139, 92, 246, 0.2)',
-                    },
-                  }}
+  width: 56,
+  height: 56,
+  borderRadius: '20px',
+  background: '#eff6ff',
+  border: '1px solid #dbeafe',
+  transition: 'all 0.2s ease',
+  "& .MuiSelect-select": {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 !important",
+  },
+  "& .MuiOutlinedInput-notchedOutline": {
+    border: 'none',
+  },
+  '&:hover': {
+    background: '#dbeafe',
+  },
+}}
                   IconComponent={() => null}
                   // renderValue={(selected) => {
                   //   // const m = models.find((x) => x.id === selected);
@@ -735,39 +790,69 @@ const ChatInput: React.FC = () => {
                 onBlur={() => setIsFocused(false)}
                 variant="outlined"
                 size="small"
+                // sx={{
+                //   "& .MuiOutlinedInput-root": {
+                //     background: 'rgba(255, 255, 255, 0.5)',
+                //     backdropFilter: 'blur(10px)',
+                //     borderRadius: '14px',
+                //     transition: 'all 0.3s ease',
+                //     border: matchedFAQ
+                //       ? '2px solid rgba(16, 185, 129, 0.5)'
+                //       : isFocused
+                //         ? '2px solid rgba(139, 92, 246, 0.4)'
+                //         : '1.5px solid rgba(255, 255, 255, 0.6)',
+                //     "& fieldset": {
+                //       border: 'none',
+                //     },
+                //     '&:hover': {
+                //       background: 'rgba(255, 255, 255, 0.7)',
+                //       boxShadow: '0 4px 16px rgba(139, 92, 246, 0.1)',
+                //     },
+                //     // '&.Mui-focused': {
+                //     //   background: 'rgba(255, 255, 255, 0.8)',
+                //     //   boxShadow: '0 8px 32px rgba(139, 92, 246, 0.2)',
+                //     // },
+                //   },
+                //   // "& .MuiInputBase-input": {
+                //   //   padding: '12px 16px',
+                //   //   fontSize: '14px',
+                //   //   color: '#1f2937',
+                //   //   '&::placeholder': {
+                //   //     color: '#9ca3af',
+                //   //     opacity: 1,
+                //   //   },
+                //   // },
+                // }}
                 sx={{
-                  "& .MuiOutlinedInput-root": {
-                    background: 'rgba(255, 255, 255, 0.5)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '14px',
-                    transition: 'all 0.3s ease',
-                    border: matchedFAQ
-                      ? '2px solid rgba(16, 185, 129, 0.5)'
-                      : isFocused
-                        ? '2px solid rgba(139, 92, 246, 0.4)'
-                        : '1.5px solid rgba(255, 255, 255, 0.6)',
-                    "& fieldset": {
-                      border: 'none',
-                    },
-                    '&:hover': {
-                      background: 'rgba(255, 255, 255, 0.7)',
-                      boxShadow: '0 4px 16px rgba(139, 92, 246, 0.1)',
-                    },
-                    // '&.Mui-focused': {
-                    //   background: 'rgba(255, 255, 255, 0.8)',
-                    //   boxShadow: '0 8px 32px rgba(139, 92, 246, 0.2)',
-                    // },
-                  },
-                  // "& .MuiInputBase-input": {
-                  //   padding: '12px 16px',
-                  //   fontSize: '14px',
-                  //   color: '#1f2937',
-                  //   '&::placeholder': {
-                  //     color: '#9ca3af',
-                  //     opacity: 1,
-                  //   },
-                  // },
-                }}
+  "& .MuiOutlinedInput-root": {
+    background: 'transparent',
+    borderRadius: '0px',
+    border: 'none',
+    boxShadow: 'none',
+    "& fieldset": {
+      border: 'none',
+    },
+    '&:hover': {
+      background: 'transparent',
+    },
+  },
+  "& .MuiInputBase-input": {
+  padding: '12px 0',
+  fontSize: '16px',
+  color: '#334155',
+  lineHeight: '1.5',
+}
+  // "& .MuiInputBase-input": {
+  //   padding: '16px 0',
+  //   fontSize: '16px',
+  //   color: '#334155',
+  //   minHeight: '64px',
+  //   '&::placeholder': {
+  //     color: '#94a3b8',
+  //     opacity: 1,
+  //   },
+  // },
+}}
               />
 
               {/* Animated Glow Effect on Focus */}
@@ -783,34 +868,58 @@ const ChatInput: React.FC = () => {
             <span>
 
               <Tooltip
-                title={isStreamingActive ? "Stop generating" : "Send message"}
+                title={isCurrentChatStreaming ? "Stop generating" : "Send message"}
                 placement="top"
               >
                 <span>
                   <IconButton
-                    onClick={isStreamingActive ? handleAbort : handleSend}
-                    disabled={!isStreamingActive && (!input.trim() || isLoading)}
+                    onClick={isCurrentChatStreaming ? handleAbort : handleSend}
+                    disabled={!isCurrentChatStreaming && (!input.trim() || isLoading)}
+                    // sx={{
+                    //   width: 48,
+                    //   height: 48,
+                    //   borderRadius: '12px',
+                    //   background: isStreamingActive
+                    //     ? 'linear-gradient(135deg, #fecaca, #f87171)' // red
+                    //     : (!input.trim() || isLoading
+                    //       ? 'rgba(209, 213, 219, 0.5)'
+                    //       : 'linear-gradient(135deg, #8b5cf6, #3b82f6)'),
+                    //   transition: 'all 0.3s ease',
+                    //   '&:hover': {
+                    //     background: isStreamingActive
+                    //       ? 'linear-gradient(135deg, #f87171, #ef4444)'
+                    //       : 'linear-gradient(135deg, #7c3aed, #2563eb)',
+                    //     boxShadow: isStreamingActive
+                    //       ? '0 8px 24px rgba(239,68,68,0.4)'
+                    //       : '0 8px 24px rgba(139,92,246,0.4)',
+                    //   },
+                    // }}
                     sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: '12px',
-                      background: isStreamingActive
-                        ? 'linear-gradient(135deg, #fecaca, #f87171)' // red
-                        : (!input.trim() || isLoading
-                          ? 'rgba(209, 213, 219, 0.5)'
-                          : 'linear-gradient(135deg, #8b5cf6, #3b82f6)'),
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        background: isStreamingActive
-                          ? 'linear-gradient(135deg, #f87171, #ef4444)'
-                          : 'linear-gradient(135deg, #7c3aed, #2563eb)',
-                        boxShadow: isStreamingActive
-                          ? '0 8px 24px rgba(239,68,68,0.4)'
-                          : '0 8px 24px rgba(139,92,246,0.4)',
-                      },
-                    }}
+  width: 56,
+  height: 56,
+  borderRadius: '20px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'all 0.2s ease',
+  background: (!input.trim() || isLoading) && !isCurrentChatStreaming
+    ? '#f1f5f9'
+    : isCurrentChatStreaming
+      ? '#fecaca'
+      : '#2563eb',
+  color: (!input.trim() || isLoading) && !isCurrentChatStreaming
+    ? '#cbd5f5'
+    : 'white',
+  '&:hover': {
+    background: isCurrentChatStreaming
+      ? '#ef4444'
+      : (!input.trim() || isLoading)
+        ? '#f1f5f9'
+        : '#1d4ed8',
+  },
+}}
                   >
-                    {isStreamingActive ? (
+                    {isCurrentChatStreaming ? (
                       // STOP ICON
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
                         <rect x="6" y="6" width="12" height="12" rx="2" />
@@ -828,12 +937,12 @@ const ChatInput: React.FC = () => {
 
               {/* <IconButton
                   onClick={handleSend}
-                  disabled={!input.trim() || isLoading || isStreamingActive}
+                  disabled={!input.trim() || isLoading || isCurrentChatStreaming}
                   className="group relative overflow-hidden"
                   sx={{
                     width: 48,
                     height: 48,
-                    background: !input.trim() || isLoading || isStreamingActive
+                    background: !input.trim() || isLoading || isCurrentChatStreaming
                       ? 'rgba(209, 213, 219, 0.5)'
                       : 'linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(59, 130, 246, 0.9))',
                     backdropFilter: 'blur(10px)',
@@ -857,7 +966,7 @@ const ChatInput: React.FC = () => {
                   <SendIcon
                     className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                     sx={{
-                      color: !input.trim() || isLoading || isStreamingActive ? '#9ca3af' : 'white',
+                      color: !input.trim() || isLoading || isCurrentChatStreaming ? '#9ca3af' : 'white',
                       fontSize: 20,
                     }}
                   />
@@ -916,7 +1025,7 @@ const ChatInput: React.FC = () => {
           )}
 
           {/* Helper Text */}
-          <div className="text-xs text-gray-500 mt-3 text-center font-medium">
+          {/* <div className="text-xs text-gray-500 mt-3 text-center font-medium">
             <span className="inline-flex items-center gap-2">
               <kbd className="px-2 py-0.5 bg-white/60 border border-white/60 rounded shadow-sm font-mono">
                 Enter
@@ -927,7 +1036,7 @@ const ChatInput: React.FC = () => {
               </kbd>
               for new line
             </span>
-          </div>
+          </div> */}
         </div>
 
         {/* Animation Keyframes */}
@@ -944,6 +1053,8 @@ const ChatInput: React.FC = () => {
         }
       `}</style>
       </div>
+    </div>
+
     </div>
   );
 };

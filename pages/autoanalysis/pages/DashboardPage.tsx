@@ -280,6 +280,9 @@ export const DashboardPage: React.FC = () => {
 
     fetchApplications();
 
+    return () => {
+      stopAppsPolling();
+    };
   }, [dispatch, selectedProject]);
 
   //   useEffect(() => {

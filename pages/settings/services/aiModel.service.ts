@@ -13,8 +13,8 @@ const getAuthHeaders = () => {
 };
 
 export const aiModelService = {
-  getAll: async () => {
-    const response = await fetch(`${API_BASE}/`, {
+  getAll: async (projectId: Number) => {
+    const response = await fetch(`${API_BASE}?project_id=${projectId}`, {
       method: "GET",
       headers: getAuthHeaders(),
     });
@@ -22,28 +22,38 @@ export const aiModelService = {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
+      console.log("Fetching models are not ok!!!", response)
       throw new Error(data?.detail || "Failed to fetch models");
     }
 
     return data;
   },
 
-  create: async (payload: any) => {
+  create: async (payload: any, projectId: Number) => {
 
-    console.log(payload);
+    const updatedPayload = {
+      ...payload,
+      project_id: Number(projectId),
+    };
+
     const response = await fetch(`${API_BASE}/`, {
       method: "POST",
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        project_id: projectId,
+      })
     });
 
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      throw new Error(data?.detail || data?.error || "Failed to create model");
+
+      console.log("__________Error found__________ : ", data?.data?.error);
+      throw new Error(data?.detail || data?.error || data?.data?.error || "Failed to create model");
     }
 
     console.log("created new model : ", data)

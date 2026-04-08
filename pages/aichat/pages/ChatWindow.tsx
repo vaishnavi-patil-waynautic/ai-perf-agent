@@ -15,7 +15,11 @@ interface ChatWindowProps {
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const messages = useAppSelector((state) => state.chat.messages);
+  const messages = useAppSelector((state) => {
+    const cid = state.chat.currentChatId;
+    const key = (!cid || cid === '0') ? 'new' : cid;
+    return state.chat.chatMap[key]?.messages ?? [];
+  });
   const dispatch = useDispatch<AppDispatch>();
 
   // Auto-scroll to bottom

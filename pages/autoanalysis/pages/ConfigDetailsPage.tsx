@@ -375,15 +375,16 @@ const IntegrationTile = ({
                         </p>
 
                         <span
-                            className={`
-                                px-2 py-1 rounded-full text-[11px] font-medium w-fit
-                                ${active
-                                    ? "bg-white/20 text-white"
-                                    : "bg-yellow-100 text-yellow-800"}
-                            `}
-                        >
-                            {active ? "Configured" : "Not Configured"}
-                        </span>
+  className={`
+    inline-flex items-center justify-center
+    px-2 py-1 rounded-full text-[11px] font-medium w-fit
+    ${active
+      ? "bg-white/20 text-white"
+      : "bg-yellow-100 text-yellow-800"}
+  `}
+>
+  {active ? "Configured" : "Not Configured"}
+</span>
                     </div>
 
                     {active ? (
@@ -902,6 +903,7 @@ export const ConfigDetailsPage: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch<any>();
+    const prevProjectId = useRef<number | null>(null);
 
     const { currentApp } = useSelector((state: RootState) => state.autoAnalysis);
     const { selectedProject } = useSelector((state: RootState) => state.project);
@@ -928,14 +930,23 @@ export const ConfigDetailsPage: React.FC = () => {
 
 
 
-    useEffect(() => {
-        if (!selectedProject?.id || !id) return;
 
-        dispatch(fetchConfig({
-            projectId: selectedProject.id,
-            appId: Number(id)
-        }));
-    }, [id, selectedProject?.id]);
+useEffect(() => {
+    if (!selectedProject?.id || !id) return;
+
+    // Navigate if project changes
+    if (prevProjectId.current && prevProjectId.current !== selectedProject.id) {
+        navigate("/autoanalysis");
+    }
+
+    prevProjectId.current = selectedProject.id;
+
+    dispatch(fetchConfig({
+        projectId: selectedProject.id,
+        appId: Number(id)
+    }));
+
+}, [id, selectedProject?.id]);
 
 
     useEffect(() => {
@@ -1306,7 +1317,7 @@ export const ConfigDetailsPage: React.FC = () => {
                 {/* <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 5 }}>
                     Configuration: {currentApp.config.application_name}
                 </Typography> */}
-{/* 
+                {/* 
                 <Typography
   variant="h5"
   sx={{
@@ -1321,12 +1332,12 @@ export const ConfigDetailsPage: React.FC = () => {
 
 
 
-<Typography variant="h5" sx={{ fontWeight: 700, mb: 4 }}>
-  Configuration:{" "}
-  <span style={{ color: "#0a5de2ff" }}>
-    {currentApp.config.application_name}
-  </span>
-</Typography>
+                <Typography variant="h5" sx={{ fontWeight: 700, mb: 4 }}>
+                    Configuration:{" "}
+                    <span style={{ color: "#0a5de2ff" }}>
+                        {currentApp.config.application_name}
+                    </span>
+                </Typography>
 
                 {/* ================= Integrations ================= */}
                 <div className='border-b pb-6 text-gray-800'>
@@ -1454,39 +1465,39 @@ export const ConfigDetailsPage: React.FC = () => {
                             /> */}
 
                             <Tooltip title={currentApp.config.script_file_name || "No script available"}>
-    <span>
-        <IntegrationTile
-            title="Script"
-            active={
-                currentApp.config.script_id !== null ||
-                currentApp.config.script_file_configured === true
-            }
-            onClick={handleDownloadScript}
-        />
-    </span>
-</Tooltip>
+                                <span>
+                                    <IntegrationTile
+                                        title="Script"
+                                        active={
+                                            currentApp.config.script_id !== null ||
+                                            currentApp.config.script_file_configured === true
+                                        }
+                                        onClick={handleDownloadScript}
+                                    />
+                                </span>
+                            </Tooltip>
 
                             <IntegrationTile
                                 title="GitHub"
-                                active={currentApp.config.gha_repo_url !== null}
+                                active={currentApp.config.github_configured == true}
                                 link={currentApp.config.gha_repo_url}
                             />
 
                             <IntegrationTile
                                 title="BlazeMeter"
-                                active={currentApp.config.blazemeter_url !== null}
+                                active={currentApp.config.blazemeter_configured == true}
                                 link={currentApp.config.blazemeter_url}
                             />
 
                             <IntegrationTile
                                 title="Azure DevOps"
-                                active={currentApp.config.ado_url !== null}
+                                active={currentApp.config.ado_configured == true}
                                 link={currentApp.config.ado_url}
                             />
 
                             <IntegrationTile
                                 title="Datadog"
-                                active={currentApp.config.datadog_url !== null}
+                                active={currentApp.config.datadog_configured == true}
                                 link={currentApp.config.datadog_url}
                             />
 
@@ -1516,7 +1527,7 @@ export const ConfigDetailsPage: React.FC = () => {
                                                     `/autoanalysis/projects/${currentApp.config.project_id}/apps/${currentApp.config.application_id}/result/${currentApp.builds[0].build_number}`,
                                                     {
                                                         state: {
-                                                            projectName: selectedProject.name,
+                                                            projectName: selectedProject?.name,
                                                             appName: currentApp.config.application_name
                                                         }
                                                     }
@@ -1594,7 +1605,7 @@ export const ConfigDetailsPage: React.FC = () => {
                                                                 `/autoanalysis/projects/${currentApp.config.project_id}/apps/${currentApp.config.application_id}/result/${build.build_number}`,
                                                                 {
                                                                     state: {
-                                                                        projectName: selectedProject.name,
+                                                                        projectName: selectedProject?.name,
                                                                         appName: currentApp.config.application_name
                                                                     }
                                                                 }
@@ -1651,13 +1662,10 @@ export const ConfigDetailsPage: React.FC = () => {
 
                             <Button
                                 variant="contained"
-                                disabled={!currentApp.config.gha_workflow}
+                                disabled={!currentApp.config.gha_workflow || !currentApp.config.github_configured}
                                 onClick={() => {
                                     if (!currentApp.config.gha_workflow) return;
 
-                                    // Use the workflow URL directly from config
-                                    // Backend already stores the full URL like:
-                                    // https://github.com/owner/repo/actions/workflows/workflow-name.yml
                                     window.open(currentApp.config.gha_workflow, "_blank", "noopener,noreferrer");
                                 }}
                             >

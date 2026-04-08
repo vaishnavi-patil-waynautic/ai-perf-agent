@@ -78,7 +78,7 @@ const Dashboard: React.FC = () => {
       <div className="mb-8 border-b border-gray-200 pb-4">
         {/* <h1 className="text-2xl font-bold text-gray-800">{selectedApp.name}</h1> */}
         {/* <p className="text-gray-500">Project: {selectedProject.name}</p> */}
-        <h1 className="text-2xl font-bold text-gray-800">{selectedProject.name}</h1>
+        <h1 className="text-xl font-semibold text-gray-800">{selectedProject.name}</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -96,7 +96,7 @@ const Dashboard: React.FC = () => {
                 {tool.icon}
               </div>
             </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-2">{tool.title}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">{tool.title}</h3>
             <p className="text-sm text-gray-600">{tool.desc}</p>
           </div>
         ))}

@@ -1792,7 +1792,7 @@ const AutoScriptPage: React.FC = () => {
   // ============================================================================
   if (showFullLayout) {
     return (
-      <div className="max-w-6xl m-auto p-8">
+      <div className="max-w-6xl m-auto px-8 py-6">
         <UploadSection
           file1={file1}
           file2={file2}
@@ -1850,7 +1850,7 @@ const AutoScriptPage: React.FC = () => {
   return (
     // <div className="max-w-7xl m-auto p-8">
     // <div className="max-w-7xl m-auto p-3 sm:p-4 md:p-6 lg:p-8">
-    <div className="max-w-7xl m-auto p-8 px-8">
+    <div className="max-w-7xl m-auto py-6 px-8">
 
 
       <div className="grid grid-cols-12 gap-4 items-stretch min-h-[420px]">
@@ -1890,6 +1890,25 @@ const AutoScriptPage: React.FC = () => {
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) {
+            console.log("Not har File : ", !file.name.toLowerCase().endsWith(".har"))
+
+            if (!file.name.toLowerCase().endsWith(".har")) {
+
+              console.log("Not har File 2 : ", !file.name.toLowerCase().endsWith(".har"))
+
+              dispatch(
+                showSnackbar({
+                  message: 'Upload failed ! Please select valid HAR file.',
+                  type: 'error',
+                })
+              );
+
+              return;
+            }
+
+            console.log("Not har File 3 : ", !file.name.toLowerCase().endsWith(".har"))
+
+
             setFile1(file);
           }
         }}
@@ -1903,6 +1922,18 @@ const AutoScriptPage: React.FC = () => {
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) {
+
+            if (!file.name.toLowerCase().endsWith(".har")) {
+              dispatch(
+                showSnackbar({
+                  message: 'Upload failed ! Please select valid HAR file.',
+                  type: 'error',
+                })
+              );
+
+              return;
+            }
+
             setFile2(file);
           }
         }}

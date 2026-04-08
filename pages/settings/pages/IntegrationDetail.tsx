@@ -921,8 +921,6 @@ export default function IntegrationDetail() {
   const dispatch = useDispatch<AppDispatch>();
   const { selectedProject } = useSelector((state: RootState) => state.project);
   const integrations = useSelector((state: RootState) => state.integration.list);
-
-  const [openToken, setOpenToken] = useState<number | null>(null);
   const [integrationType, setIntegrationType] = useState<string>("github");
   const [deleteTarget, setDeleteTarget] = useState<Integration | null>(null);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);

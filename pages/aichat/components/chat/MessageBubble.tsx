@@ -583,14 +583,13 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { User } from 'lucide-react';
+import { User, Bot } from 'lucide-react';
 import { ChatMessage } from '../../types/chat.types';
 import { useAppDispatch } from '../../store/hooks';
 import ChatResponseCard from './ChatResponseCard';
 import { sendFeedback } from '../../store/slices/chat.thunk';
 import MarkdownBlock from './ChatResponse/MarkdownBlock';
 import StreamingBubble from './StreamingBubble';
-import { ModelAvatar } from '../Modelconfig';
 
 interface Props { message: ChatMessage; }
 
@@ -676,13 +675,11 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
   return (
     <div className={`flex gap-3 mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
 
-      {/* ── Bot avatar — branded per model ───────────────────────────── */}
+      {/* Bot avatar — consistent across all models */}
       {!isUser && (
-        <ModelAvatar
-          modelId={message.modelName}   // set by addStreamingBotMessage & finalizeStreamingMessage
-          size={36}
-          className="mt-1"
-        />
+        <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center shadow-md bg-blue-600 text-white shadow-blue-500/20`}>
+          <Bot size={18} />
+        </div>
       )}
 
       {/* ── Bubble ──────────────────────────────────────────────────── */}
@@ -737,3 +734,152 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
 };
 
 export default React.memo(MessageBubble);
+
+
+
+// import React, { useState } from 'react';
+// import { IconButton, Tooltip, Snackbar } from '@mui/material';
+// import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
+// import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+// import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
+// import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+// import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+// import { User, Bot } from 'lucide-react';
+// import { ChatMessage } from '../../types/chat.types';
+// import { useAppDispatch } from '../../store/hooks';
+// import ChatResponseCard from './ChatResponseCard';
+// import { sendFeedback } from '../../store/slices/chat.thunk';
+// import MarkdownBlock from './ChatResponse/MarkdownBlock';
+// import StreamingBubble from './StreamingBubble';
+
+// interface Props { message: ChatMessage; }
+
+// const MessageBubble: React.FC<Props> = ({ message }) => {
+//   const dispatch = useAppDispatch();
+//   const [copied, setCopied] = useState(false);
+//   const isUser = message.sender === 'user';
+
+//   const handleCopy = async () => {
+//     try {
+//       await navigator.clipboard.writeText(message.content);
+//     } catch {
+//       const ta = document.createElement('textarea');
+//       ta.value = message.content;
+//       ta.style.position = 'fixed';
+//       document.body.appendChild(ta);
+//       ta.focus();
+//       ta.select();
+//       try { document.execCommand('copy'); } catch {}
+//       document.body.removeChild(ta);
+//     }
+//     setCopied(true);
+//   };
+
+//   const handleReaction = (reaction: 'like' | 'dislike') => {
+//     dispatch(sendFeedback({ messageId: message.id, reaction }));
+//   };
+
+//   const ActionBar = () => (
+//     <div className="flex items-center gap-1.5 mt-3 px-1">
+//       <Tooltip title="Like" placement="top">
+//         <IconButton size="small" onClick={() => handleReaction('like')} sx={{
+//           width: 28, height: 28, borderRadius: '8px',
+//           background: message.liked ? 'rgba(59,130,246,.12)' : 'transparent',
+//           border: message.liked ? '1px solid rgba(59,130,246,.3)' : '1px solid transparent',
+//           '&:hover': { background: 'rgba(59,130,246,.08)', border: '1px solid rgba(59,130,246,.2)' },
+//         }}>
+//           {message.liked
+//             ? <ThumbUpIcon sx={{ fontSize: 14 }} className="text-blue-600" />
+//             : <ThumbUpOutlinedIcon sx={{ fontSize: 14 }} className="text-slate-400" />}
+//         </IconButton>
+//       </Tooltip>
+//       <Tooltip title="Dislike" placement="top">
+//         <IconButton size="small" onClick={() => handleReaction('dislike')} sx={{
+//           width: 28, height: 28, borderRadius: '8px',
+//           background: message.disliked ? 'rgba(239,68,68,.12)' : 'transparent',
+//           border: message.disliked ? '1px solid rgba(239,68,68,.3)' : '1px solid transparent',
+//           '&:hover': { background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)' },
+//         }}>
+//           {message.disliked
+//             ? <ThumbDownIcon sx={{ fontSize: 14 }} className="text-red-500" />
+//             : <ThumbDownOutlinedIcon sx={{ fontSize: 14 }} className="text-slate-400" />}
+//         </IconButton>
+//       </Tooltip>
+//       <Tooltip title="Copy" placement="top">
+//         <IconButton size="small" onClick={handleCopy} sx={{
+//           width: 28, height: 28, borderRadius: '8px',
+//           '&:hover': { background: 'rgba(100,116,139,.08)' },
+//         }}>
+//           <ContentCopyIcon sx={{ fontSize: 14 }} className="text-slate-400" />
+//         </IconButton>
+//       </Tooltip>
+//     </div>
+//   );
+
+//   return (
+//     <div
+//       className={`flex gap-3 md:gap-5 w-full mb-6 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+//       style={{ animation: 'msgFadeIn 0.25s ease both' }}
+//     >
+//       <style>{`@keyframes msgFadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }`}</style>
+
+//       {/* Avatar */}
+//       <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center shadow-md transition-transform hover:scale-105
+//         ${isUser
+//           ? 'bg-white border border-slate-100 text-slate-600'
+//           : 'bg-blue-600 text-white shadow-blue-500/20'
+//         }`}
+//       >
+//         {isUser ? <User size={16} /> : <Bot size={18} />}
+//       </div>
+
+//       {/* Bubble */}
+//       <div className={`flex flex-col flex-1 min-w-0 ${isUser ? 'items-end' : 'items-start'}`}>
+//         <div className={`shadow-sm border overflow-hidden w-full
+//           ${isUser
+//             ? 'bg-white border-slate-100 rounded-[20px] rounded-tr-none text-slate-700 max-w-[80%]'
+//             : 'bg-white border-blue-100 rounded-[20px] rounded-tl-none text-slate-800 max-w-full'
+//           } p-4 md:p-5`}
+//         >
+//           {/* CASE 1: streaming */}
+//           {message.isStreaming && <StreamingBubble message={message} />}
+
+//           {/* CASE 2: finalized text */}
+//           {!message.isStreaming && message.type === 'text' && (
+//             <MarkdownBlock content={message.content} />
+//           )}
+
+//           {/* CASE 3: visualization */}
+//           {!message.isStreaming && message.type === 'visualization' && (
+//             message.data && <ChatResponseCard data={message.data} />
+//           )}
+
+//           {/* CASE 4: image / diagram */}
+//           {!message.isStreaming && message.type === 'image' && (
+//             <img src={message.content} alt="Response" className="max-w-full rounded-lg" />
+//           )}
+//           {!message.isStreaming && message.type === 'diagram' && (
+//             <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+//               <pre className="text-xs text-slate-700 whitespace-pre-wrap">{message.content}</pre>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Footer: timestamp + actions */}
+//         <div className={`flex items-center gap-2 mt-1 px-1 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+//           <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+//             {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+//           </span>
+//           {!isUser && !message.isStreaming && message.id && <ActionBar />}
+//         </div>
+//       </div>
+
+//       <Snackbar open={copied} autoHideDuration={2000} onClose={() => setCopied(false)}
+//         message="Copied!"
+//         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+//       />
+//     </div>
+//   );
+// };
+
+// export default React.memo(MessageBubble);

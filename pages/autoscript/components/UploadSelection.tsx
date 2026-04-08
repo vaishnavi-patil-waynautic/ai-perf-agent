@@ -42,7 +42,7 @@ export const UploadSection: React.FC<Props> = ({
     // <div className= `{bg-white p-8 rounded-lg border shadow-sm w-full mx-auto mb-7}`>
 
     <div
-      className={`bg-white p-8 rounded-lg border shadow-sm mx-auto mb-7 ${compact ? "w-full" : "w-4/5"
+      className={`bg-white px-8 py-6 rounded-lg border shadow-sm mx-auto mb-7 ${compact ? "w-full" : "w-4/5"
         }`}
     >
       <div className="w-64 mb-7 mx-auto">

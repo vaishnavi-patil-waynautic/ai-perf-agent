@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Paper, Typography, Divider, Snackbar, CircularProgress } from '@mui/material';
@@ -36,6 +36,9 @@ const NFRResultPage: React.FC = () => {
 
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const prevProjectId = useRef<number | null>(null);
+  const { selectedProject } = useSelector((state: RootState) => state.project);
+
   const dispatch = useDispatch<AppDispatch>();
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -47,6 +50,21 @@ const NFRResultPage: React.FC = () => {
       dispatch(fetchNfrReport(Number(id)));
     }
   }, [id, dispatch]);
+
+
+
+  useEffect(() => {
+    if (!selectedProject?.id) return;
+
+    if (
+      prevProjectId.current !== null &&
+      prevProjectId.current !== selectedProject.id
+    ) {
+      navigate("/nfr");
+    }
+
+    prevProjectId.current = selectedProject.id;
+  }, [selectedProject?.id]);
 
 
   const { selectedReport, loading } = useSelector(
@@ -64,40 +82,40 @@ const NFRResultPage: React.FC = () => {
   }
 
   const handleCopy = () => {
-  if (!selectedReport?.nfr_content) return;
+    if (!selectedReport?.nfr_content) return;
 
-  try {
-    const textarea = document.createElement("textarea");
-    textarea.value = selectedReport.nfr_content;
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = selectedReport.nfr_content;
 
-    // Prevent scrolling to bottom
-    textarea.style.position = "fixed";
-    textarea.style.top = "0";
-    textarea.style.left = "0";
-    textarea.style.opacity = "0";
+      // Prevent scrolling to bottom
+      textarea.style.position = "fixed";
+      textarea.style.top = "0";
+      textarea.style.left = "0";
+      textarea.style.opacity = "0";
 
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
 
-    const success = document.execCommand("copy");
-    document.body.removeChild(textarea);
+      const success = document.execCommand("copy");
+      document.body.removeChild(textarea);
 
-    dispatch(
-      showSnackbar({
-        message: success ? "Copied to clipboard" : "Copy failed",
-        type: success ? "success" : "error",
-      })
-    );
-  } catch (err) {
-    dispatch(
-      showSnackbar({
-        message: "Copy failed",
-        type: "error",
-      })
-    );
-  }
-};
+      dispatch(
+        showSnackbar({
+          message: success ? "Copied to clipboard" : "Copy failed",
+          type: success ? "success" : "error",
+        })
+      );
+    } catch (err) {
+      dispatch(
+        showSnackbar({
+          message: "Copy failed",
+          type: "error",
+        })
+      );
+    }
+  };
 
   // const handleCopy = () => {
   //   if (!selectedReport?.nfr_content) return;
@@ -252,7 +270,7 @@ const NFRResultPage: React.FC = () => {
           boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
           p: 3,
           mt: 1,
-          px:5
+          px: 5
         }}
       >
         <div className="flex justify-between items-start mb-6 gap-3">
@@ -283,8 +301,8 @@ const NFRResultPage: React.FC = () => {
             }}
               startIcon={<ContentCopyIcon />} onClick={handleCopy}>
               Copy</Button>
-            
-            
+
+
             <Button
               variant="contained"
               startIcon={isDownloading ? <CircularProgress size={16} color="inherit" /> : <DownloadIcon />}

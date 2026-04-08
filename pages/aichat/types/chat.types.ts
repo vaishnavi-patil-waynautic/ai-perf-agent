@@ -1,41 +1,27 @@
-export type MessageType =
-  | 'text'
-  | 'image'
-  | 'diagram'
-  | 'visualization';
-
+export type MessageType = 'text' | 'image' | 'diagram' | 'visualization';
 export type MessageSender = 'user' | 'bot';
 
-/* ---------- FLEXIBLE VISUALIZATION ---------- */
 export interface VisualizationData {
   type?: string;
   x_axis?: string | null;
   y_axes?: string[];
   group_by?: string | null;
-
-  [key: string]: unknown; // ← future proof
+  [key: string]: unknown;
 }
 
-/* ---------- GENERIC ROW ---------- */
 export type ApiResult = Record<string, unknown>;
 
-/* ---------- FULL FLEXIBLE AI DATA ---------- */
 export interface ChatMessageData {
-  // narrative
   answer?: string;
   summary?: string;
   explanation?: string;
   message?: string;
-
-  // structured
   bugs?: ApiResult[];
   bug_count?: number;
-
   results?: ApiResult[];
   visualization?: VisualizationData;
   visualization_type?: string;
   chart_metadata?: VisualizationData;
-
   query?: string;
   execution_time_ms?: number;
   application_used?: string;
@@ -44,26 +30,21 @@ export interface ChatMessageData {
   tools_used?: string[];
   from_cache?: boolean;
   cache_info?: string;
-
-  // future unknown fields
   [key: string]: unknown;
 }
 
 export interface ChatMessage {
-  id: string;                 // UI id (string)
-  backendId?: number;         // ← real message_id from API (IMPORTANT for feedback)
+  id: string;
+  backendId?: number;
   sender: MessageSender;
   type: MessageType;
   content: string;
   timestamp: string;
-
   liked?: boolean;
   disliked?: boolean;
-
   data?: ChatMessageData;
-  isStreaming?: boolean; //
-  modelName ?: string;
-
+  isStreaming?: boolean;
+  modelName?: string;
   streamParams?: StreamParams;
 }
 
@@ -72,7 +53,6 @@ export interface FeedbackPayload {
   is_liked: boolean;
   is_disliked: boolean;
 }
-
 
 export interface AIModel {
   id: string;
@@ -88,9 +68,10 @@ export interface ChatHistory {
   timestamp: string;
   messageCount: number;
 }
+
 export interface MessageReactionPayload {
-  messageId: string;     // UI id
-  backendId?: number;    // ← required for API
+  messageId: string;
+  backendId?: number;
   reaction: 'like' | 'dislike';
 }
 
@@ -100,19 +81,29 @@ export interface FAQ {
   category?: string;
 }
 
-export interface ChatState {
+/** Per-chat state stored in chatMap */
+export interface ChatEntry {
   messages: ChatMessage[];
+  isStreaming: boolean;
+  streamId: string | null;
+  loading: boolean;
+}
+
+export interface ChatState {
+  /** Per-chat state — key is chatId (or 'new' for unsaved chats) */
+  chatMap: Record<string, ChatEntry>;
+
   chatHistories: ChatHistory[];
   currentChatId: string | null;
   faqs: FAQ[];
   selectedModel: string;
   isLoading: boolean;
-  error: string | null; 
-  isFullScreen : boolean;
+  error: string | null;
+  isFullScreen: boolean;
   chatLoading: boolean;
   chatMode: 'closed' | 'collapsed' | 'fullscreen';
-   activeStreamId   : string | null;    // ← NEW
-    isStreamingActive: boolean;  
+  /** Global stream id for abort support */
+  activeStreamId: string | null;
 }
 
 export interface APIError {

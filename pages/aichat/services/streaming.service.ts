@@ -73,6 +73,8 @@ export function startChatStream(
   params: StreamParams,
   callbacks: StreamCallbacks
 ): () => void {
+
+  console.log("This streaming is called -- startChatStream---------------------------------");
   const { nlQuestion, projectId, chatId } = params;
 
   // Build query parameters

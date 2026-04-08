@@ -34,19 +34,21 @@ export const getNfrById = createAsyncThunk(
 export const fetchAdoItems = createAsyncThunk<
   ExternalItem[],
   number
->("nfr/fetchAdoItems", async (ProjectId) => {
-  const data = await nfrService.fetchAdoItems(ProjectId);
-
-  // 🔹 Map backend → ExternalItem
-  return data.map((item: any) => ({
-    id: String(item.id),
-    title: item.title,
-    type: item.work_item_type,
-    url: item.link,
-    description: item.description ?? "",
-    source: "ADO",
-    tags: item.tags ?? [],
-  }));
+>("nfr/fetchAdoItems", async (ProjectId, { rejectWithValue }) => {
+  try {
+    const data = await nfrService.fetchAdoItems(ProjectId);
+    return data.map((item: any) => ({
+      id: String(item.id),
+      title: item.title,
+      type: item.work_item_type,
+      url: item.link,
+      description: item.description ?? "",
+      source: "ADO",
+      tags: item.tags ?? [],
+    }));
+  } catch (err: any) {
+    return rejectWithValue(err || "Failed to fetch ADO items");
+  }
 });
 
 /**
