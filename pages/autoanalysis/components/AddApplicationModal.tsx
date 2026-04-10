@@ -696,7 +696,7 @@ export const AddApplicationModal: React.FC<Props> = ({
       const statusData = res?.data;   // 👈 FIX
 
       const progressVal = statusData?.progress_percentage ?? 0;
-      const appStatus   = statusData?.status ?? "";
+      const appStatus = statusData?.status ?? "";
 
       const msgVal =
         statusData?.last_setup_step ||
@@ -850,7 +850,7 @@ export const AddApplicationModal: React.FC<Props> = ({
     } catch (err: any) {
       console.error(err);
       setStep('error'); // ✅ NEW: Set error step
-      
+
       // ✅ NEW: Extract error message from backend response
       const errorData = err?.response?.data?.data;
       if (errorData?.error === "Required integrations not configured") {
@@ -1070,6 +1070,18 @@ export const AddApplicationModal: React.FC<Props> = ({
                   accept=".jmx"
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
+
+                    if (file) {
+                      // Validate extension
+                      const isJmx = file.name.toLowerCase().endsWith(".jmx");
+
+                      if (!isJmx) {
+                        alert("Only .jmx files are allowed");
+                        e.target.value = ""; // reset input
+                        return;
+                      }
+                    }
+
                     setFormData({ ...formData, jmxFile: file });
                   }}
                 />
@@ -1204,8 +1216,8 @@ export const AddApplicationModal: React.FC<Props> = ({
               </Typography>
             </Box>
 
-            
-            
+
+
 
 
             <TextField
@@ -1216,61 +1228,61 @@ export const AddApplicationModal: React.FC<Props> = ({
               inputProps={{ min: 0 }}
               value={formData.users}
               onChange={(e) => {
-    const val = e.target.value;
+                const val = e.target.value;
 
-    if (val === "") {
-      setFormData({ ...formData, users: null });
-      return;
-    }
+                if (val === "") {
+                  setFormData({ ...formData, users: null });
+                  return;
+                }
 
-    const num = Math.max(0, Number(val));
-    setFormData({ ...formData, users: num });
-  }}
+                const num = Math.max(0, Number(val));
+                setFormData({ ...formData, users: num });
+              }}
             />
 
             <TextField
-  label="Duration (min)"
-  type="number"
-  size="small"
-  fullWidth
-  inputProps={{ min: 0 }}
-  value={formData.duration}
-  onChange={(e) => {
-    const val = e.target.value;
+              label="Duration (min)"
+              type="number"
+              size="small"
+              fullWidth
+              inputProps={{ min: 0 }}
+              value={formData.duration}
+              onChange={(e) => {
+                const val = e.target.value;
 
-    if (val === "") {
-      setFormData({ ...formData, duration: null });
-      return;
-    }
+                if (val === "") {
+                  setFormData({ ...formData, duration: null });
+                  return;
+                }
 
-    setFormData({
-      ...formData,
-      duration: Math.max(0, Number(val)),
-    });
-  }}
-/>
+                setFormData({
+                  ...formData,
+                  duration: Math.max(0, Number(val)),
+                });
+              }}
+            />
 
-<TextField
-  label="Throughput (hits/s)"
-  type="number"
-  size="small"
-  fullWidth
-  inputProps={{ min: 0 }}
-  value={formData.throughput}
-  onChange={(e) => {
-    const val = e.target.value;
+            <TextField
+              label="Throughput (hits/s)"
+              type="number"
+              size="small"
+              fullWidth
+              inputProps={{ min: 0 }}
+              value={formData.throughput}
+              onChange={(e) => {
+                const val = e.target.value;
 
-    if (val === "") {
-      setFormData({ ...formData, throughput: null });
-      return;
-    }
+                if (val === "") {
+                  setFormData({ ...formData, throughput: null });
+                  return;
+                }
 
-    setFormData({
-      ...formData,
-      throughput: Math.max(0, Number(val)),
-    });
-  }}
-/>
+                setFormData({
+                  ...formData,
+                  throughput: Math.max(0, Number(val)),
+                });
+              }}
+            />
 
           </Box>
         )}
@@ -1338,7 +1350,7 @@ export const AddApplicationModal: React.FC<Props> = ({
             </Button>
           </>
         )}
-        
+
         {/* ✅ NEW: Error step buttons */}
         {step === 'error' && (
           <>
@@ -1358,7 +1370,7 @@ export const AddApplicationModal: React.FC<Props> = ({
             </Button>
           </>
         )}
-        
+
         {step === 'processing' && (
           <Button
             variant="outlined"
@@ -1369,7 +1381,7 @@ export const AddApplicationModal: React.FC<Props> = ({
             Close
           </Button>
         )}
-        
+
         {step === 'success' && (
           <Button variant="contained" onClick={handleClose} sx={{ textTransform: 'none' }}>
             Done

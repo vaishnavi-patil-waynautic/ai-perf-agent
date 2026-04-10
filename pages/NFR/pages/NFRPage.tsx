@@ -162,6 +162,8 @@ const NFRPage: React.FC = () => {
 
   if (!selectedProject?.id) return;
 
+  setSearch("");
+
   const isPending = (status: string) =>
     status === "in_process" || status === "draft" || status === "pending";
 

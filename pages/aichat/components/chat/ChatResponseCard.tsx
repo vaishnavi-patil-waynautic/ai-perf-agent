@@ -524,7 +524,7 @@ export default function ChatResponseCard({ data }: Props) {
       )}
 
       {/* Native table for visualization_type "none" — rendered once, not duplicated */}
-      {hasData && isNoneViz && <ResultsTable rows={dataset} />}
+      {/* {hasData && isNoneViz && <ResultsTable rows={dataset} />} */}
 
 
       {/* Chart visualization (fullscreen only) */}

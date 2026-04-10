@@ -13,13 +13,62 @@ const WizardStep2_Docs: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const files = useSelector((state: RootState) => state.nfrWizard.uploadedFiles);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const allowedExtensions = ["pdf", "doc", "docx"];
+
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (!e.target.files) return;
+
+  //   const fileList = Array.from(e.target.files);
+  //   dispatch(setUploadedFiles([...files, ...fileList]));
+  // };
+
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
 
-    const fileList = Array.from(e.target.files);
-    dispatch(setUploadedFiles([...files, ...fileList]));
-  };
+    const selectedFiles = Array.from(e.target.files);
+    const validFiles: File[] = [];
 
+    selectedFiles.forEach((newFile) => {
+      const extension = newFile.name.split(".").pop()?.toLowerCase();
+
+      // ✅ Validate file extension
+      if (!extension || !allowedExtensions.includes(extension)) {
+        alert(`Invalid file type: ${newFile.name}`);
+        return;
+      }
+
+      // ✅ Check for duplicates (name + extension + size)
+      const isDuplicate = files.some((existingFile) => {
+        const existingExtension = existingFile.name
+          .split(".")
+          .pop()
+          ?.toLowerCase();
+
+        return (
+          existingFile.name === newFile.name &&
+          existingExtension === extension &&
+          existingFile.size === newFile.size
+        );
+      });
+
+      if (isDuplicate) {
+        alert(`Duplicate file skipped: ${newFile.name}`);
+        return;
+      }
+
+      validFiles.push(newFile);
+    });
+
+    if (validFiles.length > 0) {
+      dispatch(setUploadedFiles([...files, ...validFiles]));
+    }
+
+    // ✅ Reset input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
   const handleRemoveFile = (index: number) => {
     dispatch(removeUploadedFile(index));
   };

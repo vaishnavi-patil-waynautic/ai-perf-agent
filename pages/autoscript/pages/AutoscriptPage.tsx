@@ -1494,6 +1494,9 @@ const AutoScriptPage: React.FC = () => {
   useEffect(() => {
     if (!selectedProject?.id) return;
 
+    setFile1(null);
+    setFile2(null);
+
     console.log('[Effect] Project changed, fetching initial history');
 
     const initialFetch = async () => {

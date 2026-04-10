@@ -68,16 +68,55 @@ export default function MarkdownBlock({ content, suppressTable }: { content?: st
           ),
 
           // ── Inline code & code blocks ────────────────────────────────────
-          code: ({ inline, children, ...props }: any) =>
-            inline ? (
-              <code className="px-1.5 py-0.5 bg-slate-100 text-blue-600 rounded-md font-mono text-xs font-bold">
-                {children}
-              </code>
-            ) : (
-              <pre className="bg-slate-900 text-slate-100 text-xs rounded-xl p-4 my-3 overflow-x-auto font-mono leading-relaxed">
-                <code {...props}>{children}</code>
-              </pre>
-            ),
+          // code: ({ inline, children, ...props }: any) =>
+          //   inline ? (
+          //     <code className="px-1.5 py-0.5 bg-slate-100 text-blue-600 rounded-md font-mono text-xs font-bold">
+          //       {children}
+          //     </code>
+          //   ) : (
+          //     <pre className="bg-slate-900 text-slate-100 text-xs rounded-xl p-4 my-3 overflow-x-auto font-mono leading-relaxed">
+          //       <code {...props}>{children}</code>
+          //     </pre>
+          //   ),
+
+
+          code({ children, className }: any) {
+  const isInline = !className;
+  const text = String(children).trim();
+
+  // detect markdown-like content inside code block
+  const isMarkdownBlock =
+    text.includes("#") ||
+    text.includes("- ") ||
+    text.includes("**") ||
+    text.includes("1.");
+
+  if (isInline) {
+    return (
+      <code className="px-1 py-0.5 bg-slate-100 text-blue-600 rounded text-xs font-mono">
+        {children}
+      </code>
+    );
+  }
+
+  // 🔥 If it's markdown → render it AGAIN as markdown
+  if (isMarkdownBlock) {
+    return (
+      <div className="bg-slate-50 border rounded-xl p-4 my-3">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {text}
+        </ReactMarkdown>
+      </div>
+    );
+  }
+
+  // normal code block
+  return (
+    <pre className="bg-slate-900 text-slate-100 text-xs rounded-lg p-3 my-3 overflow-x-auto">
+      <code>{children}</code>
+    </pre>
+  );
+},
 
           // ── Blockquote ───────────────────────────────────────────────────
           blockquote: ({ children }) => (

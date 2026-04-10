@@ -48,7 +48,6 @@ export const DashboardPage: React.FC = () => {
   const [stage, setStage] = useState<"new" | "in_progress">("new")
   const pollingUrlRef = useRef<string | null>(null);
   const inProgressAppsRef = useRef<Map<string, string>>(new Map());
-  const pollingStartTimeRef = useRef<number | null>(null);
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -67,7 +66,6 @@ export const DashboardPage: React.FC = () => {
     if (appsPollingRef.current) {
       clearInterval(appsPollingRef.current);
       appsPollingRef.current = null;
-      pollingStartTimeRef.current = null; 
       console.log("Stopeed Polling !!! ");
     }
   };
@@ -158,8 +156,6 @@ export const DashboardPage: React.FC = () => {
 
   if (appsPollingRef.current) return;
 
-  pollingStartTimeRef.current = Date.now();
-
   console.log("Starting apps polling...");
 
   pollingUrlRef.current = window.location.pathname;
@@ -168,27 +164,6 @@ export const DashboardPage: React.FC = () => {
 
   appsPollingRef.current = setInterval(async () => {
     try {
-
-
-       if (
-      pollingStartTimeRef.current &&
-      Date.now() - pollingStartTimeRef.current > 120000
-    ) {
-      console.log("Polling timeout reached → stopping polling");
-
-      clearInterval(appsPollingRef.current!);
-      appsPollingRef.current = null;
-      pollingStartTimeRef.current = null;
-
-      dispatch(
-        showSnackbar({
-          message: "Polling has stopped. Some apps may still be processing.",
-          type: "error",
-        })
-      );
-
-      return;
-    }
 
       // Stop polling if URL changed
       if (window.location.pathname !== pollingUrlRef.current) {
@@ -214,14 +189,14 @@ export const DashboardPage: React.FC = () => {
 
           console.log("Status updated for:", trackedAppName, app.config_status);
 
-          if (app.config_status === "completed") {
+          if (app.config_status === "completed" || app.config_status === "configured") {
             dispatch(
               showSnackbar({
                 message: `${trackedAppName} configured successfully`,
                 type: "success",
               })
             );
-          } else {
+          } else if (app.config_status === "failed") {
             dispatch(
               showSnackbar({
                 message: `${trackedAppName} configuration failed`,
@@ -279,10 +254,8 @@ export const DashboardPage: React.FC = () => {
     console.log("SELECTED PROJECT IN Useeffect : ", selectedProject);
 
     fetchApplications();
+    setSearch("");
 
-    return () => {
-      stopAppsPolling();
-    };
   }, [dispatch, selectedProject]);
 
   //   useEffect(() => {
@@ -324,7 +297,19 @@ export const DashboardPage: React.FC = () => {
         })
       ).unwrap();
 
-      dispatch(fetchApps(selectedProject.id));
+      const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
+
+      // Check if any apps are in progress and start polling
+      const inProgressApps = result?.filter(
+        (app: any) => app.config_status === "in_progress"
+      );
+
+      if (inProgressApps?.length) {
+        inProgressApps.forEach((app: any) => {
+          inProgressAppsRef.current.set(app.id, app.name);
+        });
+        startAppsPolling();
+      }
 
       dispatch(
         showSnackbar({
@@ -337,7 +322,7 @@ export const DashboardPage: React.FC = () => {
 
       dispatch(
         showSnackbar({
-          message: err || err.message || "Failed to create application",
+          message: "Failed to create application",
           type: "error",
         })
       );
@@ -374,13 +359,18 @@ export const DashboardPage: React.FC = () => {
     try {
       const result = await dispatch(fetchApps(selectedProject?.id)).unwrap();
 
-      const hasInProgress = result?.some(
+      const inProgressApps = result?.filter(
         (app: any) => app.config_status === "in_progress"
       );
 
       console.log("Checked status after close................", result)
 
-      if (hasInProgress) {
+      if (inProgressApps?.length) {
+        // Add all in-progress apps to tracking map
+        inProgressApps.forEach((app: any) => {
+          inProgressAppsRef.current.set(app.id, app.name);
+        });
+        
         startAppsPolling();
       } else {
         stopAppsPolling();
@@ -626,6 +616,7 @@ export const DashboardPage: React.FC = () => {
                       <PrimaryButton
                         size="small"
                         onClick={() => navigate(`/autoanalysis/${app.id}`)}
+                        disabled={app.config_status === 'in_progress' || app.config_status === 'not_configured'}
                       >
                         View
                       </PrimaryButton>
@@ -647,7 +638,8 @@ export const DashboardPage: React.FC = () => {
         </TableContainer> */}
 
 
-        {/* <div className="grid gap-4 justify-items-center">
+        {/* Commented out old grid layout
+        <div className="grid gap-4 justify-items-center">
           {loading ? (
             <div className="text-center py-8 text-gray-500">Loading...</div>
           ) : applications.map((app: any) => (
@@ -656,14 +648,14 @@ export const DashboardPage: React.FC = () => {
               elevation={1}
               className="w-8/12 p-4 border border-slate-200 rounded-lg hover:shadow-md transition-shadow flex flex-col sm:flex-row sm:items-start sm:justify-between"
             >
-              {/* Left: Title + Status + Build 
+              Left: Title + Status + Build
               <div className="flex flex-col sm:flex-1">
                 <div className="flex items-center space-x-3">
                   <div className="font-medium text-slate-700 text-lg">{app.name}</div>
                   <StatusBadge status={app.status} />
                 </div>
 
-                {/* Build / Recent Report below 
+                Build / Recent Report below
                 <div className="mt-1">
                   <Button
                     variant="text"
@@ -687,11 +679,12 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Right: Action Buttons 
+              Right: Action Buttons
               <div className="mt-2 sm:mt-0 flex items-center space-x-2">
                 <PrimaryButton
                   size="small"
                   onClick={() => navigate(`/autoanalysis/${app.id}`)}
+                  disabled={app.config_status === 'in_progress' || app.config_status === 'not_configured'}
                 >
                   View
                 </PrimaryButton>
@@ -705,95 +698,8 @@ export const DashboardPage: React.FC = () => {
               </div>
             </Paper>
           ))}
-        </div> */}
-
-
-
-        {/* <div className="space-y-4 w-full mx-auto">
-          {filteredApplications.map((app) => (
-            <div
-              key={app.id}
-              className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-200"
-            >
-              {/* Left section: title and description 
-              <div>
-
-                <div className="flex items-center space-x-3 mb-1">
-                  <div className="text-base font-semibold text-gray-900">{app.name}</div>
-                  <StatusBadge status={app.status} />
-                </div> */}
-
-        {/* <div 
-                onClick={() => navigate(`/reports/${app.lastReportId}`)}
-                sx={{
-                      textTransform: "none",
-                      padding: 0,
-                      minWidth: "unset",
-                      fontSize: "0.875rem",
-                      color: "primary.main",
-                      justifyContent: "flex-start",
-                      cursor: "pointer",
-                      "&:hover": {
-                        backgroundColor: "transparent",
-                        textDecoration: "underline",
-                      },
-                    }} 
-                    className="text-sm text-gray-500">{app.lastReportName || "-"}</div>
-                <div className="text-xs text-gray-400 mt-0.5">{app.info}</div> */}
-
-
-        {/* <div className="mt-2 flex items-center space-x-2">
-                  <div className="text-xs text-gray-500">
-                    Recent Build:
-                  </div>
-                  <a
-                    href={`/reports/${app.lastReportId}`}
-                    onClick={e => {
-                      e.preventDefault();
-                      navigate(`/reports/${app.lastReportId}`);
-                    }}
-                    className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-semibold"
-                  >
-                    {app.lastReportName || "-"}
-                  </a>
-                </div>
-
-
-
-
-              </div>
-
-              {/* Right section: icons and button 
-              <div className="flex items-center space-x-3">
-                {/* Edit icon 
-                <button
-                  onClick={() => navigate(`/autoanalysis/${app.id}`)}
-                  className="text-gray-400 hover:text-gray-600"
-                  aria-label="Edit"
-                >
-                  <EditIcon className="w-5 h-5" />
-                </button>
-
-                {/* Delete icon 
-                <button
-                  onClick={() => navigate(`/autoanalysis/${app.id}`)}
-                  className="text-red-500 hover:text-red-700"
-                  aria-label="Delete"
-                >
-                  <TrashIcon className="w-5 h-5" />
-                </button>
-
-                {/* View Collection button 
-                <button
-                  onClick={() => navigate(`/autoanalysis/${app.id}`)}
-                  className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition"
-                >
-                  View
-                </button>
-              </div>
-            </div>
-          ))}
-        </div> */}
+        </div>
+        End of commented out old grid layout */}
 
         <div className="space-y-4 w-full mx-auto">
           {filteredApplications.length > 0 ? filteredApplications.map((app) => (

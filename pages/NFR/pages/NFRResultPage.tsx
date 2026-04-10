@@ -9,7 +9,7 @@ import { AppDispatch, RootState } from '../../../store/store';
 import { ArrowBack } from '@mui/icons-material';
 import { fetchNfrReport } from '../slices/nfr.thunks';
 import { nfrService } from '../services/nfrService';
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { showSnackbar } from '@/store/snackbarStore';
 import html2pdf from "html2pdf.js";
@@ -357,11 +357,25 @@ const NFRResultPage: React.FC = () => {
   </ReactMarkdown>
 </div> */}
 
-
+{/* 
         <div className="bg-white p-6 ">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
+
+              code({ inline, className, children, ...props }) {
+  return inline ? (
+    <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">
+      {children}
+    </code>
+  ) : (
+    <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-4">
+      <code className={className} {...props}>
+        {children}
+      </code>
+    </pre>
+  );
+},
               h1: ({ children }) => (
                 <h1 className="text-2xl font-bold mt-6 mb-4">{children}</h1>
               ),
@@ -402,7 +416,77 @@ const NFRResultPage: React.FC = () => {
           >
             {selectedReport.nfr_content}
           </ReactMarkdown>
-        </div>
+        </div> */}
+
+
+
+<div className="bg-white p-6">
+  <ReactMarkdown
+    remarkPlugins={[remarkGfm]}
+    components={{
+      h1: ({ children }) => (
+        <h1 className="text-2xl font-bold mt-6 mb-4">{children}</h1>
+      ),
+      h2: ({ children }) => (
+        <h2 className="text-xl font-semibold mt-5 mb-3">{children}</h2>
+      ),
+      h3: ({ children }) => (
+        <h3 className="text-lg font-semibold mt-4 mb-2">{children}</h3>
+      ),
+      p: ({ children }) => (
+        <p className="mb-3 leading-relaxed">{children}</p>
+      ),
+      ul: ({ children }) => (
+        <ul className="list-disc pl-6 mb-4">{children}</ul>
+      ),
+      ol: ({ children }) => (
+        <ol className="list-decimal pl-6 mb-4">{children}</ol>
+      ),
+      li: ({ children }) => <li className="mb-1">{children}</li>,
+      table: ({ children }) => (
+        <table className="w-full border border-gray-300 my-4 text-sm border-collapse">
+          {children}
+        </table>
+      ),
+      th: ({ children }) => (
+        <th className="border px-3 py-2 bg-gray-100 text-left font-semibold">
+          {children}
+        </th>
+      ),
+      td: ({ children }) => (
+        <td className="border px-3 py-2 align-top">{children}</td>
+      ),
+      hr: () => <hr className="my-6 border-gray-300" />,
+      strong: ({ children }) => (
+        <strong className="font-semibold">{children}</strong>
+      ),
+
+      // Normal inline code styling without a black box
+      code: (({
+        inline,
+        children,
+      }: React.HTMLAttributes<HTMLElement> & {
+        inline?: boolean;
+        children?: React.ReactNode;
+      }) =>
+        inline ? (
+          <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">
+            {children}
+          </code>
+        ) : (
+          <code className="bg-gray-100 px-2 py-1 rounded text-sm block my-3 overflow-x-auto">
+            {children}
+          </code>
+        )) as Components["code"],
+    }}
+  >
+    {selectedReport?.nfr_content
+      ?.replace(/^```markdown\s*/i, "")
+      ?.replace(/^```/, "")
+      ?.replace(/```$/, "")
+      ?.trim()}
+  </ReactMarkdown>
+</div>
 
 
       </Paper>
