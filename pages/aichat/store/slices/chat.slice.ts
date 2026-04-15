@@ -17,7 +17,7 @@ const emptyChatEntry = (): ChatEntry => ({
 });
 
 const ensureChat = (state: ChatState, chatId: string) => {
-    if (!chatId) return null;
+  if (!chatId) return null;
 
   if (!state.chatMap[chatId]) {
     state.chatMap[chatId] = emptyChatEntry();
@@ -39,6 +39,29 @@ const initialState: ChatState = {
   chatLoading: false,
   chatMode: 'collapsed',
   activeStreamId: null,
+};
+
+const resetStreamingStateHelper = (state: ChatState) => {
+  const chatId =
+    state.currentChatId && state.currentChatId !== '0'
+      ? state.currentChatId
+      : 'new';
+
+  const entry = state.chatMap[chatId];
+  if (!entry) return;
+
+  entry.isStreaming = false;
+  entry.streamId = null;
+
+  entry.messages.forEach((msg) => {
+    if (msg.isStreaming) {
+      msg.isStreaming = false;
+    }
+  });
+
+  state.activeStreamId = null;
+  state.chatLoading = false;
+  state.isLoading = false;
 };
 
 // ── slice ─────────────────────────────────────────────────────────────────────
@@ -149,23 +172,25 @@ const chatSlice = createSlice({
       else { msg.disliked = !msg.disliked; if (msg.disliked) msg.liked = false; }
     },
 
-clearMessages: (state) => ({
-  chatMap: {},
-  chatHistories: [],
-  currentChatId: null,
-  faqs: [],
-  selectedModel: 'gpt-4',
-  isLoading: false,
-  error: null,
-  isFullScreen: false,
-  chatLoading: false,
-  chatMode: 'collapsed',
-  activeStreamId: null,
-}),
 
-// clearMessages : () =>{
 
-// },
+    clearMessages: (state) => ({
+      chatMap: {},
+      chatHistories: [],
+      currentChatId: null,
+      faqs: [],
+      selectedModel: 'gpt-4',
+      isLoading: false,
+      error: null,
+      isFullScreen: state.isFullScreen,
+      chatLoading: false,
+      chatMode: 'collapsed',
+      activeStreamId: null,
+    }),
+
+    // clearMessages : () =>{
+
+    // },
 
     addOptimisticChat: (state, action: PayloadAction<{ id: string; title: string }>) => {
       const exists = state.chatHistories.find(c => c.id === action.payload.id);
@@ -198,7 +223,7 @@ clearMessages: (state) => ({
         const newChatId = action.payload.chatId;
         const key = state.currentChatId && state.currentChatId !== '0' ? state.currentChatId : 'new';
         ensureChat(state, key).messages.push(action.payload.message);
-         
+
         if (!state.currentChatId || state.currentChatId === '0') {
           state.currentChatId = newChatId;
         }
@@ -244,13 +269,17 @@ clearMessages: (state) => ({
         state.currentChatId = action.payload;
         state.chatMap[action.payload] = emptyChatEntry();
       })
-      .addCase(abortStream.fulfilled, (state) => { state.activeStreamId = null; })
-      .addCase(abortStream.rejected, (state) => { state.activeStreamId = null; })
+      .addCase(abortStream.fulfilled, (state) => {
+  resetStreamingStateHelper(state);
+})
+.addCase(abortStream.rejected, (state) => {
+  resetStreamingStateHelper(state);
+})
       .addCase(deleteByChatId.fulfilled, (state, action) => {
         state.chatHistories = state.chatHistories.filter(c => c.id !== action.payload);
         delete state.chatMap[action.payload];
       });
-  },
+},
 });
 
 export const {

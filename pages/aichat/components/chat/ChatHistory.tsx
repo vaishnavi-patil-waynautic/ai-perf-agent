@@ -199,7 +199,7 @@ const ChatHistory: React.FC<{ collapsed?: boolean; onCollapse?: () => void }> = 
       if (currentChatId === chatId) {
         dispatch(setCurrentChat(String(0))); // or '0' if that's your empty state
         dispatch(clearMessages());
-
+        dispatch(loadChatHistories(selectedProject?.id));
       }
 
       dispatch(

@@ -54,14 +54,17 @@ import { useEffect, useMemo, useState } from "react";
 import BarChartView from "./BarChartView";
 import DataTableView from "./DataTableView";
 import { Download, Copy } from "lucide-react";
+import { Alert, Snackbar } from "@mui/material";
 
 export default function VisualizationBlock({ data, visualization }: any) {
 const [view, setView] = useState<"chart" | "table">("table");
 const [resolved, setResolved] = useState(false);
+const [copied, setCopied] = useState(false);
 
 
 
 console.log("In visaualization block - view : ", view, " | data : ", data, " | visualization : ", visualization)
+console.log("view == Table", view==="table", " visualization TYpe : ", visualization?.type==="table")
 
 useEffect(() => {
   if (resolved) return;
@@ -106,9 +109,47 @@ useEffect(() => {
     document.body.removeChild(link);
   };
 
-  const copyCSV = async () => {
-    await navigator.clipboard.writeText(generateCSV());
-  };
+const copyCSV = async () => {
+  try {
+    const csv = generateCSV();
+
+    if (!csv || !csv.trim()) {
+      console.error("CSV content is empty.");
+      alert("No data available to copy.");
+      return;
+    }
+
+    // Modern Clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(csv);
+    } else {
+      // Fallback for unsupported or insecure environments
+      const textarea = document.createElement("textarea");
+      textarea.value = csv;
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      textarea.style.top = "0";
+      textarea.setAttribute("readonly", "");
+
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textarea);
+
+      if (!successful) {
+        throw new Error("Fallback copy failed");
+      }
+    }
+
+    setCopied(true);
+    // Optional: show snackbar/toast here
+  } catch (error) {
+    console.error("Failed to copy CSV:", error);
+    alert("Failed to copy CSV. Please try again.");
+  }
+};
 
   return (
     // <div
@@ -165,7 +206,7 @@ useEffect(() => {
         </div> */}
 
         <div style={{ display: "flex", gap: 4 }}>
-  {(visualization?.type!=="table") && (
+  {(visualization?.type!=="table") && (view=="chart") && (
     <button
       onClick={() => setView("chart")}
       style={toggleStyle(view === "chart")}
@@ -184,13 +225,54 @@ useEffect(() => {
 
         {/* Actions */}
         <div style={{ display: "flex", gap: 12 }}>
-          <Download
-            size={18}
-            style={{ cursor: "pointer" }}
-            onClick={downloadCSV}
-          />
-          <Copy size={18} style={{ cursor: "pointer" }} onClick={copyCSV} />
-        </div>
+  <Download
+    size={18}
+    onClick={downloadCSV}
+    style={{
+      cursor: "pointer",
+      color: "#555",
+      transition: "transform 0.2s ease, color 0.2s ease",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = "scale(1.15)";
+      // e.currentTarget.style.color = "#1976d2";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = "scale(1)";
+      e.currentTarget.style.color = "#555";
+    }}
+    onMouseDown={(e) => {
+      e.currentTarget.style.transform = "scale(0.9)";
+    }}
+    onMouseUp={(e) => {
+      e.currentTarget.style.transform = "scale(1.15)";
+    }}
+  />
+
+  <Copy
+    size={18}
+    onClick={copyCSV}
+    style={{
+      cursor: "pointer",
+      color: "#555",
+      transition: "transform 0.2s ease, color 0.2s ease",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = "scale(1.15)";
+      // e.currentTarget.style.color = "#1976d2";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = "scale(1)";
+      e.currentTarget.style.color = "#555";
+    }}
+    onMouseDown={(e) => {
+      e.currentTarget.style.transform = "scale(0.9)";
+    }}
+    onMouseUp={(e) => {
+      e.currentTarget.style.transform = "scale(1.15)";
+    }}
+  />
+</div>
       </div>
 
       {/* CONTENT */}
@@ -202,6 +284,30 @@ useEffect(() => {
         )}
         {view === "table" && <DataTableView data={data} />}
       </div>
+
+
+
+<Snackbar
+  open={copied}
+  autoHideDuration={2000}
+  onClose={() => setCopied(false)}
+  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+>
+  <Alert
+    severity="success"
+    variant="filled"
+    onClose={() => setCopied(false)}
+    sx={{
+      borderRadius: 2,
+      boxShadow: 3,
+      fontWeight: 500,
+      alignItems: "center",
+    }}
+  >
+    Copied to clipboard!
+  </Alert>
+</Snackbar>
+            
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Tabs,
@@ -36,9 +36,37 @@ const NFRWizardPage: React.FC = () => {
   const [isStep3Valid, setIsStep3Valid] = useState(true);
   const { selectedProject } = useSelector((state: RootState) => state.project);
 
-    useEffect(() => {
-      dispatch(resetWizard());
-    }, [selectedProject?.id]);
+  const previousProjectIdRef = useRef<Number | null>(null);
+
+useEffect(() => {
+  if (!selectedProject?.id) return;
+
+  // Skip reset on first render (after persistence rehydration)
+  if (previousProjectIdRef.current === null) {
+    previousProjectIdRef.current = selectedProject.id;
+    return;
+  }
+
+  // Reset only when the project actually changes
+  if (previousProjectIdRef.current !== selectedProject.id) {
+    console.log("Project changed. Resetting wizard state...");
+    dispatch(resetWizard());
+     localStorage.removeItem("NFR_Wizard_Files");
+
+  }
+
+  previousProjectIdRef.current = selectedProject.id;
+}, [selectedProject?.id, dispatch]);
+
+    // useEffect(() => {
+
+    //   if (!selectedProject?.id) return;
+
+
+    //   console.log("Refreshing the state**********************************************************")
+
+    //   dispatch(resetWizard());
+    // }, [selectedProject?.id]);
 
   const steps = [
     { label: 'Fetch & Select', component: <WizardStep1_Fetch /> },

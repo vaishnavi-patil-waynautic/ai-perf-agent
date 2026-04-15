@@ -498,6 +498,7 @@ export default function ChatResponseCard({ data }: Props) {
     data.table ||
     data.data ||
     data.query_results ||
+    data.bug_results ||
     [];
 
   const hasData = Array.isArray(dataset) && dataset.length > 0;
@@ -506,10 +507,13 @@ export default function ChatResponseCard({ data }: Props) {
   const isNoneViz = data.visualization_type === "none" || !data.visualization_type;
 
   const visualization =
-    data.visualization ||
+    data.visualization || data.visualization_type ||
     (!isNoneViz && data.visualization_type && data.chart_metadata
       ? { type: data.visualization_type, ...data.chart_metadata }
       : undefined);
+
+
+  console.log("[visualization : ", visualization, "------isNonViz : ",isNoneViz, " Data : ", dataset, " ]")
 
   return (
     <div className="w-full max-w-full overflow-hidden">

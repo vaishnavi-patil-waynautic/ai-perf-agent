@@ -923,6 +923,7 @@ export default function IntegrationDetail() {
   const integrations = useSelector((state: RootState) => state.integration.list);
   const [integrationType, setIntegrationType] = useState<string>("github");
   const [deleteTarget, setDeleteTarget] = useState<Integration | null>(null);
+  const user = useSelector((state: RootState) => state.user.profile);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [dialogState, setDialogState] = useState<{
     open: boolean;
@@ -1033,6 +1034,7 @@ export default function IntegrationDetail() {
                           //   setOpenToken(integration.id ?? null);
                           //   setIntegrationType(integration.type);   // 👈 pass type
                           // }}
+                          disabled = {!user?.is_staff}
                           onClick={() => {
                             setDialogState({
                               open: true,
@@ -1048,6 +1050,7 @@ export default function IntegrationDetail() {
                         </button>
 
                         <button
+                          disabled = {!user?.is_staff}
                           onClick={() => setDeleteTarget(integration)}
                           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
                           title="Remove token"
@@ -1069,7 +1072,7 @@ export default function IntegrationDetail() {
                             type: integration.type,
                           });
                         }}
-
+                        disabled = {!user?.is_staff}
                         className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors"
                         title="Configure"
                       >

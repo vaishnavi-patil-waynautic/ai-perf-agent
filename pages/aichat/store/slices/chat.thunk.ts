@@ -556,7 +556,7 @@ import {
 } from './chat.slice';
 import { config } from '../../../../config/backendConfig';
 
-const ABORT_URL = `${config.baseUrl}/chatbot/abort/`;
+const ABORT_URL = `${config.baseUrl}/aichatbot/abort/`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // abortStream
@@ -719,7 +719,11 @@ export const loadChatHistories = createAsyncThunk<ChatHistory[], number, { rejec
 export const loadChatMessages = createAsyncThunk(
   'chat/loadChatMessages',
   async (chatId: string, { rejectWithValue }) => {
-    try { return await fetchChatMessages(chatId); }
+    try { 
+      const data = await fetchChatMessages(chatId)
+      console.log("-----------------Data_______", data)
+      return data; 
+    }
     catch (error: any) { return rejectWithValue(error.message); }
   }
 );

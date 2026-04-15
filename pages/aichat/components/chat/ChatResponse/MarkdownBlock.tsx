@@ -58,14 +58,18 @@ export default function MarkdownBlock({ content, suppressTable }: { content?: st
 
           // ── Lists ───────────────────────────────────────────────────────
           ul: ({ children }) => (
-            <ul className="list-disc list-outside pl-5 mb-4 space-y-1.5">{children}</ul>
+            <ul className="list-disc list-outside pl-5 mb-4 space-y-1.5 font-semibold">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal list-outside pl-5 mb-4 space-y-1.5">{children}</ol>
-          ),
-          li: ({ children }) => (
-            <li className="text-sm text-slate-700 leading-relaxed">{children}</li>
-          ),
+  <ol className="list-decimal list-outside pl-6 mb-4 space-y-1.5 text-slate-700">
+    {children}
+  </ol>
+),
+li: ({ children }) => (
+  <li className="text-sm leading-relaxed marker:font-semibold marker:text-slate-600">
+    {children}
+  </li>
+),
 
           // ── Inline code & code blocks ────────────────────────────────────
           // code: ({ inline, children, ...props }: any) =>

@@ -577,7 +577,7 @@
  */
 
 import React, { useState } from 'react';
-import { IconButton, Tooltip, Snackbar } from '@mui/material';
+import { IconButton, Tooltip, Snackbar, Alert } from '@mui/material';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
@@ -598,30 +598,88 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
   const [copied, setCopied] = useState(false);
   const isUser = message.sender === 'user';
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(message.content);
-    } catch (err) {
-      // fallback
-      const textarea = document.createElement("textarea");
-      textarea.value = message.content;
-      textarea.style.position = "fixed"; // avoid scrolling
-      document.body.appendChild(textarea);
-      textarea.focus();
-      textarea.select();
+  // const handleCopy = async () => {
+  //   try {
+  //     await navigator.clipboard.writeText(message.content);
+  //   } catch (err) {
+  //     // fallback
+  //     const textarea = document.createElement("textarea");
+  //     textarea.value = message.content;
+  //     textarea.style.position = "fixed"; // avoid scrolling
+  //     document.body.appendChild(textarea);
+  //     textarea.focus();
+  //     textarea.select();
 
-      try {
-        document.execCommand("copy");
-      } catch (e) {
-        console.error("Fallback copy failed", e);
-      }
+  //     try {
+  //       document.execCommand("copy");
+  //     } catch (e) {
+  //       console.error("Fallback copy failed", e);
+  //     }
 
-      document.body.removeChild(textarea);
+  //     document.body.removeChild(textarea);
+  //   }
+
+  //   setCopied(true);
+  // };
+
+const handleCopy = async () => {
+  // Helper function to format results
+  const formatResults = (results: any): string => {
+    if (!results) return "";
+
+    if (typeof results === "string") {
+      return results;
     }
 
-    setCopied(true);
+    if (Array.isArray(results)) {
+      return results
+        .map((item, index) => {
+          if (typeof item === "object") {
+            return `Result ${index + 1}:\n${JSON.stringify(item, null, 2)}`;
+          }
+          return `Result ${index + 1}: ${item}`;
+        })
+        .join("\n\n");
+    }
+
+    if (typeof results === "object") {
+      return JSON.stringify(results, null, 2);
+    }
+
+    return String(results);
   };
 
+  // Combine content and results
+  const combinedText = [
+    message.content,
+    message.data.results ? "\n\nResults:\n" + formatResults(message.data.results) : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
+  try {
+    await navigator.clipboard.writeText(combinedText);
+  } catch (err) {
+    // Fallback for unsupported browsers
+    const textarea = document.createElement("textarea");
+    textarea.value = combinedText;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    try {
+      document.execCommand("copy");
+    } catch (e) {
+      console.error("Fallback copy failed", e);
+    }
+
+    document.body.removeChild(textarea);
+  }
+
+  setCopied(true);
+};
 
   const handleReaction = (reaction: 'like' | 'dislike') => {
     dispatch(sendFeedback({ messageId: message.id, reaction }));
@@ -725,10 +783,28 @@ const MessageBubble: React.FC<Props> = ({ message }) => {
         </div>
       )}
 
-      <Snackbar open={copied} autoHideDuration={2000} onClose={() => setCopied(false)}
-        message="Copied to clipboard!"
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      />
+
+<Snackbar
+  open={copied}
+  autoHideDuration={2000}
+  onClose={() => setCopied(false)}
+  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+>
+  <Alert
+    severity="success"
+    variant="filled"
+    onClose={() => setCopied(false)}
+    sx={{
+      borderRadius: 2,
+      boxShadow: 3,
+      fontWeight: 500,
+      alignItems: "center",
+    }}
+  >
+    Copied to clipboard!
+  </Alert>
+</Snackbar>
+
     </div>
   );
 };

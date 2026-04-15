@@ -461,30 +461,50 @@ const NFRResultPage: React.FC = () => {
         <strong className="font-semibold">{children}</strong>
       ),
 
-      // Normal inline code styling without a black box
+      // Inline and block code styling
       code: (({
         inline,
         children,
+        ...props
       }: React.HTMLAttributes<HTMLElement> & {
         inline?: boolean;
         children?: React.ReactNode;
       }) =>
         inline ? (
-          <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">
+          <code
+            className="bg-gray-100 px-1 py-0.5 rounded text-sm"
+            {...props}
+          >
             {children}
           </code>
         ) : (
-          <code className="bg-gray-100 px-2 py-1 rounded text-sm block my-3 overflow-x-auto">
-            {children}
-          </code>
+          <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto my-3">
+            <code {...props}>{children}</code>
+          </pre>
         )) as Components["code"],
     }}
   >
-    {selectedReport?.nfr_content
-      ?.replace(/^```markdown\s*/i, "")
-      ?.replace(/^```/, "")
-      ?.replace(/```$/, "")
-      ?.trim()}
+    {(() => {
+      const content = selectedReport?.nfr_content || "";
+
+      // Extract content inside ```markdown ... ```
+      const match = content.match(/```markdown\s*([\s\S]*?)```/i);
+
+      if (match) {
+        const extractedMarkdown = match[1].trim();
+        const remainingText = content
+          .replace(match[0], "")
+          .trim();
+
+        return `${extractedMarkdown}\n\n${remainingText}`;
+      }
+
+      // Fallback: remove any generic code fences
+      return content
+        .replace(/```[a-zA-Z]*\n?/g, "")
+        .replace(/```/g, "")
+        .trim();
+    })()}
   </ReactMarkdown>
 </div>
 

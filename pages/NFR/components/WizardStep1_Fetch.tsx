@@ -33,23 +33,28 @@ const WizardStep1_Fetch: React.FC = () => {
     }));
   };
 
-  useEffect(() => {
-    if (externalItems.length === 0) {
-      dispatch(fetchAdoItems(selectedProject?.id));
-    } else {
-      setFilteredData(externalItems);
-      setItems(externalItems);
-    }
-  }, []);
+useEffect(() => {
+  if (!selectedProject?.id) return;
+
+  if (externalItems.length === 0) {
+    dispatch(fetchAdoItems(selectedProject.id));
+  } else {
+    setFilteredData(externalItems);
+    setItems(externalItems);
+  }
+}, [dispatch, externalItems]);
 
   // Reset all wizard state when project changes
-  useEffect(() => {
-    dispatch(resetWizard());
-    setFilteredData([]);
-    setItems([]);
-    setSearchText('');
-    setFilterType('All');
-  }, [selectedProject?.id]);
+  // useEffect(() => {
+
+  //   if (!selectedProject?.id) return;
+
+  //   dispatch(resetWizard());
+  //   setFilteredData([]);
+  //   setItems([]);
+  //   setSearchText('');
+  //   setFilterType('All');
+  // }, [selectedProject?.id]);
 
   const handleFetch = async () => {
 

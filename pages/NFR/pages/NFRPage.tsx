@@ -168,6 +168,7 @@ const NFRPage: React.FC = () => {
     status === "in_process" || status === "draft" || status === "pending";
 
   dispatch(resetWizard());
+  localStorage.removeItem("NFR_Wizard_Files");
 
   console.log("Fetching NFR by project id in useEffect");
 

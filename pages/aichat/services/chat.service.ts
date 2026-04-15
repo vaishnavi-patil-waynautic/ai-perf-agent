@@ -427,6 +427,7 @@ export const fetchChatMessages = async (chatId: string): Promise<ChatMessage[]> 
   })).flatMap((userMsg: ChatMessage, i: number) => {
     const m = msgs[i];
 
+
     const botMsg: ChatMessage = {
       id: `${m.id}`,
       sender: "bot",
@@ -437,13 +438,15 @@ export const fetchChatMessages = async (chatId: string): Promise<ChatMessage[]> 
       disliked: m.user_feedback?.is_disliked ?? false,
       data: {
         answer: m.summary ?? m.answer ?? "",
-        results: m.results || m.bugs || m.query_results,
+        results: m.results || m.bugs || m.bug_results || m.query_results ,
         visualization_type: m.visualization_type,
         chart_metadata: m.chart_metadata,
         table_used: m.table_used,
         execution_time_ms: m.execution_time_ms
       },
     };
+
+    console.log("*********************Botmsg : ", botMsg)
 
     return [userMsg, botMsg];
   });

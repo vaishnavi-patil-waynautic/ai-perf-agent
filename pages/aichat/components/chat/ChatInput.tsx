@@ -427,7 +427,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ inputValue, onInputChange }) => {
   });
   const { selectedProject } = useAppSelector((state: RootState) => state.project);
 
-  console.log("ChatPanel chat is loading : ", chatLoading, " ");
 
   /* ---------------- FAQ LIST ⭐ ---------------- */
   const faqList = [

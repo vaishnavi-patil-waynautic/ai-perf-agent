@@ -66,6 +66,7 @@ const nfrWizardSlice = createSlice({
     removeUploadedFile: (state, action) => {
   state.uploadedFiles = state.uploadedFiles.filter(
     (_, index) => index !== action.payload
+    
   );
 },
 

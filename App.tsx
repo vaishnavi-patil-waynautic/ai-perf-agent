@@ -29,6 +29,7 @@ import GlobalAppSnackbar from './components/GlobalAppSnackbar';
 import { authChecked } from './store/authSlice';
 import { Bot, BotMessageSquare, MessageCircle, MessagesSquare, Sparkles } from 'lucide-react';
 import ResetPassword from './pages/authentication/ResetPassword';
+import GovernanceDashboard from './pages/governance/pages/GovernanceDashboard';
 
 
 
@@ -434,10 +435,18 @@ if (authLoading) {
           </ProtectedRoute>
         } />
 
-        <Route path="/dashboard" element={
+        {/* <Route path="/dashboard" element={
           <ProtectedRoute>
             <AppLayout>
               <Dashboard />
+            </AppLayout>
+          </ProtectedRoute>
+        } /> */}
+
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <AppLayout>
+              <GovernanceDashboard />
             </AppLayout>
           </ProtectedRoute>
         } />
