@@ -1024,7 +1024,8 @@ export default function IntegrationDetail() {
                   </h3>
                 </div>
 
-                  <div className="flex items-center gap-1 ml-auto flex-wrap">
+                {
+                  user?.is_staff && (<div className="flex items-center gap-1 ml-auto flex-wrap">
 
                     {/* ACTIVE → EDIT */}
                     {integration.status === "active" ? (
@@ -1080,7 +1081,10 @@ export default function IntegrationDetail() {
                       </button>
                     )}
 
-                  </div>
+                  </div>)
+                }
+
+                  
               </div>
 
               <div className="mb-3">

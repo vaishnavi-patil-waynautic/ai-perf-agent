@@ -2,7 +2,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Box, Typography, Alert } from '@mui/material';
 
-interface Props { children: ReactNode; title: string; }
+interface Props { children: ReactNode; title: string; type: string }
 interface State { hasError: boolean; }
 
 export class WidgetBoundary extends Component<Props, State> {
@@ -26,6 +26,27 @@ export class WidgetBoundary extends Component<Props, State> {
         </Box>
       );
     }
-    return this.props.children;
+    return (
+      <Box
+  sx={{
+    ...(this.props.type !== 'KPI' && {
+      bgcolor: 'white',
+      borderRadius: 3,
+      border: '1px solid #f1f5f9',
+      p: 2.5,
+      height: '100%',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    }),
+  }}
+>
+        {this.props.type != "KPI" && 
+        ( <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#55585dff', mb: 1.5, fontSize: '0.95rem' }}>
+          {this.props.title}
+        </Typography>)
+        }
+       
+        {this.props.children}
+      </Box>
+    );
   }
 }

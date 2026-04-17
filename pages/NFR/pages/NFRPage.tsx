@@ -462,7 +462,11 @@ const NFRPage: React.FC = () => {
 
 
   return (
-    <div className="m-auto max-w-6xl p-10">
+    <div 
+    className="m-auto max-w-6xl p-10"
+    // sx={{background: ''}}
+    >
+
 
 
 

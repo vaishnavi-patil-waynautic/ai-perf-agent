@@ -28,6 +28,9 @@ export const logoutService = async (): Promise<void> => {
     if (!res.ok) {
       console.warn("Backend logout failed:", res.status);
     }
+
+    localStorage.clear();
+    
   } catch (error) {
     console.warn("Logout request error:", error);
   }

@@ -212,6 +212,10 @@ const chatSlice = createSlice({
       state.activeStreamId = null;
     },
 
+    clearNewChat: (state) => {
+      delete state.chatMap['new'];
+    },
+
     // resetChatState: () => initialState,
   },
 
@@ -297,6 +301,7 @@ export const {
   setStreamId,
   addOptimisticChat,
   resetChatState,
+  clearNewChat,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

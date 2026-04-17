@@ -651,6 +651,8 @@ export const AddApplicationModal: React.FC<Props> = ({
   const [syncMsg, setSyncMsg] = useState('');
   const [syncedSecrets, setSyncedSecrets] = useState<string[]>([]);
   const [secretsSynced, setSecretsSynced] = useState(false);
+
+  const fileInputRef = useRef(null);
   // ──────────────────────────────────────────────────────────────────────────
 
   const [formData, setFormData] = useState({
@@ -1050,7 +1052,7 @@ export const AddApplicationModal: React.FC<Props> = ({
                 </span>
 
                 {/* Remove icon when file selected */}
-                {formData.jmxFile && (
+                {/* {formData.jmxFile && (
                   <IconButton
                     size="small"
                     onClick={(e) => {
@@ -1061,10 +1063,30 @@ export const AddApplicationModal: React.FC<Props> = ({
                   >
                     <X size={16} />
                   </IconButton>
+                )} */}
+
+                {/* Remove icon when file selected */}
+                {formData.jmxFile && (
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      setFormData({ ...formData, jmxFile: null });
+
+                      // Reset the file input so the same file can be reselected
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                    }}
+                  >
+                    <X size={16} />
+                  </IconButton>
                 )}
 
                 {/* Hidden file input */}
-                <input
+                {/* <input
                   type="file"
                   hidden
                   accept=".jmx"
@@ -1084,6 +1106,25 @@ export const AddApplicationModal: React.FC<Props> = ({
 
                     setFormData({ ...formData, jmxFile: file });
                   }}
+                /> */}
+
+                <input
+                  type="file"
+                  accept=".jmx"
+                  ref={fileInputRef}
+                  onClick={(e) => {
+                    (e.target as HTMLInputElement).value = "";
+                  }}
+                  onChange={(e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        jmxFile: file,
+                      }));
+                    }
+                  }}
+                  className="hidden"
                 />
               </Button>
 

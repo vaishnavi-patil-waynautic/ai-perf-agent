@@ -443,7 +443,7 @@ if (authLoading) {
           </ProtectedRoute>
         } /> */}
 
-        <Route path="/dashboard" element={
+        <Route path="/governance" element={
           <ProtectedRoute>
             <AppLayout>
               <GovernanceDashboard />

@@ -28,6 +28,8 @@ const Login: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
 
+    localStorage.clear();
+
     e.preventDefault();
     setError("");
 

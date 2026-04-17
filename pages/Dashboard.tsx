@@ -53,15 +53,15 @@ const Dashboard: React.FC = () => {
       title: (
         <div className="flex items-center space-x-2">
           <span>Governance</span>
-          <span className="bg-yellow-200 text-yellow-800 text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full">
+          {/* <span className="bg-yellow-200 text-yellow-800 text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full">
             WIP
-          </span>
+          </span> */}
         </div>
       ),
       desc: 'Monitor compliance and NFR standards across pipelines.',
       icon: (<ShieldCheck size={24} className="text-green-600" />),
       color: 'bg-green-50 hover:border-green-300',
-      action: () => alert('Module coming soon')
+      action: () => navigate('/governance')
     },
     {
       id: 'nfr',

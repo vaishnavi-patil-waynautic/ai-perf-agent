@@ -142,6 +142,7 @@ export default function AISettings() {
   const dispatch = useDispatch<AppDispatch>();
   const [open, setOpen] = useState(false);
   const models = useSelector((state: RootState) => state.aiModel.models);
+    const user = useSelector((state: RootState) => state.user.profile);
   const [form, setForm] = useState({
     name: "",
     api_token: "",
@@ -246,7 +247,14 @@ export default function AISettings() {
 
         <button
           onClick={() => setOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm transition"
+          // className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm transition"
+           disabled={!user?.is_staff}
+          className={`
+    px-4 py-2 rounded-md text-white transition
+    ${user?.is_staff
+              ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"}
+  `}
         >
           + Add Model
         </button>
@@ -260,7 +268,8 @@ export default function AISettings() {
               <th className="text-left p-3 font-medium px-5">Model Name</th>
               <th className="text-left p-3 font-medium">Provider</th>
               <th className="text-left p-3 font-medium">Rate Limit</th>
-              <th className="text-right p-3 font-medium px-5">Action</th>
+              
+              {user?.is_staff && ( <th className="text-right p-3 font-medium px-5">Action</th>)}
             </tr>
           </thead>
 
@@ -288,14 +297,15 @@ export default function AISettings() {
 
                 <td className="p-3 text-gray-600">{model.rate_limit}</td>
 
-                <td className="p-3 text-right px-8">
+                {user?.is_staff && ( <td className="p-3 text-right px-8">
                   <button
                     onClick={() => handleDelete(model.id)}
                     className="text-red-500 hover:text-red-600 transition"
                   >
                     <Trash2 size={14} />
                   </button>
-                </td>
+                </td>)}
+               
               </tr>
             ))}
           </tbody>

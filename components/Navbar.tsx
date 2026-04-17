@@ -462,9 +462,9 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
               <LayoutDashboard size={14} />
               <span>Governance</span>
 
-              <span className="bg-yellow-200 text-yellow-800 text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full">
+              {/* <span className="bg-yellow-200 text-yellow-800 text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full">
                 WIP
-              </span>
+              </span> */}
             </button>
 
           </div>

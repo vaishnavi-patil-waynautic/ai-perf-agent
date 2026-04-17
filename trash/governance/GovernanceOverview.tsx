@@ -1,8 +1,8 @@
 import { Box, Typography, Button } from '@mui/material';
-import { KPIWidget } from '../components/widgets/KPIWidget';
-import { LineChartWidget } from '../components/widgets/LineChartWidget';
-import TableWidget from '../components/widgets/TableWidget';
-import { mockWidgetData } from '../data/mockDashboard';
+import { KPIWidget } from '../../pages/governance/components/widgets/KPIWidget';
+import { LineChartWidget } from '../../pages/governance/components/widgets/LineChartWidget';
+import TableWidget from '../../pages/governance/components/widgets/TableWidget';
+import { mockWidgetData } from '../../pages/governance/data/mockDashboard';
 
 const mockNfrData = mockWidgetData['table-1'];
 const trendData = mockWidgetData['line-1'];

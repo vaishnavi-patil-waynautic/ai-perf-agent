@@ -653,6 +653,7 @@ const handleCopy = async () => {
   const combinedText = [
     message.content,
     message.data.results ? "\n\nResults:\n" + formatResults(message.data.results) : "",
+    message.data.bugs ? "\n\nBugs:\n" + formatResults(message.data.bugs) : "",
   ]
     .filter(Boolean)
     .join("");

@@ -431,14 +431,15 @@ export const fetchChatMessages = async (chatId: string): Promise<ChatMessage[]> 
     const botMsg: ChatMessage = {
       id: `${m.id}`,
       sender: "bot",
-      type: m.visualization_type ? "visualization" : "text",
+      type: m.visualization_type || m.bug_results ? "visualization" : "text",
       content: m.summary ?? "",
       timestamp: new Date(m.created_on).toISOString(),
       liked: m.user_feedback?.is_liked ?? false,
       disliked: m.user_feedback?.is_disliked ?? false,
       data: {
         answer: m.summary ?? m.answer ?? "",
-        results: m.results || m.bugs || m.bug_results || m.query_results ,
+        bugs: m.bug_results || m.bugs,  // ✅ bug_results from API
+        results: m.query_results || m.results,  // ✅ query_results from API
         visualization_type: m.visualization_type,
         chart_metadata: m.chart_metadata,
         table_used: m.table_used,

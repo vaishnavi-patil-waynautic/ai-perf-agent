@@ -426,66 +426,109 @@ const AutoScriptPage: React.FC = () => {
 
 
   useEffect(() => {
-  if (!selectedProject?.id) return;
+    if (!selectedProject?.id) return;
 
-  const storedProjectId = Number(
-    localStorage.getItem("AUTOSCRIPT_PROJECT_ID")
-  );
-
-  console.log(
-    "[Project Check] Stored:",
-    storedProjectId,
-    "Current:",
-    selectedProject.id
-  );
-
-  // First load after refresh – do not clear files
-  if (!storedProjectId) {
-    localStorage.setItem(
-      "AUTOSCRIPT_PROJECT_ID",
-      selectedProject.id.toString()
+    const storedProjectId = Number(
+      localStorage.getItem("AUTOSCRIPT_PROJECT_ID")
     );
-    previousProjectIdRef.current = selectedProject.id;
-    return;
-  }
 
-  // Clear files only when the project actually changes
-  if (storedProjectId !== selectedProject.id) {
-    console.log("[Project Change] Clearing stored files");
-
-    localStorage.removeItem(FILE1_STORAGE_KEY);
-    localStorage.removeItem(FILE2_STORAGE_KEY);
-
-    setFile1(null);
-    setFile2(null);
-
-    localStorage.setItem(
-      "AUTOSCRIPT_PROJECT_ID",
-      selectedProject.id.toString()
+    console.log(
+      "[Project Check] Stored:",
+      storedProjectId,
+      "Current:",
+      selectedProject.id
     );
-  }
 
-  previousProjectIdRef.current = selectedProject.id;
-
-  console.log('[Effect] Project changed, fetching initial history');
-
-  let isMounted = true;
-
-  const initialFetch = async () => {
-    const hasRunning = await fetchHistory();
-
-    if (isMounted && hasRunning) {
-      startPolling();
+    // First load after refresh – do not clear files
+    if (!storedProjectId) {
+      localStorage.setItem(
+        "AUTOSCRIPT_PROJECT_ID",
+        selectedProject.id.toString()
+      );
+      previousProjectIdRef.current = selectedProject.id;
+      return;
     }
+
+    // Clear files only when the project actually changes
+    if (storedProjectId !== selectedProject.id) {
+      console.log("[Project Change] Clearing stored files");
+
+      localStorage.removeItem(FILE1_STORAGE_KEY);
+      localStorage.removeItem(FILE2_STORAGE_KEY);
+
+      setFile1(null);
+      setFile2(null);
+
+      localStorage.setItem(
+        "AUTOSCRIPT_PROJECT_ID",
+        selectedProject.id.toString()
+      );
+    }
+
+    previousProjectIdRef.current = selectedProject.id;
+
+    console.log('[Effect] Project changed, fetching initial history');
+
+    let isMounted = true;
+
+    const initialFetch = async () => {
+      const hasRunning = await fetchHistory();
+
+      if (isMounted && hasRunning) {
+        startPolling();
+      }
+    };
+
+    initialFetch();
+
+    return () => {
+      isMounted = false;
+      stopPolling();
+    };
+  }, [selectedProject?.id, fetchHistory, startPolling, stopPolling]);
+
+
+  const MAX_FILE_SIZE_MB = 50;
+  const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+  const validateHarFile = (
+    file: File,
+    existingFile?: File | null
+  ): boolean => {
+    if (!file.name.toLowerCase().endsWith(".har")) {
+      dispatch(
+        showSnackbar({
+          message: "Upload failed! Please select a valid HAR file.",
+          type: "error",
+        })
+      );
+      return false;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      dispatch(
+        showSnackbar({
+          message: `File exceeds ${MAX_FILE_SIZE_MB} MB limit.`,
+          type: "error",
+        })
+      );
+      return false;
+    }
+
+    // Optional: Ensure total size doesn't exceed 50 MB
+    if (existingFile && file.size + existingFile.size > MAX_FILE_SIZE) {
+      dispatch(
+        showSnackbar({
+          message: "Total size of both HAR files must not exceed 50 MB.",
+          type: "error",
+        })
+      );
+      return false;
+    }
+
+    return true;
   };
 
-  initialFetch();
-
-  return () => {
-    isMounted = false;
-    stopPolling();
-  };
-}, [selectedProject?.id, fetchHistory, startPolling, stopPolling]);
 
   const generate = async () => {
     if (!file1 || !file2) {
@@ -797,7 +840,7 @@ const AutoScriptPage: React.FC = () => {
 
 
 
-        <input
+        {/* <input
           hidden
           ref={fileRef1}
           type="file"
@@ -855,7 +898,58 @@ const AutoScriptPage: React.FC = () => {
               console.log("[SAVE] REFERENCE FOR PROJECT : ", previousProjectIdRef)
             }
           }}
-        />
+        /> */}
+
+
+          <input
+        hidden
+        ref={fileRef1}
+        type="file"
+        accept=".har"
+        onClick={(e: React.MouseEvent<HTMLInputElement>) => {
+          e.currentTarget.value = "";
+        }}
+        onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+
+          if (!validateHarFile(file, file2)) {
+            if (fileRef1.current) fileRef1.current.value = "";
+            return;
+          }
+
+          setFile1(file);
+
+          // Avoid localStorage for large files
+          // Use IndexedDB instead (recommended)
+          console.log("Selected File 1:", file.name);
+        }}
+      />
+
+      <input
+        hidden
+        ref={fileRef2}
+        type="file"
+        accept=".har"
+        onClick={(e: React.MouseEvent<HTMLInputElement>) => {
+          e.currentTarget.value = "";
+        }}
+        onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+
+          if (!validateHarFile(file, file1)) {
+            if (fileRef2.current) fileRef2.current.value = "";
+            return;
+          }
+
+          setFile2(file);
+
+          console.log("Selected File 2:", file.name);
+          console.log("REFERENCE FOR PROJECT:", previousProjectIdRef);
+        }}
+      />
+      
       </div>
     );
   }
@@ -898,7 +992,7 @@ const AutoScriptPage: React.FC = () => {
         </div>
       </div>
 
-      <input
+      {/* <input
         hidden
         ref={fileRef1}
         type="file"
@@ -957,7 +1051,59 @@ const AutoScriptPage: React.FC = () => {
             console.log(" REFERENCE FOR PROJECT : ", previousProjectIdRef)
           }
         }}
+      /> */}
+
+
+      <input
+        hidden
+        ref={fileRef1}
+        type="file"
+        accept=".har"
+        onClick={(e: React.MouseEvent<HTMLInputElement>) => {
+          e.currentTarget.value = "";
+        }}
+        onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+
+          if (!validateHarFile(file, file2)) {
+            if (fileRef1.current) fileRef1.current.value = "";
+            return;
+          }
+
+          setFile1(file);
+
+          // Avoid localStorage for large files
+          // Use IndexedDB instead (recommended)
+          console.log("Selected File 1:", file.name);
+        }}
       />
+
+      <input
+        hidden
+        ref={fileRef2}
+        type="file"
+        accept=".har"
+        onClick={(e: React.MouseEvent<HTMLInputElement>) => {
+          e.currentTarget.value = "";
+        }}
+        onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+
+          if (!validateHarFile(file, file1)) {
+            if (fileRef2.current) fileRef2.current.value = "";
+            return;
+          }
+
+          setFile2(file);
+
+          console.log("Selected File 2:", file.name);
+          console.log("REFERENCE FOR PROJECT:", previousProjectIdRef);
+        }}
+      />
+
+
     </div>
   );
 };

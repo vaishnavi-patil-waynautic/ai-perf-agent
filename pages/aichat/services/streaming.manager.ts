@@ -137,7 +137,8 @@ export function startStream(params: {
           content: responseData.answer || responseData.summary || s.accumulatedText,
           data: {
             ...responseData,
-            results: responseData.results || responseData.bugs || responseData.query_results || [],
+            bugs: responseData.bugs,  // ✅ Keep bugs separate
+            results: responseData.results || responseData.query_results || [],  // ✅ Keep results separate
           },
           type: hasVisualization ? 'visualization' : 'text',
           newChatId,

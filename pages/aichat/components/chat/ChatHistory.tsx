@@ -157,7 +157,7 @@ import {
   createChat,
   deleteByChatId,
 } from '../../store/slices/chat.thunk';
-import { setCurrentChat, clearMessages } from '../../store/slices/chat.slice';
+import { setCurrentChat, clearMessages, clearNewChat } from '../../store/slices/chat.slice';
 import { RootState, store } from '@/store/store';
 import { Delete, MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { showSnackbar } from '@/store/snackbarStore';
@@ -188,6 +188,7 @@ const ChatHistory: React.FC<{ collapsed?: boolean; onCollapse?: () => void }> = 
   };
 
   const handleNewChat = () => {
+    dispatch(clearNewChat());
     dispatch(setCurrentChat('0'));
   };
 
@@ -280,23 +281,43 @@ const ChatHistory: React.FC<{ collapsed?: boolean; onCollapse?: () => void }> = 
             <div className="text-center py-12 px-4">
               <p className="text-slate-300 text-sm font-medium italic">No history yet</p>
             </div>
-          ) : (
-            chatHistories.map((chat) => (
-              <div
-                key={chat.id}
-                onClick={() => handleChatSelect(chat.id)}
-                className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all duration-200 ${currentChatId === chat.id ? "bg-blue-50 text-blue-700 shadow-sm" : "hover:bg-slate-50 text-slate-600"}`}
-              >
-                <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
-                  <MessageSquare size={15} className={`flex-shrink-0 ${currentChatId === chat.id ? "text-blue-500" : "text-slate-400"}`} />
-                  <span className="truncate text-sm">{chat.title || "New Chat"}</span>
-                </div>
-                <button onClick={(e) => { e.stopPropagation(); handleDelete(chat.id); }} className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all flex-shrink-0">
-                  <Trash2 size={13} />
-                </button>
-              </div>
-            ))
-          )}
+          ) : chatHistories
+  .filter((chat) => chat?.messageCount > 0)
+  .map((chat) => (
+    <div
+      key={chat.id}
+      onClick={() => handleChatSelect(chat.id)}
+      className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+        currentChatId === chat.id
+          ? "bg-blue-50 text-blue-700 shadow-sm"
+          : "hover:bg-slate-50 text-slate-600"
+      }`}
+    >
+      <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
+        <MessageSquare
+          size={15}
+          className={`flex-shrink-0 ${
+            currentChatId === chat.id
+              ? "text-blue-500"
+              : "text-slate-400"
+          }`}
+        />
+        <span className="truncate text-sm">
+          {chat.title || "New Chat"}
+        </span>
+      </div>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDelete(chat.id);
+        }}
+        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all flex-shrink-0"
+      >
+        <Trash2 size={13} />
+      </button>
+    </div>
+  ))}
         </div>
       </div>
       <style>{`.custom-scrollbar::-webkit-scrollbar{width:4px}.custom-scrollbar::-webkit-scrollbar-track{background:transparent}.custom-scrollbar::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px}.custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#cbd5e1}`}</style>
