@@ -195,11 +195,11 @@ export const KPIWidget = ({
         borderRadius: '20px',
         position: 'relative',
         overflow: 'hidden',
-        background:
-          theme.palette.mode === 'dark'
-            ? 'linear-gradient(145deg, #1e293b, #0f172a)'
-            : 'linear-gradient(145deg, #ffffff, #f8fafc)',
-        border: `1px solid ${theme.palette.divider}`,
+        // background:
+        //   theme.palette.mode === 'dark'
+        //     ? 'linear-gradient(145deg, #1e293b, #0f172a)'
+        //     : 'linear-gradient(145deg, #ffffff, #f8fafc)',
+        // border: `1px solid ${theme.palette.divider}`,
         boxShadow:
           theme.palette.mode === 'dark'
             ? '0 4px 14px rgba(0,0,0,0.4)'
