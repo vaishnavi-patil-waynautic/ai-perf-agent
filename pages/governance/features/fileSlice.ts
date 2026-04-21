@@ -32,3 +32,5 @@ export const fileSlice = createSlice({
     }
   }
 });
+
+export default fileSlice.reducer;

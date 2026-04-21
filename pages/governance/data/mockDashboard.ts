@@ -316,6 +316,22 @@ export const mockWidgets: WidgetConfig[] = [
     layout: { x: 6, y: 2, w: 6, h: 3 },
     visuals: defaultVisuals,
   },
+  {
+  id: 'roi-kpi-7',
+  type: 'KPI',
+  title: 'LLM Tokens Used',
+  dataSource: defaultDataSource,
+  layout: { x: 0, y: 5, w: 6, h: 2 },
+  visuals: { ...defaultVisuals, color: '#6366f1' },
+},
+{
+  id: 'roi-kpi-8',
+  type: 'KPI',
+  title: 'LLM Cost Used',
+  dataSource: defaultDataSource,
+  layout: { x: 6, y: 5, w: 6, h: 2 },
+  visuals: { ...defaultVisuals, color: '#ef4444' },
+},
 ];
 
 /* -------------------------------------------------------------------------- */

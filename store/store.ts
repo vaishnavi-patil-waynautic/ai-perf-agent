@@ -22,8 +22,8 @@ import userReducer from '../pages/settings/store/user.slice';
 import chatReducer from '../pages/aichat/store/slices/chat.slice';
 import appSnackbarReducer from './snackbarStore';
 import aiModelReducer from '../pages/settings/store/aiModel.slice';
-import { dashboardSlice } from '../pages/governance/features/dashboardSlice';
-import { fileSlice } from '../pages/governance/features/fileSlice';
+import dashboardReducer from '../pages/governance/features/dashboardSlice';
+import fileReducer from '../pages/governance/features/fileSlice';
 // Combine reducers
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -36,8 +36,8 @@ const rootReducer = combineReducers({
   chat: chatReducer,
   appSnackbar: appSnackbarReducer,
   aiModel: aiModelReducer,
-  dashboard: dashboardSlice.reducer,
-  files: fileSlice.reducer,
+  dashboard: dashboardReducer,
+  files: fileReducer,
 });
 
 // Persist configuration

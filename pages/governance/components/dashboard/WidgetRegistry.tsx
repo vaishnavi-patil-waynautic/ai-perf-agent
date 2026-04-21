@@ -49,7 +49,8 @@ const Registry: Record<string, React.FC<any>> = {
 
 export const renderWidget = (
   config: WidgetConfig,
-  filters: GlobalFilters
+  filters: GlobalFilters,
+  overrideData?: any
 ) => {
   const Component = Registry[config.type];
 
@@ -64,7 +65,8 @@ export const renderWidget = (
   }
 
   // Fetch mock data using widget ID
-  const data = mockWidgetData[config.id];
+  // const data = mockWidgetData[config.id];
+  const data = overrideData ?? mockWidgetData[config.id];
 
   return <Component config={config} filters={filters} data={data} />;
 };
