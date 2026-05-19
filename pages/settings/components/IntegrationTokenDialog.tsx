@@ -1,74 +1,3 @@
-// import {
-//   Dialog,
-//   DialogTitle,
-//   DialogContent,
-//   DialogActions,
-//   Button,
-//   TextField,
-// } from "@mui/material";
-// import { useEffect, useState } from "react";
-
-
-// type Props = {
-//   open: boolean;
-//   onClose: () => void;
-//   integrationId?: number;
-//   type : string;
-//   projectId : number;
-// };
-
-// export default function IntegrationTokenDialog({
-//   open,
-//   onClose,
-//   integrationId,
-//   type,
-//   projectId
-// }: Props) {
-//   const [token, setToken] = useState("");
-
-//   useEffect(() => {
-//     setToken(initialToken || "");
-//   }, [initialToken, open]);
-
-//   return (
-//     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-//       <DialogTitle sx={{ color: "primary.main" }}>
-//         {initialToken ? "Edit Token" : "Connect Integration"}
-//       </DialogTitle>
-
-//       <DialogContent sx={{ pt: 2 }}>
-//         <TextField
-//           label="Access Token"
-//           type="password"
-//           fullWidth
-//           size="small"
-//           margin="normal"
-//           value={token}
-//           onChange={e => setToken(e.target.value)}
-//         />
-//       </DialogContent>
-
-
-//       <DialogActions sx={{ justifyContent: "space-between", px: 2, pb: 2 }}>
-//         <Button onClick={onClose}>Cancel</Button>
-
-//         <Button
-//           variant="contained"
-//           disabled={!token.trim()}
-//           onClick={() => {
-//             onSave(token);
-//             onClose();
-//           }}
-//         >
-//           Save
-//         </Button>
-//       </DialogActions>
-
-//     </Dialog>
-//   );
-// }
-
-
 import {
   Dialog,
   DialogTitle,
@@ -155,34 +84,6 @@ export default function IntegrationTokenDialog({
     fetchToken();
   }, [open, integrationId, projectId]);
 
-  /* ================= Save ================= */
-  // const handleSave = async () => {
-  //   try {
-  //     const payload: any = { integration_type: type };
-
-  //     if (type === "github" || type === "jira" || type === "datadog") {
-  //       payload.token = token;
-  //     }
-
-  //     if (type === "blazemeter") {
-  //       payload.api_key = apiKey;
-  //       payload.api_secret = apiSecret;
-  //     }
-
-  //     if (type === "ado") {
-  //       payload.ado_pat = adoPat;
-  //     }
-
-  //     console.log("Saving payload:", payload);
-
-  //     // TODO: call create/update API here
-
-  //     onClose();
-  //   } catch (err) {
-  //     console.error("Save failed:", err);
-  //   }
-  // };
-
 
   const handleSave = async () => {
     try {
@@ -225,15 +126,7 @@ export default function IntegrationTokenDialog({
 
       console.log("Saving payload:", payload);
 
-      // ================= Create or Update =================
 
-      // if (integrationId) {
-      //   await integrationService.updateIntegration(
-      //     projectId,
-      //     integrationId,
-      //     payload
-      //   );
-      // } else {
       await integrationService.createIntegration(
         projectId,
         payload
@@ -293,18 +186,7 @@ export default function IntegrationTokenDialog({
       </DialogTitle>
 
       <DialogContent sx={{ pt: 1 }}>
-{/* 
-        <TextField
-          label="Name"
-          fullWidth
-          size="small"
-          margin="normal"
-          value={name}
-          inputProps={{ maxLength: 50 }}
-          helperText={name.length >= 50 ? "Name cannot exceed 50 characters" : ""}
-          FormHelperTextProps={{ sx: { color: 'error.main' } }}
-          onChange={(e) => setName(e.target.value)}
-        /> */}
+
 
         {/* GitHub / Jira / Datadog */}
         {(type === "github" || type === "jira" || type === "datadog") && (

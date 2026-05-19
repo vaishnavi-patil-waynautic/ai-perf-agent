@@ -22,145 +22,99 @@ export default function ApplicationSettings() {
   const [editingApp, setEditingApp] = useState<Application | null>(null);
   const [deleteOpen, setDeleteOpen] = useState<Application | null>(null);
 
-  // const handleAdd = async (data: { name: string; description: string }) => {
-  //   if (!selectedProject?.id) return;
-
-  //   try {
-  //     await dispatch(createApplication({
-  //       projectId: selectedProject.id,
-  //       name: data.name,
-  //       description: data.description
-  //     })).unwrap();
-
-  //     console.log("[UI] Application created");
-
-  //   } catch (err) {
-  //     console.error("[UI] Create failed:", err);
-  //   }
-  // };
 
   const handleAdd = async (data: { name: string; description: string }) => {
-  if (!selectedProject?.id) return;
+    if (!selectedProject?.id) return;
 
-  try {
-    await dispatch(
-      createApplication({
-        projectId: selectedProject.id,
-        name: data.name,
-        description: data.description,
-      })
-    ).unwrap();
+    try {
+      await dispatch(
+        createApplication({
+          projectId: selectedProject.id,
+          name: data.name,
+          description: data.description,
+        })
+      ).unwrap();
 
-    dispatch(
-      showSnackbar({
-        message: "Application created successfully",
-        type: "success",
-      })
-    );
+      dispatch(
+        showSnackbar({
+          message: "Application created successfully",
+          type: "success",
+        })
+      );
 
-    setEditingApp(null);
-    
-  } catch (err: any) {
-    console.error("[UI] Create failed:", err);
+      setEditingApp(null);
 
-    dispatch(
-      showSnackbar({
-        message: err || err?.message || "Failed to create application",
-        type: "error",
-      })
-    );
-  }
-};
+    } catch (err: any) {
+      console.error("[UI] Create failed:", err);
 
+      dispatch(
+        showSnackbar({
+          message: err || err?.message || "Failed to create application",
+          type: "error",
+        })
+      );
+    }
+  };
 
+  const handleEdit = async (data: { name: string; description: string }) => {
+    if (!editingApp) return;
 
-  // const handleEdit = async (data: { name: string; description: string }) => {
-  //   if (!editingApp) return;
+    try {
+      await dispatch(
+        updateApplication({
+          appId: editingApp.id,
+          name: data.name,
+          description: data.description,
+        })
+      ).unwrap();
 
-  //   try {
-  //     await dispatch(updateApplication({
-  //       appId: editingApp.id,   // must be NUMBER
-  //       name: data.name,
-  //       description: data.description
-  //     })).unwrap();
+      setEditingApp(null);
 
-  //     console.log("[UI] Application updated");
+      dispatch(
+        showSnackbar({
+          message: "Application updated successfully",
+          type: "success",
+        })
+      );
+    } catch (err: any) {
+      console.error("[UI] Update failed:", err);
 
-  //     setEditingApp(null);
-
-  //   } catch (err) {
-  //     console.error("[UI] Update failed:", err);
-  //   }
-  // };
-
-
-  // const handleDelete = async (id: number) => {
-  //   try {
-  //     await dispatch(deleteApplication(id)).unwrap();
-  //     console.log("[UI] Application deleted");
-  //   } catch (err) {
-  //     console.error("[UI] Delete failed:", err);
-  //   }
-  // };
-const handleEdit = async (data: { name: string; description: string }) => {
-  if (!editingApp) return;
-
-  try {
-    await dispatch(
-      updateApplication({
-        appId: editingApp.id,
-        name: data.name,
-        description: data.description,
-      })
-    ).unwrap();
-
-    setEditingApp(null);
-
-    dispatch(
-      showSnackbar({
-        message: "Application updated successfully",
-        type: "success",
-      })
-    );
-  } catch (err: any) {
-    console.error("[UI] Update failed:", err);
-
-    dispatch(
-      showSnackbar({
-        message: err?.message || "Failed to update application",
-        type: "error",
-      })
-    );
-  }
-};
+      dispatch(
+        showSnackbar({
+          message: err?.message || "Failed to update application",
+          type: "error",
+        })
+      );
+    }
+  };
 
 
-const handleDelete = async (id: number) => {
-  try {
+  const handleDelete = async (id: number) => {
+    try {
 
-    if(!deleteOpen) return;
+      if (!deleteOpen) return;
 
-    await dispatch(deleteApplication(id)).unwrap();
+      await dispatch(deleteApplication(id)).unwrap();
 
-    dispatch(
-      showSnackbar({
-        message: "Application deleted successfully",
-        type: "success",
-      })
-    );
-  } catch (err: any) {
-    console.error("[UI] Delete failed:", err);
+      dispatch(
+        showSnackbar({
+          message: "Application deleted successfully",
+          type: "success",
+        })
+      );
+    } catch (err: any) {
+      console.error("[UI] Delete failed:", err);
 
-    dispatch(
-      showSnackbar({
-        message: err?.message || "Failed to delete application",
-        type: "error",
-      })
-    );
-  }
+      dispatch(
+        showSnackbar({
+          message: err?.message || "Failed to delete application",
+          type: "error",
+        })
+      );
+    }
 
-  setDeleteOpen(null);
-};
+    setDeleteOpen(null);
+  };
 
 
   return (
@@ -216,7 +170,7 @@ const handleDelete = async (id: number) => {
       />
 
 
-       {deleteOpen && (
+      {deleteOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-[400px] border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Remove Integration</h3>

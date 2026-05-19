@@ -150,144 +150,144 @@ export default function UserProfileSettings() {
     // };
 
     const handleSaveProfile = async () => {
-  try {
-    setLoading(true);
+        try {
+            setLoading(true);
 
-    await dispatch(updateCurrentUser(formData)).unwrap();
+            await dispatch(updateCurrentUser(formData)).unwrap();
 
-    setEditMode(false);
+            setEditMode(false);
 
-    dispatch(
-      showSnackbar({
-        message: "Profile updated successfully!",
-        type: "success",
-      })
-    );
-  } catch (err: any) {
-    dispatch(
-      showSnackbar({
-        message: err?.message || "Failed to update profile",
-        type: "error",
-      })
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+            dispatch(
+                showSnackbar({
+                    message: "Profile updated successfully!",
+                    type: "success",
+                })
+            );
+        } catch (err: any) {
+            dispatch(
+                showSnackbar({
+                    message: err?.message || "Failed to update profile",
+                    type: "error",
+                })
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
-//     const handleChangePassword = async () => {
-//   // Frontend validation
-//   if (passwordData.newPassword !== passwordData.confirmPassword) {
-//     setSnackbar({
-//       open: true,
-//       message: "Passwords do not match",
-//       severity: "error",
-//     });
-//     return;
-//   }
+    //     const handleChangePassword = async () => {
+    //   // Frontend validation
+    //   if (passwordData.newPassword !== passwordData.confirmPassword) {
+    //     setSnackbar({
+    //       open: true,
+    //       message: "Passwords do not match",
+    //       severity: "error",
+    //     });
+    //     return;
+    //   }
 
-//   if (passwordData.newPassword.length < 8) {
-//     setSnackbar({
-//       open: true,
-//       message: "Password must be at least 8 characters",
-//       severity: "error",
-//     });
-//     return;
-//   }
+    //   if (passwordData.newPassword.length < 8) {
+    //     setSnackbar({
+    //       open: true,
+    //       message: "Password must be at least 8 characters",
+    //       severity: "error",
+    //     });
+    //     return;
+    //   }
 
-//   try {
-//     setLoading(true);
+    //   try {
+    //     setLoading(true);
 
-//     await changePassword(
-//       passwordData.currentPassword,
-//       passwordData.newPassword,
-//       passwordData.confirmPassword
-//     );
+    //     await changePassword(
+    //       passwordData.currentPassword,
+    //       passwordData.newPassword,
+    //       passwordData.confirmPassword
+    //     );
 
-//     setPasswordDialog(false);
-//     setPasswordData({
-//       currentPassword: "",
-//       newPassword: "",
-//       confirmPassword: "",
-//     });
+    //     setPasswordDialog(false);
+    //     setPasswordData({
+    //       currentPassword: "",
+    //       newPassword: "",
+    //       confirmPassword: "",
+    //     });
 
-//     setSnackbar({
-//       open: true,
-//       message: "Password changed successfully",
-//       severity: "success",
-//     });
+    //     setSnackbar({
+    //       open: true,
+    //       message: "Password changed successfully",
+    //       severity: "success",
+    //     });
 
-//   } catch (err: any) {
-//     console.error("Change password error:", err);
+    //   } catch (err: any) {
+    //     console.error("Change password error:", err);
 
-//     setSnackbar({
-//       open: true,
-//       message: err.message || "Failed to change password",
-//       severity: "error",
-//     });
-//   } finally {
-//     setLoading(false);
-//   }
-// };
+    //     setSnackbar({
+    //       open: true,
+    //       message: err.message || "Failed to change password",
+    //       severity: "error",
+    //     });
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
 
-const handleChangePassword = async () => {
-  // Frontend validation
-  if (passwordData.newPassword !== passwordData.confirmPassword) {
-    dispatch(
-      showSnackbar({
-        message: "Passwords do not match",
-        type: "error",
-      })
-    );
-    return;
-  }
+    const handleChangePassword = async () => {
+        // Frontend validation
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            dispatch(
+                showSnackbar({
+                    message: "Passwords do not match",
+                    type: "error",
+                })
+            );
+            return;
+        }
 
-  if (passwordData.newPassword.length < 8) {
-    dispatch(
-      showSnackbar({
-        message: "Password must be at least 8 characters",
-        type: "error",
-      })
-    );
-    return;
-  }
+        if (passwordData.newPassword.length < 8) {
+            dispatch(
+                showSnackbar({
+                    message: "Password must be at least 8 characters",
+                    type: "error",
+                })
+            );
+            return;
+        }
 
-  try {
-    setLoading(true);
+        try {
+            setLoading(true);
 
-    await changePassword(
-      passwordData.currentPassword,
-      passwordData.newPassword,
-      passwordData.confirmPassword
-    );
+            await changePassword(
+                passwordData.currentPassword,
+                passwordData.newPassword,
+                passwordData.confirmPassword
+            );
 
-    setPasswordDialog(false);
-    setPasswordData({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+            setPasswordDialog(false);
+            setPasswordData({
+                currentPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+            });
 
-    dispatch(
-      showSnackbar({
-        message: "Password changed successfully",
-        type: "success",
-      })
-    );
-  } catch (err: any) {
-    console.error("Change password error:", err);
+            dispatch(
+                showSnackbar({
+                    message: "Password changed successfully",
+                    type: "success",
+                })
+            );
+        } catch (err: any) {
+            console.error("Change password error:", err);
 
-    dispatch(
-      showSnackbar({
-        message: err?.message || "Failed to change password",
-        type: "error",
-      })
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+            dispatch(
+                showSnackbar({
+                    message: err?.message || "Failed to change password",
+                    type: "error",
+                })
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSettingChange = (setting) => {
         setSettings({ ...settings, [setting]: !settings[setting] });
@@ -435,36 +435,36 @@ const handleChangePassword = async () => {
                             />
 
                             <TextField
-  label="Phone Number"
-  type="tel"
-  value={editMode ? formData.phone_no : user?.phone_no || ""}
-  onChange={(e) => {
-    let value = e.target.value;
+                                label="Phone Number"
+                                type="tel"
+                                value={editMode ? formData.phone_no : user?.phone_no || ""}
+                                onChange={(e) => {
+                                    let value = e.target.value;
 
-    // Allow only digits + optional leading "+"
-    value = value.replace(/[^\d+]/g, "");
+                                    // Allow only digits + optional leading "+"
+                                    value = value.replace(/[^\d+]/g, "");
 
-    // Ensure only one "+" and only at start
-    if (value.includes("+")) {
-      value = "+" + value.replace(/\+/g, "");
-    }
+                                    // Ensure only one "+" and only at start
+                                    if (value.includes("+")) {
+                                        value = "+" + value.replace(/\+/g, "");
+                                    }
 
-    setFormData({ ...formData, phone_no: value });
-  }}
-  disabled={!editMode}
-  fullWidth
-  inputProps={{
-    maxLength: 14, // enough for +91XXXXXXXXXX
-    inputMode: "tel",
-  }}
-  InputProps={{
-    startAdornment: (
-      <InputAdornment position="start">
-        <Phone className="text-gray-400" fontSize="small" />
-      </InputAdornment>
-    ),
-  }}
-/>
+                                    setFormData({ ...formData, phone_no: value });
+                                }}
+                                disabled={!editMode}
+                                fullWidth
+                                inputProps={{
+                                    maxLength: 14, // enough for +91XXXXXXXXXX
+                                    inputMode: "tel",
+                                }}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Phone className="text-gray-400" fontSize="small" />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
 
                             <TextField
                                 label="Location"

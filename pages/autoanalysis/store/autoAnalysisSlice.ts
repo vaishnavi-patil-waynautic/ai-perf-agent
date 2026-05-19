@@ -33,26 +33,6 @@ export const fetchApps = createAsyncThunk<
 );
 
 
-// export const addApp = createAsyncThunk('autoAnalysis/addApp', async (data: any) => await api.createApplication(data));
-// export const removeApp = createAsyncThunk('autoAnalysis/removeApp', async (id: string) => {
-//   await api.deleteApplication(id);
-//   return id;
-// });
-
-// export const fetchConfig = createAsyncThunk<
-//   AppDetails,
-//   { projectId: number; appId: number }
-// >(
-//   'autoAnalysis/fetchConfig',
-//   async ({ projectId, appId }, thunkAPI) => {
-//     try {
-//       return await api.fetchAppDetails(projectId, appId);
-//     } catch (err: any) {
-//       return thunkAPI.rejectWithValue(err.message);
-//     }
-//   }
-// );
-
 export const fetchConfig = createAsyncThunk<
   AppDetails,
   { projectId: number; appId: number }
@@ -128,16 +108,6 @@ updateRecipientsLocal: (state, action) => {
         state.loading = false;
         state.applications = action.payload;
       })
-      // Add App
-      // .addCase(addApp.fulfilled, (state, action) => {
-      //   state.applications.push(action.payload);
-      // })
-      // // Remove App
-      // .addCase(removeApp.fulfilled, (state, action) => {
-      //   state.applications = state.applications.filter(
-      //     app => app.id !== action.payload
-      //   );
-      // })
 
       // Fetch Config
       .addCase(fetchConfig.pending, (state) => {

@@ -1,55 +1,3 @@
-// import { useState } from "react";
-// import BarChartView from "./BarChartView";
-// import DataTableView from "./DataTableView";
-
-// export default function VisualizationBlock({ data, visualization }: any) {
-//   const [view, setView] = useState<"chart" | "table">(
-//     visualization?.type ? "chart" : "table"
-//   );
-
-//   const containerStyle = {
-//     border: "1px solid #e5e7eb",
-//     borderRadius: 10,
-//     marginTop: 10,
-//     overflow: "hidden",
-//     background: "#fff",
-//   };
-
-//   return (
-//     <div style={containerStyle}>
-//       {/* TOOLBAR */}
-//       <div
-//         style={{
-//           display: "flex",
-//           justifyContent: "space-between",
-//           padding: "8px 12px",
-//           borderBottom: "1px solid #f1f5f9",
-//           background: "#f9fafb",
-//         }}
-//       >
-//         <div style={{ fontSize: 12, color: "#64748b" }}>
-//           Data Visualization
-//         </div>
-
-//         <div>
-//           <button onClick={() => setView("chart")}>Chart</button>
-//           <button onClick={() => setView("table")}>Table</button>
-//         </div>
-//       </div>
-
-//       {/* CONTENT */}
-//       <div style={{ maxHeight: 320, overflow: "auto" }}>
-//         {view === "chart" && visualization && (
-//           <BarChartView data={data} visualization={visualization} />
-//         )}
-
-//         {view === "table" && <DataTableView data={data} />}
-//       </div>
-//     </div>
-//   );
-// }
-
-
 import { useEffect, useMemo, useState } from "react";
 import BarChartView from "./BarChartView";
 import DataTableView from "./DataTableView";
@@ -164,15 +112,6 @@ export default function VisualizationBlock({ data, visualization, chart_metadata
   };
 
   return (
-    // <div
-    //   style={{
-    //     border: "1px solid #e5e7eb",
-    //     borderRadius: 12,
-    //     marginTop: 12,
-    //     background: "#fff",
-    //     overflow: "hidden",
-    //   }}
-    // >
 
     <div
       style={{
@@ -199,23 +138,7 @@ export default function VisualizationBlock({ data, visualization, chart_metadata
           zIndex: 2,
         }}
       >
-        {/* Toggle */}
-        {/* <div style={{ display: "flex", gap: 4 }}>
-          {
-            view === "chart" && (<button
-            onClick={() => setView("chart")}
-            style={toggleStyle(view === "chart")}
-          >
-            Chart
-          </button>)
-          }
-          <button
-            onClick={() => setView("table")}
-            style={toggleStyle(view === "table")}
-          >
-            Table
-          </button>
-        </div> */}
+
 
         <div style={{ display: "flex", gap: 4 }}>
           {(visualization !== "table") && (
@@ -292,7 +215,7 @@ export default function VisualizationBlock({ data, visualization, chart_metadata
        */}
       <div style={{ maxHeight: 380, overflow: "auto", width: "100%" }}>
         {view === "bar" && (
-          <BarChartView data={data} visualization={visualization} chart_metadata={chart_metadata}/>
+          <BarChartView data={data} visualization={visualization} chart_metadata={chart_metadata} />
         )}
         {view === "table" && <DataTableView data={data} />}
       </div>

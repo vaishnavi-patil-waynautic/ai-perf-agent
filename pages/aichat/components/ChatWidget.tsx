@@ -7,9 +7,6 @@ import { BotMessageSquare } from 'lucide-react';
 const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
-
-  console.log("New Chat Widget--------------------------------------------")
-
   return (
     <>
       {/* The Chat Window Popup */}
@@ -33,15 +30,7 @@ const ChatWidget: React.FC = () => {
             } transition-colors duration-300`}
             size="large"
           >
-            {/* <ChatIcon
-              className={
-                isOpen
-                  ? 'rotate-90 transition-transform'
-                  : 'transition-transform'
-              }
-            /> */}
 
-            {/* <BotMessageSquare /> */}
           </Fab>
         </Tooltip>
       </div>

@@ -22,18 +22,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 }) => {
   const isFullScreen = useSelector((state: RootState) => state.chat.isFullScreen);
 
-  // In fullscreen with sidebar visible — no header needed, sidebar has the logo
-  // In fullscreen with sidebar collapsed — show floating bar
-  // In collapsed (non-fullscreen) — show minimal floating bar
   const showLeft = !isFullScreen || sidebarCollapsed;
 
   return (
-    // <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-3 pt-2 pointer-events-none">
 
     <div
       className={`${isFullScreen
-          ? "absolute top-0 left-0 right-0 z-10"
-          : "relative w-full py-3"
+        ? "absolute top-0 left-0 right-0 z-10"
+        : "relative w-full py-3"
         } flex items-center justify-between px-3 pt-2 pointer-events-none`}
     >
       {/* Left — only shown when sidebar is collapsed or not fullscreen */}
@@ -60,10 +56,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                 <PanelLeftOpen size={16} />
               </button>
             </Tooltip>
-            {/* <div className="flex items-center gap-2 backdrop-blur-sm rounded-lg px-3 py-1.5 ">
-              <img src="/ai-perf-agent/img/exgenix.png" alt="Waynautic" className="h-5 w-auto" />
-              <span className="font-semibold text-sm text-slate-800">Waynautic AI</span>
-            </div> */}
+
 
             <div className="flex items-center gap-3">
               <img src="/ai-perf-agent/img/exgenix.png" alt="Waynautic" className="h-7 w-auto" />

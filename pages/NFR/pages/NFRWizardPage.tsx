@@ -58,16 +58,7 @@ useEffect(() => {
   previousProjectIdRef.current = selectedProject.id;
 }, [selectedProject?.id, dispatch]);
 
-    // useEffect(() => {
-
-    //   if (!selectedProject?.id) return;
-
-
-    //   console.log("Refreshing the state**********************************************************")
-
-    //   dispatch(resetWizard());
-    // }, [selectedProject?.id]);
-
+   
   const steps = [
     { label: 'Fetch & Select', component: <WizardStep1_Fetch /> },
     { label: 'Add Documents', component: <WizardStep2_Docs /> },

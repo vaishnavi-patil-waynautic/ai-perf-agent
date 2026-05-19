@@ -60,8 +60,6 @@ export const DashboardPage: React.FC = () => {
   const appsPollingRef = useRef<NodeJS.Timeout | null>(null);
 
 
-  // console.log("SELECTED PROJECT IN AUTOSCRIPT : ", selectedProject);
-
   const stopAppsPolling = () => {
     if (appsPollingRef.current) {
       clearInterval(appsPollingRef.current);
@@ -78,175 +76,102 @@ export const DashboardPage: React.FC = () => {
     );
   };
 
-  // const startAppsPolling = async () => {
-
-  //   if (!selectedProject?.id) return;
-
-  //   if (appsPollingRef.current) return;
-
-  //   console.log("Starting apps polling...");
-
-  //   pollingUrlRef.current = window.location.pathname;
-
-
-  //   console.log(" Current Autoanalysis URL : ", pollingUrlRef.current)
-
-  //   appsPollingRef.current = setInterval(async () => {
-
-  //     try {
-
-
-  //             if (window.location.pathname !== pollingUrlRef.current) {
-  //       console.log("URL changed → stopping polling");
-
-  //       clearInterval(appsPollingRef.current!);
-  //       appsPollingRef.current = null;
-  //       pollingUrlRef.current = null;
-  //       return;
-  //     }
-
-  //       console.log("DebugPolling : ", selectedProject);
-
-  //       const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
-
-  //       console.log("Polling apps... in_progress:", hasInProgress(result));
-
-  //       if (!hasInProgress(result)) {
-  //         console.log("All apps finished → stop polling");
-
-  //         dispatch(
-  //           showSnackbar({
-  //             message: "Application configured successfully",
-  //             type: "success",
-  //           })
-  //         );
-
-  //         if (appsPollingRef.current) {
-  //           clearInterval(appsPollingRef.current);
-  //           appsPollingRef.current = null;
-  //         }
-  //       }
-  //     } catch (err) {
-  //       console.error("Apps polling error:", err);
-  //     }
-
-  //   }, 5000);
-
-  // };
-
-
-  // const fetchApplications = async () => {
-
-  //   const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
-
-  //   stopAppsPolling();
-
-  //   console.log("application in useeffect ", result)
-
-
-  //   if (hasInProgress(result)) {
-  //     console.log("application has in progress ", result)
-  //     startAppsPolling();
-  //   }
-
-  // }
-
   const startAppsPolling = async () => {
-  if (!selectedProject?.id) return;
+    if (!selectedProject?.id) return;
 
-  if (appsPollingRef.current) return;
+    if (appsPollingRef.current) return;
 
-  console.log("Starting apps polling...");
+    console.log("Starting apps polling...");
 
-  pollingUrlRef.current = window.location.pathname;
+    pollingUrlRef.current = window.location.pathname;
 
-  console.log("Current Autoanalysis URL:", pollingUrlRef.current);
+    console.log("Current Autoanalysis URL:", pollingUrlRef.current);
 
-  appsPollingRef.current = setInterval(async () => {
-    try {
+    appsPollingRef.current = setInterval(async () => {
+      try {
 
-      // Stop polling if URL changed
-      if (window.location.pathname !== pollingUrlRef.current) {
-        console.log("URL changed → stopping polling");
+        // Stop polling if URL changed
+        if (window.location.pathname !== pollingUrlRef.current) {
+          console.log("URL changed → stopping polling");
 
-        clearInterval(appsPollingRef.current!);
-        appsPollingRef.current = null;
-        pollingUrlRef.current = null;
+          clearInterval(appsPollingRef.current!);
+          appsPollingRef.current = null;
+          pollingUrlRef.current = null;
 
-        return;
-      }
-
-      console.log("Polling apps for project:", selectedProject.id);
-
-      const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
-
-      result.forEach((app: any) => {
-
-        const trackedAppName = inProgressAppsRef.current.get(app.id);
-
-        // If app was previously in progress and now finished
-        if (trackedAppName && app.config_status !== "in_progress") {
-
-          console.log("Status updated for:", trackedAppName, app.config_status);
-
-          if (app.config_status === "completed" || app.config_status === "configured") {
-            dispatch(
-              showSnackbar({
-                message: `${trackedAppName} configured successfully`,
-                type: "success",
-              })
-            );
-          } else if (app.config_status === "failed") {
-            dispatch(
-              showSnackbar({
-                message: `${trackedAppName} configuration failed`,
-                type: "error",
-              })
-            );
-          }
-
-          // Remove from tracking
-          inProgressAppsRef.current.delete(app.id);
+          return;
         }
-      });
 
-      // Stop polling when no apps left
-      if (inProgressAppsRef.current.size === 0) {
-        console.log("All apps finished → stop polling");
+        console.log("Polling apps for project:", selectedProject.id);
 
-        clearInterval(appsPollingRef.current!);
-        appsPollingRef.current = null;
+        const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
+
+        result.forEach((app: any) => {
+
+          const trackedAppName = inProgressAppsRef.current.get(app.id);
+
+          // If app was previously in progress and now finished
+          if (trackedAppName && app.config_status !== "in_progress") {
+
+            console.log("Status updated for:", trackedAppName, app.config_status);
+
+            if (app.config_status === "completed" || app.config_status === "configured") {
+              dispatch(
+                showSnackbar({
+                  message: `${trackedAppName} configured successfully`,
+                  type: "success",
+                })
+              );
+            } else if (app.config_status === "failed") {
+              dispatch(
+                showSnackbar({
+                  message: `${trackedAppName} configuration failed`,
+                  type: "error",
+                })
+              );
+            }
+
+            // Remove from tracking
+            inProgressAppsRef.current.delete(app.id);
+          }
+        });
+
+        // Stop polling when no apps left
+        if (inProgressAppsRef.current.size === 0) {
+          console.log("All apps finished → stop polling");
+
+          clearInterval(appsPollingRef.current!);
+          appsPollingRef.current = null;
+        }
+
+      } catch (err) {
+        console.error("Apps polling error:", err);
       }
-
-    } catch (err) {
-      console.error("Apps polling error:", err);
-    }
-  }, 5000);
-};
+    }, 5000);
+  };
 
 
   const fetchApplications = async () => {
 
-  const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
+    const result = await dispatch(fetchApps(selectedProject.id)).unwrap();
 
-  stopAppsPolling();
+    stopAppsPolling();
 
-  console.log("application in useeffect ", result)
+    console.log("application in useeffect ", result)
 
-  const inProgressApps = result?.filter(
-    (app: any) => app.config_status === "in_progress"
-  );
+    const inProgressApps = result?.filter(
+      (app: any) => app.config_status === "in_progress"
+    );
 
-  if (inProgressApps?.length) {
+    if (inProgressApps?.length) {
 
-    inProgressApps.forEach((app: any) => {
-      inProgressAppsRef.current.set(app.id, app.name);
-    });
+      inProgressApps.forEach((app: any) => {
+        inProgressAppsRef.current.set(app.id, app.name);
+      });
 
-    startAppsPolling();
+      startAppsPolling();
+    }
+
   }
-
-}
 
   useEffect(() => {
     if (!selectedProject?.id) return;
@@ -258,32 +183,6 @@ export const DashboardPage: React.FC = () => {
 
   }, [dispatch, selectedProject]);
 
-  //   useEffect(() => {
-  //   return () => {
-  //     stopAppsPolling();
-  //   };
-  // }, []);
-
-
-
-  // const handleAdd = async (data: { name: string; description: string }) => {
-  //   if (!selectedProject?.id) return;
-
-  //   try {
-  //     await dispatch(createApplication({
-  //       projectId: selectedProject.id,
-  //       name: data.name,
-  //       description: data.description
-  //     })).unwrap();
-
-  //     console.log("[UI] Application created");
-
-  //     dispatch(fetchApps(selectedProject.id));
-
-  //   } catch (err) {
-  //     console.error("[UI] Create failed:", err);
-  //   }
-  // };
 
   const handleAdd = async (data: { name: string; description: string }) => {
     if (!selectedProject?.id) return;
@@ -329,29 +228,6 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  //   const handleClose = async () => {
-  //   setOpenAdd(false)
-
-
-  //   try {
-  //     const result = await dispatch(fetchApps(selectedProject?.id)).unwrap();
-
-  //     const hasInProgress = result?.some(
-  //       (app: any) =>
-  //         app.status === "in_progress" 
-  //     );
-
-  //     if (hasInProgress) {
-  //       console.log("Some apps still running → start polling");
-  //       startAppsPolling();
-  //     } else {
-  //       stopAppsPolling();
-  //     }
-
-  //   } catch (err) {
-  //     console.error("handleClose fetch failed:", err);
-  //   }
-  // };
 
   const handleClose = async () => {
     setOpenAdd(false);
@@ -370,7 +246,7 @@ export const DashboardPage: React.FC = () => {
         inProgressApps.forEach((app: any) => {
           inProgressAppsRef.current.set(app.id, app.name);
         });
-        
+
         startAppsPolling();
       } else {
         stopAppsPolling();
@@ -387,24 +263,6 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  // const handleEdit = async (data: { name: string; description: string }) => {
-  //   if (!editingApp) return;
-
-  //   try {
-  //     await dispatch(updateApplication({
-  //       appId: editingApp.id,   // must be NUMBER
-  //       name: data.name,
-  //       description: data.description
-  //     })).unwrap();
-
-  //     console.log("[UI] Application updated");
-
-  //     setEditingApp(null);
-
-  //   } catch (err) {
-  //     console.error("[UI] Update failed:", err);
-  //   }
-  // };
 
   const handleEdit = async (data: { name: string; description: string }) => {
     if (!editingApp) return;
@@ -450,22 +308,8 @@ export const DashboardPage: React.FC = () => {
   }
 
 
-
-  // const handleDelete = async (id: string) => {
-  //   try {
-  //     // dispatch(removeApp(id));  
-  //     setSnackbar({
-  //       open: true,
-  //       message: "Application deleted successfully"
-  //     });
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // };
-
   const handleDelete = async (id: string) => {
     try {
-      // await dispatch(removeApp(id)).unwrap();
 
       dispatch(
         showSnackbar({
@@ -563,143 +407,6 @@ export const DashboardPage: React.FC = () => {
 
           </Box>
         </div>
-
-        {/* </Toolbar> */}
-
-        {/* <TableContainer component={Paper} elevation={0} className="border border-slate-200">
-          <Table>
-            <TableHead className="bg-slate-100">
-              <TableRow>
-                <TableCell className="font-bold text-slate-600">Application Name</TableCell>
-                <TableCell className="font-bold text-slate-600">Status</TableCell>
-                <TableCell className="font-bold text-slate-600">Recent Report</TableCell>
-                <TableCell className="font-bold text-slate-600" align="right"></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow><TableCell colSpan={4} align="center">Loading...</TableCell></TableRow>
-              ) : applications.map((app: any) => (
-                <TableRow key={app.id} hover>
-                  <TableCell className="font-medium text-slate-700">{app.name}</TableCell>
-                  <TableCell><StatusBadge status={app.status} /></TableCell>
-                  {/* <TableCell>{app.lastReportName || '-'}</TableCell> 
-
-                  <TableCell>
-                    <Button
-                      variant="text"
-                      onClick={() => navigate(`/reports/${app.lastReportId}`)}
-                      sx={{
-                        textTransform: "none",
-                        padding: 0,
-                        minWidth: "unset",
-                        fontSize: "0.875rem",
-                        color: "primary.main",
-                        justifyContent: "flex-start",
-                        cursor: "pointer",
-                        '&:hover': {
-                          backgroundColor: "transparent",
-                          textDecoration: "underline",
-                        },
-                      }}
-                    >
-                      {app.lastReportName || '-'}
-                    </Button>
-                  </TableCell>
-
-
-
-                  <TableCell align="right">
-
-                    <div className="flex justify-end items-center">
-
-                      <PrimaryButton
-                        size="small"
-                        onClick={() => navigate(`/autoanalysis/${app.id}`)}
-                        disabled={app.config_status === 'in_progress' || app.config_status === 'not_configured'}
-                      >
-                        View
-                      </PrimaryButton>
-                      <button
-                        onClick={() => dispatch(removeApp(app.id))}
-                        className="text-red-600 hover:text-red-800 p-3 pr-4 rounded hover:bg-red-50 transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-
-                    </div>
-
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer> */}
-
-
-        {/* Commented out old grid layout
-        <div className="grid gap-4 justify-items-center">
-          {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
-          ) : applications.map((app: any) => (
-            <Paper
-              key={app.id}
-              elevation={1}
-              className="w-8/12 p-4 border border-slate-200 rounded-lg hover:shadow-md transition-shadow flex flex-col sm:flex-row sm:items-start sm:justify-between"
-            >
-              Left: Title + Status + Build
-              <div className="flex flex-col sm:flex-1">
-                <div className="flex items-center space-x-3">
-                  <div className="font-medium text-slate-700 text-lg">{app.name}</div>
-                  <StatusBadge status={app.status} />
-                </div>
-
-                Build / Recent Report below
-                <div className="mt-1">
-                  <Button
-                    variant="text"
-                    onClick={() => navigate(`/reports/${app.lastReportId}`)}
-                    sx={{
-                      textTransform: "none",
-                      padding: 0,
-                      minWidth: "unset",
-                      fontSize: "0.875rem",
-                      color: "primary.main",
-                      justifyContent: "flex-start",
-                      cursor: "pointer",
-                      "&:hover": {
-                        backgroundColor: "transparent",
-                        textDecoration: "underline",
-                      },
-                    }}
-                  >
-                    {app.lastReportName || "-"}
-                  </Button>
-                </div>
-              </div>
-
-              Right: Action Buttons
-              <div className="mt-2 sm:mt-0 flex items-center space-x-2">
-                <PrimaryButton
-                  size="small"
-                  onClick={() => navigate(`/autoanalysis/${app.id}`)}
-                  disabled={app.config_status === 'in_progress' || app.config_status === 'not_configured'}
-                >
-                  View
-                </PrimaryButton>
-                <button
-                  onClick={() => dispatch(removeApp(app.id))}
-                  className="text-red-600 hover:text-red-800 p-2 rounded hover:bg-red-50 transition-colors"
-                  title="Delete"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </Paper>
-          ))}
-        </div>
-        End of commented out old grid layout */}
 
         <div className="space-y-4 w-full mx-auto">
           {filteredApplications.length > 0 ? filteredApplications.map((app) => (

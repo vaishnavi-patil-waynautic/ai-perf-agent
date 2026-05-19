@@ -32,31 +32,6 @@ const WizardStep1_Fetch: React.FC = () => {
     }));
   };
 
-
-
-  // useEffect(() => {
-  //   if (!selectedProject?.id) return;
-
-  //   // if (externalItems.length === 0) {
-  //   //   dispatch(fetchAdoItems(selectedProject.id));
-  //   // } else {
-  //   setFilteredData(externalItems);
-  //   setItems(externalItems);
-  //   // }
-  // }, [dispatch, externalItems]);
-
-  // Reset all wizard state when project changes
-  // useEffect(() => {
-
-  //   if (!selectedProject?.id) return;
-
-  //   dispatch(resetWizard());
-  //   setFilteredData([]);
-  //   setItems([]);
-  //   setSearchText('');
-  //   setFilterType('All');
-  // }, [selectedProject?.id]);
-
   const filteredData = items.filter((item: any) => {
 
     const matchesType =
@@ -84,24 +59,6 @@ const WizardStep1_Fetch: React.FC = () => {
       const allRecords = response;
 
       setItems(allRecords);
-
-      // let result = [...allRecords];
-
-      // if (searchText.trim() !== '') {
-      //   const search = searchText.toLowerCase();
-      //   result = result.filter((item: any) =>
-      //     item.tags && item.tags.some((tag: string) => tag.toLowerCase().includes(search))
-      //   );
-      // }
-
-      // if (filterType !== 'All') {
-      //   result = result.filter((item: any) =>
-      //     item.type?.toLowerCase() === filterType.toLowerCase()
-      //   );
-      // }
-
-      // setItems(allRecords);
-      // setFilteredData(result);
 
 
     } catch (err: any) {

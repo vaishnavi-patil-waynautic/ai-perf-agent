@@ -1,11 +1,3 @@
-/**
- * StreamingManager — module-level singleton
- *
- * Keeps EventSource connections alive independent of React component lifecycle.
- * When StreamingBubble unmounts (e.g. chat switch), the stream continues here.
- * When the component remounts, it reads the accumulated text from the manager.
- */
-
 import { store } from '../../../store/store';
 import {
   finalizeStreamingMessage,

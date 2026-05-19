@@ -1,19 +1,3 @@
-/**
- * modelConfig.tsx
- *
- * Single source of truth for model display:
- *   - Icon component (inline SVG)
- *   - Brand colour (avatar bg + ring)
- *   - Short label
- *
- * HOW THE BUCKET CHECK WORKS
- * ──────────────────────────
- * getModelConfig(modelId) lowercases the string then walks MODEL_BUCKETS
- * in order. First matching regex wins. Unknown models get the default Bot icon.
- *
- * To add a new model family: add one entry to MODEL_BUCKETS. Nothing else changes.
- */
-
 import React from 'react';
 import { Bot } from 'lucide-react';
 
@@ -24,8 +8,6 @@ export interface ModelConfig {
   textColor : string;   // hex colour for icon fill/stroke
   Icon      : React.FC<{ size?: number; color?: string }>;
 }
-
-/* ── SVG icon components ────────────────────────────────────────────────── */
 
 const OpenAIIcon: React.FC<{ size?: number; color?: string }> = ({ size = 20, color = '#fff' }) => (
   <svg width={size} height={size} viewBox="0 0 32 32" fill="none">

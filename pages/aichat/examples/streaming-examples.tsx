@@ -1,19 +1,9 @@
-/**
- * SSE Streaming Examples
- * 
- * This file contains various examples of how to use the streaming functionality
- * in different scenarios.
- */
-
 import React, { useState } from 'react';
 import { useAppDispatch } from '../store/hooks';
 import { sendMessageWithStreaming } from '../store/slices/chat.thunk';
 import { useChatStream } from '../hooks/useChatStream';
 import { startChatStream } from '../services/streaming.service';
 
-// ============================================================================
-// Example 1: Basic Streaming with Redux (Recommended)
-// ============================================================================
 
 export function Example1_BasicReduxStreaming() {
   const dispatch = useAppDispatch();
@@ -41,10 +31,6 @@ export function Example1_BasicReduxStreaming() {
     </div>
   );
 }
-
-// ============================================================================
-// Example 2: Using the Hook for Custom UI
-// ============================================================================
 
 export function Example2_CustomHookStreaming() {
   const [question, setQuestion] = useState('');
@@ -114,9 +100,6 @@ export function Example2_CustomHookStreaming() {
   );
 }
 
-// ============================================================================
-// Example 3: Direct Service Usage (Advanced)
-// ============================================================================
 
 export function Example3_DirectServiceStreaming() {
   const [question, setQuestion] = useState('');
@@ -205,9 +188,6 @@ export function Example3_DirectServiceStreaming() {
   );
 }
 
-// ============================================================================
-// Example 4: Streaming with Progress Tracking
-// ============================================================================
 
 export function Example4_StreamingWithProgress() {
   const [question, setQuestion] = useState('');
@@ -288,9 +268,6 @@ export function Example4_StreamingWithProgress() {
   );
 }
 
-// ============================================================================
-// Example 5: Multiple Concurrent Streams (Advanced)
-// ============================================================================
 
 export function Example5_MultipleStreams() {
   const [streams, setStreams] = useState<{
@@ -375,9 +352,6 @@ export function Example5_MultipleStreams() {
   );
 }
 
-// ============================================================================
-// Example 6: Streaming with Retry Logic
-// ============================================================================
 
 export function Example6_StreamingWithRetry() {
   const [question, setQuestion] = useState('');

@@ -21,15 +21,6 @@ const Dashboard: React.FC = () => {
 
   console.log("Selected Project in Dashboard:", selectedProject);
 
-  // if (!selectedApp) {
-  //   return (
-  //     <div className="flex flex-col items-center justify-center h-full text-gray-500 p-10">
-  //       <Activity size={64} className="mb-4 text-gray-300" />
-  //       <h2 className="text-xl font-medium mb-2">No Application Selected</h2>
-  //       <p>Select an application from the sidebar to view available tools.</p>
-  //     </div>
-  //   );
-  // }
 
   const tools = [
     {
@@ -53,9 +44,6 @@ const Dashboard: React.FC = () => {
       title: (
         <div className="flex items-center space-x-2">
           <span>Governance</span>
-          {/* <span className="bg-yellow-200 text-yellow-800 text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full">
-            WIP
-          </span> */}
         </div>
       ),
       desc: 'Monitor compliance and NFR standards across pipelines.',
@@ -76,8 +64,6 @@ const Dashboard: React.FC = () => {
   return (
     <div className="p-10 mx-8">
       <div className="mb-8 border-b border-gray-200 pb-4">
-        {/* <h1 className="text-2xl font-bold text-gray-800">{selectedApp.name}</h1> */}
-        {/* <p className="text-gray-500">Project: {selectedProject.name}</p> */}
         <h1 className="text-xl font-semibold text-gray-800">{selectedProject.name}</h1>
       </div>
 

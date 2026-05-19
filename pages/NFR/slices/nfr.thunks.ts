@@ -51,20 +51,7 @@ export const fetchAdoItems = createAsyncThunk<
   }
 });
 
-/**
- * Delete NFR by ID
- */
-// export const deleteNfrById = createAsyncThunk<number>(
-//   "nfr/delete",
-//   async (id, { rejectWithValue }) => {
-//     try {
-//       await nfrService.deleteById(id);
-//       return id;
-//     } catch (err: any) {
-//       return rejectWithValue(err.message);
-//     }
-//   }
-// );
+
 
 export const deleteNfrById = createAsyncThunk<
   number,        // ✅ returns nothing

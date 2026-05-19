@@ -63,228 +63,135 @@ const NFRPage: React.FC = () => {
 
   const { strategies } = useSelector((state: RootState) => state.nfrList);
   const nfrInProgressRef = useRef<Map<string, string>>(new Map());
-  console.log("ref attached:", ref);
 
-  // const [snackbar, setSnackbar] = useState<{
-  //   open: boolean;
-  //   message: string;
-  //   type: SnackbarType;
-  // }>({
-  //   open: false,
-  //   message: '',
-  //   type: 'success',
-  // });
-
-
-  // useEffect(() => {
-
-  //   const hasPending = (list) =>
-  //     list.some(s => s.status === 'in_process' || s.status === 'draft' || s.status === 'pending');
-
-  //   dispatch(resetWizard());
-
-  //   console.log("Fetching NFR by project id in Useeffect Before polling")
-
-  //   const startPolling = async () => {
-  //     try {
-
-  //       console.log("Fetching NFR by project id in Useeffect")
-
-  //       // const strategies = await dispatch(getNfrById(selectedProject.id)).unwrap();
-  //       const strategies = await dispatch(getNfrById(selectedProject?.id)).unwrap();
-
-  //       if (!hasPending(strategies)) return;
-
-
-  //       console.log("The application has pending status------------------------------");
-
-  //       // Prevent duplicate intervals
-  //       if (pollingRef.current) return;
-
-  //       pollingRef.current = setInterval(async () => {
-
-  //         try {
-  //           const updated = await dispatch(getNfrById(selectedProject.id)).unwrap();
-
-  //           if (!hasPending(updated)) {
-
-  //             dispatch(
-  //               showSnackbar({
-  //                 message: "NFR generation completed",
-  //                 type: "success",
-  //               })
-  //             );
-
-  //             clearInterval(pollingRef.current);
-  //             pollingRef.current = null;
-  //           }
-
-  //         } catch (err) {
-  //           console.error("Polling failed", err);
-
-  //           dispatch(
-  //             showSnackbar({
-  //               message: "Polling failed",
-  //               type: "error",
-  //             })
-  //           );
-  //         }
-
-
-  //       }, 5000);
-
-  //     } catch (err) {
-
-  //       console.error("Initial fetch failed", err);
-
-  //       dispatch(
-  //         showSnackbar({
-  //           message: "Failed to fetch NFR data",
-  //           type: "error",
-  //         })
-  //       );
-  //     }
-
-  //   };
-
-  //   startPolling();
-
-  //   return () => {
-  //     if (pollingRef.current) {
-  //       clearInterval(pollingRef.current);
-  //       pollingRef.current = null;
-  //     }
-  //   };
-
-  // }, [dispatch, selectedProject]);
 
   useEffect(() => {
 
-  if (!selectedProject?.id) return;
+    if (!selectedProject?.id) return;
 
-  setSearch("");
+    setSearch("");
 
-  const isPending = (status: string) =>
-    status === "in_process" || status === "draft" || status === "pending";
+    const isPending = (status: string) =>
+      status === "in_process" || status === "draft" || status === "pending";
 
-  dispatch(resetWizard());
-  localStorage.removeItem("NFR_Wizard_Files");
+    dispatch(resetWizard());
+    localStorage.removeItem("NFR_Wizard_Files");
 
-  console.log("Fetching NFR by project id in useEffect");
+    console.log("Fetching NFR by project id in useEffect");
 
-  const startPolling = async () => {
-    try {
+    const startPolling = async () => {
+      try {
 
-      const strategies = await dispatch(
-        getNfrById(selectedProject.id)
-      ).unwrap();
+        const strategies = await dispatch(
+          getNfrById(selectedProject.id)
+        ).unwrap();
 
-      // Track pending strategies
-      const pendingStrategies = strategies?.filter((s: any) =>
-        isPending(s.status)
-      );
+        // Track pending strategies
+        const pendingStrategies = strategies?.filter((s: any) =>
+          isPending(s.status)
+        );
 
-      pendingStrategies?.forEach((s: any) => {
-        nfrInProgressRef.current.set(s.id, s.display_name);
-      });
+        pendingStrategies?.forEach((s: any) => {
+          nfrInProgressRef.current.set(s.id, s.display_name);
+        });
 
-      if (pendingStrategies.length === 0) return;
+        if (pendingStrategies.length === 0) return;
 
-      console.log("Some strategies pending → start polling");
+        console.log("Some strategies pending → start polling");
 
-      // Prevent duplicate polling
-      if (pollingRef.current) return;
+        // Prevent duplicate polling
+        if (pollingRef.current) return;
 
-      pollingRef.current = setInterval(async () => {
+        pollingRef.current = setInterval(async () => {
 
-        try {
+          try {
 
-          const updated = await dispatch(
-            getNfrById(selectedProject.id)
-          ).unwrap();
+            const updated = await dispatch(
+              getNfrById(selectedProject.id)
+            ).unwrap();
 
-          updated.forEach((strategy: any) => {
+            updated.forEach((strategy: any) => {
 
-            const trackedName = nfrInProgressRef.current.get(strategy.id);
+              const trackedName = nfrInProgressRef.current.get(strategy.id);
 
-            if (trackedName && !isPending(strategy.status)) {
+              if (trackedName && !isPending(strategy.status)) {
 
-              console.log("Strategy status updated:", trackedName);
+                console.log("Strategy status updated:", trackedName);
 
-              if (strategy.status === "completed") {
+                if (strategy.status === "completed") {
 
-                dispatch(
-                  showSnackbar({
-                    message: `${trackedName} generated successfully`,
-                    type: "success",
-                  })
-                );
+                  dispatch(
+                    showSnackbar({
+                      message: `${trackedName} generated successfully`,
+                      type: "success",
+                    })
+                  );
 
-              } else {
+                } else {
 
-                dispatch(
-                  showSnackbar({
-                    message: `${trackedName} generation failed`,
-                    type: "error",
-                  })
-                );
+                  dispatch(
+                    showSnackbar({
+                      message: `${trackedName} generation failed`,
+                      type: "error",
+                    })
+                  );
 
+                }
+
+                nfrInProgressRef.current.delete(strategy.id);
               }
 
-              nfrInProgressRef.current.delete(strategy.id);
+            });
+
+            // Stop polling when everything finished
+            if (nfrInProgressRef.current.size === 0) {
+
+              console.log("All strategies finished → stop polling");
+
+              clearInterval(pollingRef.current!);
+              pollingRef.current = null;
+
             }
 
-          });
+          } catch (err) {
 
-          // Stop polling when everything finished
-          if (nfrInProgressRef.current.size === 0) {
+            console.error("Polling failed", err);
 
-            console.log("All strategies finished → stop polling");
-
-            clearInterval(pollingRef.current!);
-            pollingRef.current = null;
+            dispatch(
+              showSnackbar({
+                message: "Polling failed",
+                type: "error",
+              })
+            );
 
           }
 
-        } catch (err) {
+        }, 5000);
 
-          console.error("Polling failed", err);
+      } catch (err) {
 
-          dispatch(
-            showSnackbar({
-              message: "Polling failed",
-              type: "error",
-            })
-          );
+        console.error("Initial fetch failed", err);
 
-        }
+        dispatch(
+          showSnackbar({
+            message: "Failed to fetch NFR data",
+            type: "error",
+          })
+        );
 
-      }, 5000);
+      }
+    };
 
-    } catch (err) {
+    startPolling();
 
-      console.error("Initial fetch failed", err);
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
 
-      dispatch(
-        showSnackbar({
-          message: "Failed to fetch NFR data",
-          type: "error",
-        })
-      );
-
-    }
-  };
-
-  startPolling();
-
-  return () => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
-  };
-
-}, [dispatch, selectedProject]);
+  }, [dispatch, selectedProject]);
 
   const filteredStrategies = strategies?.filter((strategy) =>
     (strategy.display_name || "")
@@ -303,35 +210,6 @@ const NFRPage: React.FC = () => {
     );
   }
 
-
-
-  // const handleDownload = async (id: number) => {
-  //   try {
-  //     const blob = await nfrService.downloadById(id);
-
-  //     const url = window.URL.createObjectURL(blob);
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.download = `nfr-${id}.txt`;
-  //     document.body.appendChild(a);
-  //     a.click();
-
-  //     a.remove();
-  //     window.URL.revokeObjectURL(url);
-
-  //     setSnackbar({
-  //       open: true,
-  //       message: 'NFR downloaded successfully',
-  //       type: 'success',
-  //     });
-  //   } catch (err) {
-  //     setSnackbar({
-  //       open: true,
-  //       message: 'Failed to download NFR',
-  //       type: 'error',
-  //     });
-  //   }
-  // };
 
   const handleDownload = async (id: number) => {
     try {
@@ -365,81 +243,6 @@ const NFRPage: React.FC = () => {
   };
 
 
-  // const handleDelete = async (id: number) => {
-  //   try {
-  //     console.log("Delete called", id);
-  //     await dispatch(deleteNfrById(id));
-  //     setSnackbar({
-  //       open: true,
-  //       message: 'NFR deleted successfully',
-  //       type: 'success',
-  //     });
-  //   } catch (err) {
-  //     setSnackbar({
-  //       open: true,
-  //       message: 'Failed to delete NFR',
-  //       type: 'error',
-  //     });
-  //   }
-  // }
-
-
-
-
-  // useEffect(() => {
-
-  //   const hasPending = (list) =>
-  //     list.some(s => s.status === 'pending');
-
-  //   const startPolling = async () => {
-  //     try {
-
-  //       const strategies = await dispatch(fetchNfrList()).unwrap();
-
-  //       if (!hasPending(strategies)) return;
-
-  //       // Prevent duplicate intervals
-  //       if (pollingRef.current) return;
-
-  //       pollingRef.current = setInterval(async () => {
-
-  //         try {
-  //           const updated = await dispatch(fetchNfrList()).unwrap();
-
-  //           if (!hasPending(updated)) {
-
-  //             setSnackbar({
-  //               open: true,
-  //               message: 'NFR generation completed',
-  //               type: 'success',
-  //             });
-
-  //             clearInterval(pollingRef.current);
-  //             pollingRef.current = null;
-  //           }
-
-  //         } catch (err) {
-  //           console.error('Polling failed', err);
-  //         }
-
-  //       }, 5000);
-
-  //     } catch (err) {
-  //       console.error('Initial fetch failed', err);
-  //     }
-  //   };
-
-  //   startPolling();
-
-  //   return () => {
-  //     if (pollingRef.current) {
-  //       clearInterval(pollingRef.current);
-  //       pollingRef.current = null;
-  //     }
-  //   };
-
-  // }, [dispatch]);
-
   const handleDelete = async (id: number) => {
     try {
       await dispatch(deleteNfrById(id)).unwrap();
@@ -462,15 +265,15 @@ const NFRPage: React.FC = () => {
 
 
   return (
-    <div 
-    className="m-auto max-w-6xl p-10"
+    <div
+      className="m-auto max-w-6xl p-10"
     // sx={{background: ''}}
     >
 
 
 
 
-      <div   ref={ref} className="mb-8 flex items-center justify-between w-full">
+      <div ref={ref} className="mb-8 flex items-center justify-between w-full">
 
         <div className="flex flex-col">
           <h1 className="text-2xl font-bold text-gray-800">
@@ -491,134 +294,29 @@ const NFRPage: React.FC = () => {
               onChange={setSearch}
               placeholder="Search strategies..." onSearch={undefined} />
 
-            {/* <Tooltip title="Generate Performance Test Strategy" arrow>
+
+
+            <Tooltip title="Generate Performance Test Strategy" arrow>
               <button
                 onClick={() => navigate("/nfr/wizard")}
                 className="
-        px-4 py-2 rounded-md text-white bg-blue-600
-        hover:bg-blue-700 transition
-        flex items-center gap-2
-      "
-              >
-                <AddIcon style={{ fontSize: 18 }} />
-                Generate Performance Test Strategy
-              </button>
-            </Tooltip> */}
-
-            {/* <Tooltip title="Generate Performance Test Strategy" arrow>
-  <button
-    onClick={() => navigate("/nfr/wizard")}
-    className="
-      px-3 sm:px-4 py-2 rounded-md text-white bg-blue-600
-      hover:bg-blue-700 transition
-      flex items-center justify-center gap-2
-    "
-  >
-    <AddIcon style={{ fontSize: 18 }} />
-
-    <span className="hidden lg:inline">
-      Generate Performance Test Strategy
-    </span>
-
-  </button>
-</Tooltip> */}
-
-{/* <Tooltip title="Generate Performance Test Strategy" arrow>
-  <button
-    onClick={() => navigate("/nfr/wizard")}
-    className="
-      px-3 py-2 rounded-md text-white bg-blue-600
-      hover:bg-blue-700 transition
-      flex items-center gap-2
-      whitespace-nowrap
-      flex-shrink-0
-    "
-  >
-    <AddIcon style={{ fontSize: 18 }} />
-
-    <span className="hidden 2xl:inline">
-      Generate Performance Test Strategy
-    </span>
-
-  </button>
-</Tooltip> */}
-
-
-<Tooltip title="Generate Performance Test Strategy" arrow>
-  <button
-    onClick={() => navigate("/nfr/wizard")}
-    className="
       px-4 py-2 rounded-md text-white bg-blue-600
       hover:bg-blue-700 transition
       flex items-center gap-2
     "
-  >
-    <AddIcon style={{ fontSize: 18 }} />
+              >
+                <AddIcon style={{ fontSize: 18 }} />
 
-    {!isCompressed ? (
-      <span>Generate Performance Test Strategy</span>
-    ) : (
-      <span>Generate Test Strategy</span>
-  )}
-  </button>
-</Tooltip>
-
+                {!isCompressed ? (
+                  <span>Generate Performance Test Strategy</span>
+                ) : (
+                  <span>Generate Test Strategy</span>
+                )}
+              </button>
+            </Tooltip>
           </div>
-
         </div>
-
       </div>
-
-{/* <div className="mb-8 flex items-center justify-between w-full flex-wrap gap-3">
-
-  <div className="flex flex-col">
-    <h1 className="text-2xl font-bold text-gray-800">
-      Performance Strategy Hub
-    </h1>
-    <p className="text-gray-500 mt-1">
-      Generate Performance Test Strategy using AI
-    </p>
-  </div>
-
-  <div className="flex items-center gap-3 ml-auto flex-wrap">
-
-    <div className="w-56 sm:w-64">
-      <SearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Search strategies..."
-        onSearch={undefined}
-      />
-    </div>
-
-    <Tooltip title="Generate Performance Test Strategy" arrow>
-      <button
-        onClick={() => navigate("/nfr/wizard")}
-        className="
-          px-4 py-2 rounded-md text-white bg-blue-600
-          hover:bg-blue-700 transition
-          flex items-center gap-2
-          whitespace-nowrap
-        "
-      >
-        <AddIcon style={{ fontSize: 18 }} />
-        Generate Performance Test Strategy
-      </button>
-    </Tooltip>
-
-  </div>
-
-</div> */}
-
-
-{/* 
-
-      <AppSnackbar
-        open={snackbar.open}
-        message={snackbar.message}
-        type={snackbar.type}
-        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-      /> */}
 
       <div className="space-y-4 w-full mx-auto">
         {(filteredStrategies?.length ?? 0) > 0 ? (
@@ -642,10 +340,6 @@ const NFRPage: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* </div> */}
-
-      {/* </Paper> */}
     </div>
   );
 };

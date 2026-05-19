@@ -1,27 +1,3 @@
-// import React from 'react';
-// import { Chip } from '@mui/material';
-
-// interface Props {
-//   status: string;
-// }
-
-// export const StatusBadge: React.FC<Props> = ({ status }) => {
-//   const isConfigured = status === 'configured';
-//   return (
-//     <Chip
-//       label={isConfigured ? 'Configured' : 'Unconfigured'}
-//       size="small"
-//       sx={{
-//         backgroundColor: isConfigured ? '#e8eeeaff' : '#f5f5f5',
-//         color: isConfigured ? '#1976d2' : '#757575',
-//         fontWeight: 600,
-//         textTransform: 'uppercase',
-//         fontSize: '0.7rem',
-//       }}
-//     />
-//   );
-// };
-
 import React from 'react';
 import { Chip } from '@mui/material';
 

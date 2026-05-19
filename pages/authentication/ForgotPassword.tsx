@@ -36,34 +36,6 @@ const ForgotPassword: React.FC = () => {
           <p className="text-gray-500 mt-2">Enter your email to reset your password</p>
         </div>
 
-        {/* {success ? (
-          <div className="text-center">
-            <div className="bg-green-50 text-green-700 p-4 rounded mb-6">
-              Check your email for a reset link.
-            </div>
-            <Link to="/login" className="text-blue-600 hover:underline">Back to Login</Link>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <TextField
-              label="Email Address"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              fullWidth
-              variant="outlined"
-              sx={{ mb: 2 }}
-            />
-            <Button type="submit" fullWidth className="mt-4">Send Reset Link</Button>
-
-            <div className="mt-6 text-center">
-              <Link to="/login" className="text-sm text-gray-600 hover:text-blue-600">
-                &larr; Back to Login
-              </Link>
-            </div>
-          </form>
-        )} */}
 
         {success ? (
           <div className="text-center">

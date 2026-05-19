@@ -83,50 +83,6 @@ const Login: React.FC = () => {
 
           {error && <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm text-center border border-red-200">{error}</div>}
 
-          {/* <form onSubmit={handleLogin}>
-            <Input
-              label="Email Address"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="john@example.com"
-              required
-            />
-
-            <div className="mb-6">
-
-
-<TextField
-  label="Password"
-  type={showPassword ? "text" : "password"}
-  value={password}
-  onChange={(e) => setPassword(e.target.value)}
-  placeholder="••••••••"
-  required
-  fullWidth
-  InputProps={{
-    endAdornment: (
-      <InputAdornment position="end">
-        <IconButton
-          onClick={() => setShowPassword((prev) => !prev)}
-          edge="end"
-        >
-          {showPassword ? <VisibilityOff /> : <Visibility />}
-        </IconButton>
-      </InputAdornment>
-    ),
-  }}
-/>
-              <div className="flex justify-end -mt-3">
-                <Link to="/forgot-password" className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
-                  Forgot Password?
-                </Link>
-              </div>
-            </div>
-
-            <Button type="submit" disabled={!!loading} fullWidth>Sign In</Button>
-          </form> */}
-
           <div className="w-full max-w-sm mx-auto">
 
           <form onSubmit={handleLogin}>
@@ -151,19 +107,6 @@ const Login: React.FC = () => {
                 required
                 fullWidth
                 variant="outlined"
-                // InputProps={{
-                //   endAdornment: (
-                //     <InputAdornment position="end">
-                //       <IconButton
-                //         onMouseDown={(e) => e.preventDefault()} // prevents focus loss
-                //         onClick={() => setShowPassword((prev) => !prev)}
-                //         edge="end"
-                //       >
-                //         {showPassword ? <VisibilityOff /> : <Visibility />}
-                //       </IconButton>
-                //     </InputAdornment>
-                //   ),
-                // }}
               />
 
               <div className="flex justify-end mt-1">

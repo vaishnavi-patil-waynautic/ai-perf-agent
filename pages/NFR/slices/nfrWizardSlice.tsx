@@ -64,11 +64,11 @@ const nfrWizardSlice = createSlice({
     },
 
     removeUploadedFile: (state, action) => {
-  state.uploadedFiles = state.uploadedFiles.filter(
-    (_, index) => index !== action.payload
-    
-  );
-},
+      state.uploadedFiles = state.uploadedFiles.filter(
+        (_, index) => index !== action.payload
+
+      );
+    },
 
 
     // Reset everything
@@ -76,18 +76,18 @@ const nfrWizardSlice = createSlice({
   },
 
   extraReducers: builder => {
-  builder
-    .addCase(fetchAdoItems.pending, state => {
-      state.loadingItems = true;
-    })
-    .addCase(fetchAdoItems.fulfilled, (state, action) => {
-      state.loadingItems = false;
-      state.externalItems = action.payload;
-    })
-    .addCase(fetchAdoItems.rejected, state => {
-      state.loadingItems = false;
-    });
-}
+    builder
+      .addCase(fetchAdoItems.pending, state => {
+        state.loadingItems = true;
+      })
+      .addCase(fetchAdoItems.fulfilled, (state, action) => {
+        state.loadingItems = false;
+        state.externalItems = action.payload;
+      })
+      .addCase(fetchAdoItems.rejected, state => {
+        state.loadingItems = false;
+      });
+  }
 
 });
 
@@ -98,7 +98,7 @@ export const {
   setAdditionalInstructions,
   setSelectedApplication,
   resetWizard,
-  removeUploadedFile 
+  removeUploadedFile
 } = nfrWizardSlice.actions;
 
 export default nfrWizardSlice.reducer;

@@ -16,100 +16,65 @@ const Signup: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
-const [nameError, setNameError] = useState('');
-const [passwordError, setPasswordError] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const [showPassword, setShowPassword] = useState(false);
 
-const handleSignup = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  setLoading(true);
+    setLoading(true);
 
-  // Clear old errors
-  setError('');
-  setEmailError('');
-  setNameError('');
-  setPasswordError('');
+    // Clear old errors
+    setError('');
+    setEmailError('');
+    setNameError('');
+    setPasswordError('');
 
-  try {
-    await signup(email, firstName, lastName, password);
-    navigate('/login');
-  } catch (err: any) {
-    console.error("Signup error:", err);
+    try {
+      await signup(email, firstName, lastName, password);
+      navigate('/login');
+    } catch (err: any) {
+      console.error("Signup error:", err);
 
-    const errors =
-      err?.errors ||          // from improved service
-      err?.data?.errors ||    // your current backend shape
-      null;
+      const errors =
+        err?.errors ||          // from improved service
+        err?.data?.errors ||    // your current backend shape
+        null;
 
-    if (errors) {
-      // Handle field-wise errors safely
-      if (errors.email) setEmailError(errors.email);
+      if (errors) {
+        // Handle field-wise errors safely
+        if (errors.email) setEmailError(errors.email);
 
-      // Backend may send firstName / lastName / name / non_field_errors
-      if (errors.firstName || errors.lastName || errors.name) {
-        setNameError(
-          errors.firstName ||
-          errors.lastName ||
-          errors.name
-        );
+        // Backend may send firstName / lastName / name / non_field_errors
+        if (errors.firstName || errors.lastName || errors.name) {
+          setNameError(
+            errors.firstName ||
+            errors.lastName ||
+            errors.name
+          );
+        }
+
+        if (errors.password) setPasswordError(errors.password);
+
+        // If any unknown field errors exist → show generic box
+        const knownFields = ['email', 'password', 'firstName', 'lastName', 'name'];
+        const otherErrors = Object.keys(errors)
+          .filter(k => !knownFields.includes(k))
+          .map(k => errors[k]);
+
+        if (otherErrors.length > 0) {
+          setError(otherErrors.join("\n"));
+        }
+      } else {
+        // Generic / network / unexpected error
+        setError(err?.message || "Something went wrong. Please try again.");
       }
-
-      if (errors.password) setPasswordError(errors.password);
-
-      // If any unknown field errors exist → show generic box
-      const knownFields = ['email', 'password', 'firstName', 'lastName', 'name'];
-      const otherErrors = Object.keys(errors)
-        .filter(k => !knownFields.includes(k))
-        .map(k => errors[k]);
-
-      if (otherErrors.length > 0) {
-        setError(otherErrors.join("\n"));
-      }
-    } else {
-      // Generic / network / unexpected error
-      setError(err?.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-//   const handleSignup = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     setLoading(true);
-
-
-
-//     try {
-//       await signup(email, firstName, lastName, password);
-//       setLoading(false);
-//       navigate('/login');
-
-//     }  catch (err: any) {
-//   console.error("Signup error:", err);
-
-//   // If backend returned validation errors
-//   if (err?.data?.errors) {
-//     const errorsObj = err.data.errors;
-
-//     // Convert {email: "...", password: "..."} -> single string
-//     const formatted = Object.entries(errorsObj)
-//       .map(([field, message]) => `${field}: ${message}`)
-//       .join("\n");
-
-//     setError(formatted);
-//   } 
-//   // fallback
-//   else {
-//     setError(err?.message || "Error while signing up");
-//   }
-// }
-
-//   };
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 items-center justify-center p-4">
@@ -131,7 +96,7 @@ const handleSignup = async (e: React.FormEvent) => {
             required
             fullWidth
             variant="outlined"
-            sx={{mb:2}}
+            sx={{ mb: 2 }}
           />
           {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
 
@@ -142,8 +107,8 @@ const handleSignup = async (e: React.FormEvent) => {
             onChange={(e) => setFirstName(e.target.value)}
             required
             fullWidth
-              variant="outlined"
-              sx={{mb:2}}
+            variant="outlined"
+            sx={{ mb: 2 }}
           />
 
           <TextField
@@ -153,43 +118,24 @@ const handleSignup = async (e: React.FormEvent) => {
             onChange={(e) => setLastName(e.target.value)}
             required
             fullWidth
-              variant="outlined"
-              sx={{mb:2}}
+            variant="outlined"
+            sx={{ mb: 2 }}
           />
 
-          { nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p> }
+          {nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p>}
           <TextField
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                fullWidth
-                variant="outlined"
-                // InputProps={{
-                //   endAdornment: (
-                //     <InputAdornment position="end">
-                //       <IconButton
-                //         onMouseDown={(e) => e.preventDefault()} // prevents focus loss
-                //         onClick={() => setShowPassword((prev) => !prev)}
-                //         edge="end"
-                //       >
-                //         {showPassword ? <VisibilityOff /> : <Visibility />}
-                //       </IconButton>
-                //     </InputAdornment>
-                //   ),
-                // }}
-              />
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+            fullWidth
+            variant="outlined"
+          />
 
           {passwordError && <p className="text-red-500 text-sm mt-1">{passwordError}</p>}
-          {/* <Input 
-            label="Confirm Password" 
-            type="password" 
-            value={confirmPassword} 
-            onChange={(e) => setConfirmPassword(e.target.value)} 
-            required
-          /> */}
+    
 
           <Button type="submit" fullWidth disabled={loading} className="mt-4">
             {loading ? 'Creating...' : 'Sign Up'}

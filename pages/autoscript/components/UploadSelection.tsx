@@ -14,8 +14,6 @@ interface Props {
   onGenerate: () => void;
   isGenerating: boolean;
   compact: boolean;
-  // applicationId: number | null;
-  // changeApplicationId: (value: number | null) => void;
 }
 
 export const UploadSection: React.FC<Props> = ({

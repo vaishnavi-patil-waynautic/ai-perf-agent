@@ -1,5 +1,3 @@
-// 
-
 import { autoScriptApi } from "@/services/api";
 import { JMXRecord } from "../types/type";
 import axios from "axios";
@@ -8,16 +6,9 @@ import { config } from "@/config/backendConfig";
 
 const API_BASE = config.baseUrl;
 
-/**
- * Simple error message extractor
- */
 const getErrorMessage = (data: any, fallback: string) => {
   return data?.error || data?.message || data?.data?.error || fallback;
 };
-
-// ============================================================================
-// TYPES
-// ============================================================================
 
 interface GenerateScriptResponse {
   success: boolean;

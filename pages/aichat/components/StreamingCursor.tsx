@@ -1,4 +1,3 @@
-// components/chat/StreamingCursor.tsx
 const StreamingCursor = () => (
   <span
     className="inline-block w-[2px] h-[1em] bg-gray-500 ml-0.5 align-middle"

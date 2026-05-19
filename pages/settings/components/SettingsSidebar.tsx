@@ -10,18 +10,16 @@ const integrations = [
 
 export default function SettingsSidebar() {
     return (
-        // <div className="w-64 border-r bg-white p-4 space-y-6 shadow-[2px_0_8px_rgba(0,0,0,0.06)]">
-        // <div className="w-64 bg-white p-4 space-y-6 shadow-[6px_0_16px_rgba(0,0,0,0.12)]">
-        <div
-  className="
-    w-64 bg-white p-4 space-y-6
-    sticky top-0 h-screen
-    shadow-[8px_0_24px_rgba(0,0,0,0.12)]
-    border-r border-gray-100
-    z-20 overflow-hidden
-  "
->
 
+        <div
+            className="
+                    w-64 bg-white p-4 space-y-6
+                    sticky top-0 h-screen
+                    shadow-[8px_0_24px_rgba(0,0,0,0.12)]
+                    border-r border-gray-100
+                    z-20 overflow-hidden
+                "
+        >
 
             {/* Applications */}
             <div>
@@ -34,15 +32,6 @@ export default function SettingsSidebar() {
             {/* Integrations */}
             <div>
                 <h3 className="text-xs font-semibold text-gray-400 mb-2">INTEGRATIONS</h3>
-                {/* {integrations.map(i => (
-                    <NavLink
-                        key={i.id}
-                        to={`/settings/integrations/${i.id}`}
-                        className="block py-2 text-sm capitalize"
-                    >
-                        {i.label}
-                    </NavLink>
-                ))} */}
 
                 <NavLink to="/settings/integrations" className="block py-2 text-sm">
                     Integrations

@@ -1,331 +1,3 @@
-// import React, { useEffect, useState } from 'react';
-// import { useParams, useNavigate } from 'react-router-dom';
-// import { Box, Paper, Typography, Button, CircularProgress, Alert, TableCell, TableHead, Table, TableRow, TableBody, TableContainer, Chip } from '@mui/material';
-// import { ArrowBack, Download } from '@mui/icons-material';
-// import ReactMarkdown from 'react-markdown';
-// import { fetchBuildReport } from '../services/mockService';
-// import { BuildReport } from '../types';
-// import { useLocation } from 'react-router-dom';
-// import { BarChart3, Boxes, Clock, Folder } from 'lucide-react';
-
-
-// interface InfoCardProps {
-//   title: string;
-//   value: string;
-// }
-
-// const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
-
-//   const hasData = value && value.trim().length > 0;
-
-//   return (
-//     <Paper
-//       variant="outlined"
-//       className="p-4"
-//       sx={{
-//         borderLeft: "4px solid",
-//         borderColor: hasData ? "primary.main" : "grey.300",
-//         backgroundColor: hasData ? "#ffffff" : "#fafafa"
-//       }}
-//     >
-//       <Typography
-//         variant="subtitle2"
-//         color="text.secondary"
-//         gutterBottom
-//       >
-//         {title}
-//       </Typography>
-
-//       <Typography
-//         variant="body2"
-//         sx={{
-//           whiteSpace: "pre-line",
-//           color: hasData ? "text.primary" : "text.disabled"
-//         }}
-//       >
-//         {hasData ? value : "No data available"}
-//       </Typography>
-//     </Paper>
-//   );
-// };
-
-
-// export const ResultPage: React.FC = () => {
-
-//   const location = useLocation();
-
-//   const { projectName, appName } = location.state || {};
-
-
-//   const { projectId, appId, buildId } = useParams();
-//   const navigate = useNavigate();
-
-//   const [report, setReport] = useState<BuildReport | null>(null);
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-
-//   useEffect(() => {
-
-//     if (!projectId || !appId || !buildId) return;
-
-//     const controller = new AbortController();
-
-//     const loadReport = async () => {
-//       try {
-//         setLoading(true);
-//         const data = await fetchBuildReport(projectId, appId, buildId);
-//         setReport(data);
-//       } catch (err: any) {
-//         if (err.name !== "AbortError") {
-//           setError(err.message || "Failed to load report");
-//         }
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     loadReport();
-
-//     return () => controller.abort();
-
-//   }, [projectId, appId, buildId]);
-
-//   // ---------- UI STATES ----------
-
-//   if (loading) {
-//     return (
-//       <Box className="flex justify-center items-center h-screen">
-//         <CircularProgress />
-//       </Box>
-//     );
-//   }
-
-//   if (error) {
-//     return <Alert severity="error">{error}</Alert>;
-//   }
-
-//   if (!report) return null;
-
-//   const formatDate = (date: string) =>
-//     new Date(date).toLocaleString();
-
-//   const formatTPS = (value: number) => value.toFixed(2);
-
-//   const formatRT = (value: number) => value.toFixed(2);
-
-//   const exportToCSV = (report: BuildReport) => {
-
-//     const metaSection = [
-//       ["Build Number", report.build_number],
-//       ["Project", projectName || report.project_id],
-//       ["Application", appName || report.application_id],
-//       ["Test Time", formatDate(report.test_timing)],
-//       ["Transactions", report.result_data.length],
-//       [],
-//     ];
-
-//     const notesSection = [
-//       ["Observations", report.observations || "N/A"],
-//       ["Datadog Remarks", report.datadog_remarks || "N/A"],
-//       ["ADO Defects", report.ado_defects || "N/A"],
-//       [],
-//     ];
-
-//     const tableHeader = [
-//       "Transaction",
-//       "Total Hits",
-//       "TPS (req/s)",
-//       "Avg RT (ms)",
-//       "P90 RT (ms)",
-//       "P95 RT (ms)",
-//       "Max RT (ms)",
-//       "Error Rate (%)"
-//     ];
-
-//     const tableRows = report.result_data.map(r => [
-//       r.transaction_name,
-//       r.total_hits,
-//       formatTPS(r.tps),
-//       formatRT(r.avg_rt),
-//       formatRT(r.rt_90th),
-//       formatRT(r.rt_95th),
-//       formatRT(r.max_rt),
-//       r.error_rate
-//     ]);
-
-//     const csvContent = [
-//       ...metaSection,
-//       ...notesSection,
-//       tableHeader,
-//       ...tableRows
-//     ]
-//       .map(row => row.map(String).join(","))
-//       .join("\n");
-
-//     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-
-//     const url = window.URL.createObjectURL(blob);
-
-//     const link = document.createElement("a");
-//     link.href = url;
-//     link.download = `Build_${report.build_number}_Full_Report.csv`;
-//     link.click();
-//   };
-
-//   return (
-//     <Box className="bg-slate-50 min-h-screen">
-
-//       {/* Centered Content Wrapper */}
-//       <Box
-//         sx={{
-//           maxWidth: "1200px",
-//           mx: "auto",
-//           px: 3,
-//           py: 3
-//         }}
-//       >
-
-//         {/* Header */}
-//         <Box
-//           sx={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             alignItems: "center",
-//             mb: 3
-//           }}
-//         >
-//           <Button startIcon={<ArrowBack />} onClick={() => navigate(-1)}>
-//             Back
-//           </Button>
-
-//           <Button
-//             variant="contained"
-//             startIcon={<Download />}
-//             onClick={() => exportToCSV(report)}
-//           >
-//             Download Report
-//           </Button>
-//         </Box>
-
-//         {/* Summary Card */}
-//         <Paper sx={{ p: 3, mb: 3 }} variant="outlined">
-
-//           <Typography variant="h6" fontWeight={600}>
-//             Build #{report.build_number}
-//           </Typography>
-
-//           <Box
-//             sx={{
-//               display: "grid",
-//               gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-//               gap: 1,
-//               mt: 1
-//             }}
-//           >
-//             <Box display="flex" alignItems="center" gap={1}>
-//               <Folder size={16} />
-//               <Typography variant="body2">
-//                 <b>Project:</b> {projectName || `ID ${report.project_id}`}
-//               </Typography>
-//             </Box>
-
-//             <Box display="flex" alignItems="center" gap={1}>
-//               <Boxes size={16} />
-//               <Typography variant="body2">
-//                 <b>Application:</b> {appName || `ID ${report.application_id}`}
-//               </Typography>
-//             </Box>
-
-//             <Box display="flex" alignItems="center" gap={1}>
-//               <Clock size={16} />
-//               <Typography variant="body2">
-//                 <b>Test Time:</b> {formatDate(report.test_timing)}
-//               </Typography>
-//             </Box>
-
-//             <Box display="flex" alignItems="center" gap={1}>
-//               <BarChart3 size={16} />
-//               <Typography variant="body2">
-//                 <b>Transactions:</b> {report.result_data.length}
-//               </Typography>
-//             </Box>
-//           </Box>
-
-//         </Paper>
-
-//         {/* Observation Cards */}
-//         <Box
-//           sx={{
-//             display: "grid",
-//             gridTemplateColumns: "repeat(auto-fit, minmax(370px, max-content))",
-//             gap: 2,
-//             justifyContent: "start",
-//             mb: 3
-//           }}
-//         >
-//           <InfoCard title="Observations" value={report.observations} />
-//           <InfoCard title="Datadog Remarks" value={report.datadog_remarks} />
-//           <InfoCard title="ADO Defects" value={report.ado_defects} />
-//         </Box>
-
-//         {/* Metrics Table */}
-//         <Paper variant="outlined">
-
-//           <TableContainer>
-
-//             <Table stickyHeader>
-
-//               <TableHead>
-//                 <TableRow>
-//                   <TableCell>Transaction</TableCell>
-//                   <TableCell>Total Hits</TableCell>
-//                   <TableCell>TPS (req/s)</TableCell>
-//                   <TableCell>Avg RT (ms)</TableCell>
-//                   <TableCell>P90 RT (ms)</TableCell>
-//                   <TableCell>P95 RT (ms)</TableCell>
-//                   <TableCell>Max RT (ms)</TableCell>
-//                   <TableCell>Error Rate (%)</TableCell>
-//                 </TableRow>
-//               </TableHead>
-
-//               <TableBody>
-//                 {report.result_data.map(row => (
-//                   <TableRow key={row.id} hover>
-
-//                     <TableCell>{row.transaction_name}</TableCell>
-//                     <TableCell>{row.total_hits}</TableCell>
-//                     <TableCell>{formatTPS(row.tps)}</TableCell>
-//                     <TableCell>{formatRT(row.avg_rt)}</TableCell>
-//                     <TableCell>{formatRT(row.rt_90th)}</TableCell>
-//                     <TableCell>{formatRT(row.rt_95th)}</TableCell>
-//                     <TableCell>{formatRT(row.max_rt)}</TableCell>
-
-//                     <TableCell>
-//                       <Chip
-//                         label={`${row.error_rate}%`}
-//                         color={row.error_rate === 0 ? "success" : "error"}
-//                         size="small"
-//                       />
-//                     </TableCell>
-
-//                   </TableRow>
-//                 ))}
-//               </TableBody>
-
-//             </Table>
-
-//           </TableContainer>
-
-//         </Paper>
-
-//       </Box>
-
-//     </Box>
-//   );
-// };
-
-
-
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Paper, Typography, Button, CircularProgress, Alert, TableCell, TableHead, Table, TableRow, TableBody, TableContainer, Chip, Collapse, IconButton } from '@mui/material';
@@ -346,250 +18,6 @@ interface InfoCardProps {
   title: string;
   value: string;
 }
-
-// const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
-//   const hasData = value && value.trim().length > 0;
-
-//   return (
-//     <Paper
-//       elevation={0}
-//       sx={{
-//         p: 3,
-//         borderRadius: 2,
-//         border: '1px solid',
-//         borderColor: hasData ? 'rgba(59, 130, 246, 0.2)' : 'rgba(226, 232, 240, 1)',
-//         backgroundColor: hasData ? 'rgba(239, 246, 255, 0.4)' : '#fafafa',
-//         transition: 'all 0.2s ease-in-out',
-//         '&:hover': {
-//           borderColor: hasData ? 'rgba(59, 130, 246, 0.4)' : 'rgba(226, 232, 240, 1)',
-//           backgroundColor: hasData ? 'rgba(239, 246, 255, 0.6)' : '#f5f5f5',
-//         }
-//       }}
-//     >
-//       <Typography
-//         variant="caption"
-//         sx={{
-//           fontSize: '0.75rem',
-//           fontWeight: 600,
-//           letterSpacing: '0.5px',
-//           textTransform: 'uppercase',
-//           color: hasData ? '#3b82f6' : '#94a3b8',
-//           mb: 1,
-//           display: 'block'
-//         }}
-//       >
-//         {title}
-//       </Typography>
-
-//       <Typography
-//         variant="body2"
-//         sx={{
-//           whiteSpace: 'pre-line',
-//           color: hasData ? '#1e293b' : '#94a3b8',
-//           fontSize: '0.875rem',
-//           lineHeight: 1.6
-//         }}
-//       >
-//         {hasData ? value : 'No data available'}
-//       </Typography>
-//     </Paper>
-//   );
-// };
-
-
-// const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
-//   const [open, setOpen] = useState(true);
-//   const hasData = value && value.trim().length > 0;
-
-//   return (
-//     <Paper
-//       elevation={0}
-//       sx={{
-//         borderRadius: 3,
-//         border: '1px solid rgba(226, 232, 240, 1)',
-//         overflow: 'hidden',
-//         background: '#fff'
-//       }}
-//     >
-//       {/* Header */}
-//       <Box
-//         onClick={() => setOpen(!open)}
-//         sx={{
-//           cursor: 'pointer',
-//           display: 'flex',
-//           justifyContent: 'space-between',
-//           alignItems: 'center',
-//           px: 2.5,
-//           py: 1.8,
-//           bgcolor: '#f8fafc'
-//         }}
-//       >
-//         <Typography
-//           sx={{
-//             fontSize: '0.8rem',
-//             fontWeight: 700,
-//             letterSpacing: '0.5px',
-//             textTransform: 'uppercase',
-//             color: '#334155'
-//           }}
-//         >
-//           {title}
-//         </Typography>
-
-//         <IconButton size="small">
-//           {
-//             open ? <ChevronUp 
-//           /> : <ChevronDown 
-//           />
-//           }
-//         </IconButton>
-//       </Box>
-
-//       {/* Content */}
-//       <Collapse in={open}>
-//         <Box sx={{ p: 2.5 }}>
-//           {hasData ? (
-//             <ReactMarkdown
-//               components={{
-//                 li: ({ node, ...props }) => (
-//                   <li style={{ marginBottom: 6, color: '#1e293b' }} {...props} />
-//                 ),
-//                 strong: ({ node, ...props }) => (
-//                   <strong style={{ color: '#0f172a' }} {...props} />
-//                 ),
-//               }}
-//             >
-//               {value}
-//             </ReactMarkdown>
-//           ) : (
-//             <Typography sx={{ color: '#94a3b8' }}>
-//               No data available
-//             </Typography>
-//           )}
-//         </Box>
-//       </Collapse>
-//     </Paper>
-//   );
-// };
-
-// const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
-//   const [expanded, setExpanded] = useState(false);
-
-//   const hasData = value && value.trim().length > 0;
-
-//   // Normalize + clean value (remove duplicated titles)
-//   const cleanValue = React.useMemo(() => {
-//   if (!value) return '';
-
-//   let result = value.trim();
-
-//   // Escape title for regex safety
-//   const escapeRegex = (str: string) =>
-//     str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-//   const normalizedTitle = escapeRegex(title.trim());
-
-//   // Remove ONLY if title is at the very start
-//   const patterns = [
-//     new RegExp(`^${normalizedTitle}\\s*[:\\-]*\\s*`, 'i'),
-//     /^(observations|ado defects|datadog remarks)\s*[:\-]*\s*/i
-//   ];
-
-//   patterns.forEach((pattern) => {
-//     result = result.replace(pattern, '');
-//   });
-
-//   return result.trim();
-// }, [value, title]);
-
-//   return (
-//     <Paper
-//       onClick={() => setExpanded(!expanded)}
-//       sx={{
-//         border: '1px solid #e2e8f0',
-//         borderRadius: 2,
-//         px: 3,
-//         py: 3,
-//         cursor: 'pointer',
-//         transition: 'all 0.25s ease'
-//       }}
-//     >
-//       <Box
-//         sx={{
-//           display: 'flex',
-//           alignItems: 'flex-start',
-//           justifyContent: 'space-between',
-//           gap: 2
-//         }}
-//       >
-//         {/* TEXT */}
-//         <Box sx={{ flex: 1 }}>
-//           <Typography
-//             component="div"
-//             sx={{
-//               fontSize: '0.85rem',
-//               color: '#1e293b',
-//               lineHeight: 1.6
-//             }}
-//           >
-//             {/* TITLE */}
-//             <Box
-//               component="span"
-//               sx={{
-//                 fontWeight: 700,
-//                 textTransform: 'uppercase',
-//                 color: expanded ? '#2563eb' : '#0f172a',
-//                 transition: 'color 0.25s ease',
-//                 marginBottom: 3,
-//                 py: 7
-//               }}
-//             >
-//               {title}
-//             </Box>{' '}
-//             -{' '}
-
-//             {/* VALUE */}
-//             <Box
-//               component="span"
-//               sx={{
-//                 display: 'block',
-//                 overflow: 'hidden',
-//                 transition: 'all 0.5s ease',
-//                 py:2,
-//                 ...(expanded
-//                   ? {
-//                       maxHeight: '500px',
-//                       opacity: 1
-//                     }
-//                   : {
-//                       display: '-webkit-box',
-//                       WebkitLineClamp: 2,
-//                       WebkitBoxOrient: 'vertical',
-//                       maxHeight: '4.5em',
-//                       opacity: 0.9
-//                     })
-//               }}
-//             >
-//               <ReactMarkdown>
-//                 {hasData ? cleanValue : 'No data available'}
-//               </ReactMarkdown>
-//             </Box>
-//           </Typography>
-//         </Box>
-
-//         {/* ARROW */}
-//         <Box
-//           sx={{
-//             transition: 'transform 0.25s ease',
-//             transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
-//           }}
-//         >
-//           <ChevronDown />
-//         </Box>
-//       </Box>
-//     </Paper>
-//   );
-// };
 
 const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
   const [expanded, setExpanded] = useState(false);
@@ -620,7 +48,7 @@ const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
 
   return (
     <Paper
-    data-infocard 
+      data-infocard
       onClick={() => setExpanded(!expanded)}
       sx={{
         border: '1px solid #e2e8f0',
@@ -636,8 +64,8 @@ const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
           alignItems: 'flex-start',
           justifyContent: 'space-between',
           gap: 2,
-          py:2,
-          px:2
+          py: 2,
+          px: 2
         }}
       >
         <Box sx={{ flex: 1 }}>
@@ -656,7 +84,7 @@ const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
                 textTransform: 'uppercase',
                 color: !hasData
                   ? '#94a3b8' // gray if no data
-                  : '#2563eb' ,
+                  : '#2563eb',
                 transition: 'color 0.25s ease',
 
               }}
@@ -667,25 +95,25 @@ const InfoCard: React.FC<InfoCardProps> = ({ title, value }) => {
 
             {/* VALUE WRAPPER (animation container) */}
             <Box
-            data-content
+              data-content
               sx={{
                 overflow: 'hidden',
                 transition: 'max-height 0.35s ease',
-                maxHeight: expanded ? '500px' : '6em' ,// ~2 lines
-                py:1
+                maxHeight: expanded ? '500px' : '6em',// ~2 lines
+                py: 1
               }}
             >
               {/* INNER CONTENT */}
               <Box
-              data-inner
+                data-inner
                 sx={
                   !expanded
                     ? {
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }
                     : {}
                 }
               >
@@ -721,25 +149,25 @@ export const ResultPage: React.FC = () => {
   const navigate = useNavigate();
   const prevProjectId = useRef<number | null>(null);
   const [copied, setCopied] = useState(false);
-   const { selectedProject } = useSelector((state: RootState) => state.project);
+  const { selectedProject } = useSelector((state: RootState) => state.project);
 
   const [report, setReport] = useState<BuildReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
 
-useEffect(() => {
+  useEffect(() => {
     if (!selectedProject?.id) return;
 
     if (
-        prevProjectId.current !== null &&
-        prevProjectId.current !== selectedProject.id
+      prevProjectId.current !== null &&
+      prevProjectId.current !== selectedProject.id
     ) {
-        navigate("/autoanalysis");
+      navigate("/autoanalysis");
     }
 
     prevProjectId.current = selectedProject.id;
-}, [selectedProject?.id]);
+  }, [selectedProject?.id]);
 
   const copyTableAsCSV = async () => {
     const header = [
@@ -920,27 +348,27 @@ useEffect(() => {
 
     const cloned = pageRef.current.cloneNode(true) as HTMLElement;
 
-// ✅ FORCE FULL EXPANSION (NO HEIGHT LIMITS AT ALL)
-cloned.querySelectorAll('[data-infocard]').forEach((card) => {
-  const content = card.querySelector('[data-content]') as HTMLElement;
-  const inner = card.querySelector('[data-inner]') as HTMLElement;
+    // ✅ FORCE FULL EXPANSION (NO HEIGHT LIMITS AT ALL)
+    cloned.querySelectorAll('[data-infocard]').forEach((card) => {
+      const content = card.querySelector('[data-content]') as HTMLElement;
+      const inner = card.querySelector('[data-inner]') as HTMLElement;
 
-  if (content) {
-    content.style.maxHeight = 'none';
-    content.style.height = 'auto';
-    content.style.overflow = 'visible';
-    content.style.transition = 'none';
-  }
+      if (content) {
+        content.style.maxHeight = 'none';
+        content.style.height = 'auto';
+        content.style.overflow = 'visible';
+        content.style.transition = 'none';
+      }
 
-  if (inner) {
-    inner.style.display = 'block';
-    inner.style.overflow = 'visible';
+      if (inner) {
+        inner.style.display = 'block';
+        inner.style.overflow = 'visible';
 
-    // Remove line clamp completely
-    inner.style.webkitLineClamp = 'unset';
-    inner.style.webkitBoxOrient = 'unset';
-  }
-});
+        // Remove line clamp completely
+        inner.style.webkitLineClamp = 'unset';
+        inner.style.webkitBoxOrient = 'unset';
+      }
+    });
     // Remove back/download nav buttons only
     cloned.querySelectorAll(".no-export").forEach(el => el.remove());
 
@@ -1248,32 +676,19 @@ cloned.querySelectorAll('[data-infocard]').forEach((card) => {
           </Box>
         </Paper>
 
-        {/* Observation Cards */}
-        {/* <Box
+
+        <Box
           sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: 2.5,
+            display: 'flex',
+            flexDirection: 'column',   // 🔥 KEY CHANGE
+            gap: 2,
             mb: 3
           }}
         >
           <InfoCard title="Observations" value={report.observations} />
           <InfoCard title="Datadog Remarks" value={report.datadog_remarks} />
           <InfoCard title="ADO Defects" value={report.ado_defects} />
-        </Box> */}
-
-        <Box
-  sx={{
-    display: 'flex',
-    flexDirection: 'column',   // 🔥 KEY CHANGE
-    gap: 2,
-    mb: 3
-  }}
->
-  <InfoCard title="Observations" value={report.observations} />
-  <InfoCard title="Datadog Remarks" value={report.datadog_remarks} />
-  <InfoCard title="ADO Defects" value={report.ado_defects} />
-</Box>
+        </Box>
 
         {/* Metrics Table */}
         <Paper

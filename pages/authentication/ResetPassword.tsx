@@ -109,19 +109,6 @@ const ResetPassword: React.FC = () => {
               required
               fullWidth
               variant="outlined"
-              // InputProps={{
-              //   endAdornment: (
-              //     <InputAdornment position="end">
-              //       <IconButton
-              //         onMouseDown={(e) => e.preventDefault()} // prevents focus loss
-              //         onClick={() => setShowNewPassword((prev) => !prev)}
-              //         edge="end"
-              //       >
-              //         {showNewPassword ? <VisibilityOff /> : <Visibility />}
-              //       </IconButton>
-              //     </InputAdornment>
-              //   ),
-              // }}
               sx={{ mb: 3 }}
             />
 
@@ -134,19 +121,6 @@ const ResetPassword: React.FC = () => {
               required
               fullWidth
               variant="outlined"
-            // InputProps={{
-            //   endAdornment: (
-            //     <InputAdornment position="end">
-            //       <IconButton
-            //         onMouseDown={(e) => e.preventDefault()} // prevents focus loss
-            //         onClick={() => setShowConfirmPassword((prev) => !prev)}
-            //         edge="end"
-            //       >
-            //         {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-            //       </IconButton>
-            //     </InputAdornment>
-            //   ),
-            // }}
             />
 
             <Button

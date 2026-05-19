@@ -10,16 +10,6 @@ interface Props {
 export const UploadBox: React.FC<Props> = ({ file, label, onClick, onCancel }) => {
   
   return (
-  // <div
-  //   onClick={onClick}
-  //   className={`
-  //     border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer
-  //     transition-all h-48 w-64
-  //     ${file
-  //       ? "bg-blue-50 border-blue-400 text-blue-800"
-  //       : "border-gray-300 text-gray-500 hover:border-blue-300 hover:bg-gray-50"}
-  //   `}
-  // >
 
   <div
   onClick={onClick}
