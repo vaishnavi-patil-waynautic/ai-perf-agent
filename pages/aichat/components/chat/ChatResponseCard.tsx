@@ -889,7 +889,7 @@ export default function ChatResponseCard({ data }: Props) {
 
       {/* Chart visualization (fullscreen only) */}
       {!isNoneViz && (hasData || visualization) && isFullScreen && (
-        <VisualizationBlock data={dataset} visualization={visualization} />
+        <VisualizationBlock data={dataset} visualization={visualization} chart_metadata={data?.chart_metadata}/>
       )}
 
       {/* Collapsed fullscreen prompt */}

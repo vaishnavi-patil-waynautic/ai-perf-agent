@@ -20,8 +20,7 @@ const WizardStep1_Fetch: React.FC = () => {
   const [source, setSource] = useState<'ADO'>('ADO');
   const [filterType, setFilterType] = useState<string>('All');
   const [searchText, setSearchText] = useState('');
-  const [filteredData, setFilteredData] = useState<any[]>(externalItems);
-
+  // const [filteredData, setFilteredData] = useState<any[]>(externalItems);
 
   const [expandedRows, setExpandedRows] = React.useState<Record<string, boolean>>({});
   const [loading, setLoading] = React.useState<boolean>(false);
@@ -33,16 +32,18 @@ const WizardStep1_Fetch: React.FC = () => {
     }));
   };
 
-useEffect(() => {
-  if (!selectedProject?.id) return;
 
-  if (externalItems.length === 0) {
-    dispatch(fetchAdoItems(selectedProject.id));
-  } else {
-    setFilteredData(externalItems);
-    setItems(externalItems);
-  }
-}, [dispatch, externalItems]);
+
+  // useEffect(() => {
+  //   if (!selectedProject?.id) return;
+
+  //   // if (externalItems.length === 0) {
+  //   //   dispatch(fetchAdoItems(selectedProject.id));
+  //   // } else {
+  //   setFilteredData(externalItems);
+  //   setItems(externalItems);
+  //   // }
+  // }, [dispatch, externalItems]);
 
   // Reset all wizard state when project changes
   // useEffect(() => {
@@ -56,32 +57,51 @@ useEffect(() => {
   //   setFilterType('All');
   // }, [selectedProject?.id]);
 
+  const filteredData = items.filter((item: any) => {
+
+    const matchesType =
+      filterType === 'All' ||
+      item.type?.toLowerCase() === filterType.toLowerCase();
+
+    const matchesSearch =
+      searchText.trim() === '' ||
+      item.tags?.some((tag: string) =>
+        tag.toLowerCase().includes(searchText.toLowerCase())
+      );
+
+    return matchesType && matchesSearch;
+  });
+
+
+
   const handleFetch = async () => {
 
     setLoading(true);
-    
+
     try {
 
-      const response = await dispatch(fetchAdoItems(selectedProject.id)).unwrap();
+      const response = await dispatch(fetchAdoItems(selectedProject?.id)).unwrap();
       const allRecords = response;
 
-      let result = [...allRecords];
-
-      if (searchText.trim() !== '') {
-        const search = searchText.toLowerCase();
-        result = result.filter((item: any) =>
-          item.tags && item.tags.some((tag: string) => tag.toLowerCase().includes(search))
-        );
-      }
-
-      if (filterType !== 'All') {
-        result = result.filter((item: any) =>
-          item.type?.toLowerCase() === filterType.toLowerCase()
-        );
-      }
-
       setItems(allRecords);
-      setFilteredData(result);
+
+      // let result = [...allRecords];
+
+      // if (searchText.trim() !== '') {
+      //   const search = searchText.toLowerCase();
+      //   result = result.filter((item: any) =>
+      //     item.tags && item.tags.some((tag: string) => tag.toLowerCase().includes(search))
+      //   );
+      // }
+
+      // if (filterType !== 'All') {
+      //   result = result.filter((item: any) =>
+      //     item.type?.toLowerCase() === filterType.toLowerCase()
+      //   );
+      // }
+
+      // setItems(allRecords);
+      // setFilteredData(result);
 
 
     } catch (err: any) {

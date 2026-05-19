@@ -556,228 +556,242 @@ const GovernanceDashboard: React.FC = () => {
               const rowHeight = isKPI ? KPI_ROW_HEIGHT : DEFAULT_ROW_HEIGHT;
 
 
-             
+
 
 
               return (
-  <React.Fragment key={widget.id}>
-    {/* 🔥 Inject dropdown BEFORE KPI 7 */}
-    {widget.id === 'roi-kpi-7' && (
-      // <Box
-      //   sx={{
-      //     gridColumn: 'span 12',
-      //     display: 'flex',
-      //     justifyContent: 'flex-end',
-      //     mb: 0.5,
-      //   }}
-      // >
+                <React.Fragment key={widget.id}>
+                  {/* 🔥 Inject dropdown BEFORE KPI 7 */}
+                  {widget.id === 'roi-kpi-7' && (
+                    // <Box
+                    //   sx={{
+                    //     gridColumn: 'span 12',
+                    //     display: 'flex',
+                    //     justifyContent: 'flex-end',
+                    //     mb: 0.5,
+                    //   }}
+                    // >
 
-      <Box
-  sx={{
-    gridColumn: 'span 12',
-    display: 'flex',
-    justifyContent: 'center',
-    mb: 1,
-  }}
->
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <Select
-            value={selectedModel || ''}
-            onChange={(e) => dispatch(setSelectedModel(e.target.value))}
-            sx={{
-              height: 38,
-              borderRadius: '10px',
-              fontSize: '0.85rem',
-              fontWeight: 500,
-              backgroundColor: '#fff',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                    <Box
+                      sx={{
+                        gridColumn: 'span 12',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        mb: 1,
+                      }}
+                    >
+                      <FormControl size="small" sx={{ minWidth: 200 }}>
+                        <Select
+                          value={selectedModel || ''}
+                          onChange={(e) => dispatch(setSelectedModel(e.target.value))}
+                          sx={{
+                            height: 38,
+                            borderRadius: '10px',
+                            fontSize: '0.85rem',
+                            fontWeight: 500,
+                            backgroundColor: '#fff',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
 
-              '& fieldset': { borderColor: '#e2e8f0' },
-              '&:hover fieldset': { borderColor: '#cbd5f5' },
-              '&.Mui-focused fieldset': {
-                borderColor: '#6366f1',
-                boxShadow: '0 0 0 2px rgba(99,102,241,0.15)',
-              },
-            }}
-          >
-            {models.map((m: any) => (
-              <MenuItem key={m.id} value={m.id}>
-                {m.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Box>
-    )}
+                            '& fieldset': { borderColor: '#e2e8f0' },
+                            '&:hover fieldset': { borderColor: '#cbd5f5' },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#6366f1',
+                              boxShadow: '0 0 0 2px rgba(99,102,241,0.15)',
+                            },
+                          }}
+                        >
+                          {models.length === 0 ? (
+                            <MenuItem disabled value="">
+                              <span
+                                style={{
+                                  color: '#000000',
+                                  fontSize: '0.8rem',
+                                  fontStyle: 'italic',
+                                }}
+                              >
+                                No model available
+                              </span>
+                            </MenuItem>
+                          ) : (
+                            models.map((m: any) => (
+                              <MenuItem key={m.id} value={m.id}>
+                                {m.label}
+                              </MenuItem>
+                            ))
+                          )}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  )}
 
-    {/* 🔥 ACTUAL WIDGET */}
-    <Box
-      sx={{
-        gridColumn: `span ${widget.layout?.w ?? 4}`,
-        minHeight:
-          (widget.layout?.h ?? (isKPI ? 1 : 2)) * rowHeight,
-      }}
-    >
-      <WidgetBoundary title={widget.title} type={widget.type}>
-        {widget.id === 'roi-kpi-7' || widget.id === 'roi-kpi-8' ? (
-          (() => {
-            const selected = models.find((m: any) => m.id === selectedModel);
+                  {/* 🔥 ACTUAL WIDGET */}
+                  <Box
+                    sx={{
+                      gridColumn: `span ${widget.layout?.w ?? 4}`,
+                      minHeight:
+                        (widget.layout?.h ?? (isKPI ? 1 : 2)) * rowHeight,
+                    }}
+                  >
+                    <WidgetBoundary title={widget.title} type={widget.type}>
+                      {widget.id === 'roi-kpi-7' || widget.id === 'roi-kpi-8' ? (
+                        (() => {
+                          const selected = models.find((m: any) => m.id === selectedModel);
 
-            const value =
-              widget.id === 'roi-kpi-7'
-                ? selected?.tokens?.toLocaleString() ?? llm?.totalTokens ?? '—'
-                : `₹ ${selected?.cost ?? llm?.totalCost ?? '—'}`;
+                          const value =
+                            widget.id === 'roi-kpi-7'
+                              ? selected?.tokens?.toLocaleString() ?? llm?.totalTokens ?? '—'
+                              : `₹ ${selected?.cost ?? llm?.totalCost ?? '—'}`;
 
-            return (
-              <KPIWidget
-                config={widget}
-                data={{
-                  value,
-                  trend: 0,
-                }}
-              />
-            );
-          })()
-        ) : (
-          renderWidget(
-            widget,
-            filters,
-            kpis?.[widget.id] || charts?.[widget.id]
-          )
-        )}
-      </WidgetBoundary>
-    </Box>
-  </React.Fragment>
-);
+                          return (
+                            <KPIWidget
+                              config={widget}
+                              data={{
+                                value,
+                                trend: 0,
+                              }}
+                            />
+                          );
+                        })()
+                      ) : (
+                        renderWidget(
+                          widget,
+                          filters,
+                          kpis?.[widget.id] || charts?.[widget.id]
+                        )
+                      )}
+                    </WidgetBoundary>
+                  </Box>
+                </React.Fragment>
+              );
 
 
-//               return (
-//                 <Box
-//                   key={widget.id}
-//                   sx={{
-//                     gridColumn: `span ${widget.layout?.w ?? 4}`,
-//                     minHeight:
-//                       (widget.layout?.h ?? (isKPI ? 1 : 2)) * rowHeight,
-//                   }}
-//                 >
-//                   <WidgetBoundary title={widget.title} type={widget.type}>
-//                     {/* 🔥 LLM KPI WIDGETS */}
+              //               return (
+              //                 <Box
+              //                   key={widget.id}
+              //                   sx={{
+              //                     gridColumn: `span ${widget.layout?.w ?? 4}`,
+              //                     minHeight:
+              //                       (widget.layout?.h ?? (isKPI ? 1 : 2)) * rowHeight,
+              //                   }}
+              //                 >
+              //                   <WidgetBoundary title={widget.title} type={widget.type}>
+              //                     {/* 🔥 LLM KPI WIDGETS */}
 
-//                     {widget.id === 'roi-kpi-7' || widget.id === 'roi-kpi-8' ? (
-//                       (() => {
-//                         const selected = models.find((m: any) => m.id === selectedModel);
+              //                     {widget.id === 'roi-kpi-7' || widget.id === 'roi-kpi-8' ? (
+              //                       (() => {
+              //                         const selected = models.find((m: any) => m.id === selectedModel);
 
-//                         const value =
-//                           widget.id === 'roi-kpi-7'
-//                             ? selected?.tokens?.toLocaleString() ?? llm?.totalTokens ?? '—'
-//                             : `₹ ${selected?.cost ?? llm?.totalCost ?? '—'}`;
+              //                         const value =
+              //                           widget.id === 'roi-kpi-7'
+              //                             ? selected?.tokens?.toLocaleString() ?? llm?.totalTokens ?? '—'
+              //                             : `₹ ${selected?.cost ?? llm?.totalCost ?? '—'}`;
 
-//                         return (
-//                           <KPIWidget
-//                             config={widget}
-//                             data={{
-//                               value,
-//                               trend: 0,
-//                             }}
-//                           />
-//                         );
-//                       })()
-//                     ) : (
-//                       renderWidget(
-//                         widget,
-//                         filters,
-//                         kpis?.[widget.id] || charts?.[widget.id]
-//                       )
-//                     )}
+              //                         return (
+              //                           <KPIWidget
+              //                             config={widget}
+              //                             data={{
+              //                               value,
+              //                               trend: 0,
+              //                             }}
+              //                           />
+              //                         );
+              //                       })()
+              //                     ) : (
+              //                       renderWidget(
+              //                         widget,
+              //                         filters,
+              //                         kpis?.[widget.id] || charts?.[widget.id]
+              //                       )
+              //                     )}
 
-//                     {/* {widget.id === 'roi-kpi-7' || widget.id === 'roi-kpi-8' ? (
-//                       <Box> */}
-//                     {/* 🔥 Dropdown */}
-//                     {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 0.5 }}>
- 
+              //                     {/* {widget.id === 'roi-kpi-7' || widget.id === 'roi-kpi-8' ? (
+              //                       <Box> */}
+              //                     {/* 🔥 Dropdown */}
+              //                     {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 0.5 }}>
 
-//       <FormControl size="small" sx={{ minWidth: 160 }}>
-//   <Select
-//     value={selectedModel || ''}
-//     onChange={(e) => dispatch(setSelectedModel(e.target.value))}
-//     displayEmpty
-//     sx={{
-//       height: 36,
-//       borderRadius: '10px',
-//       fontSize: '0.8rem',
-//       fontWeight: 500,
-//       px: 1,
 
-//       backgroundColor: '#ffffff',
-//       boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+              //       <FormControl size="small" sx={{ minWidth: 160 }}>
+              //   <Select
+              //     value={selectedModel || ''}
+              //     onChange={(e) => dispatch(setSelectedModel(e.target.value))}
+              //     displayEmpty
+              //     sx={{
+              //       height: 36,
+              //       borderRadius: '10px',
+              //       fontSize: '0.8rem',
+              //       fontWeight: 500,
+              //       px: 1,
 
-//       '& .MuiSelect-select': {
-//         py: 1,
-//         display: 'flex',
-//         alignItems: 'center',
-//       },
+              //       backgroundColor: '#ffffff',
+              //       boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
 
-//       '& fieldset': {
-//         borderColor: '#e2e8f0',
-//       },
+              //       '& .MuiSelect-select': {
+              //         py: 1,
+              //         display: 'flex',
+              //         alignItems: 'center',
+              //       },
 
-//       '&:hover fieldset': {
-//         borderColor: '#cbd5f5',
-//       },
+              //       '& fieldset': {
+              //         borderColor: '#e2e8f0',
+              //       },
 
-//       '&.Mui-focused fieldset': {
-//         borderColor: '#6366f1',
-//         boxShadow: '0 0 0 2px rgba(99,102,241,0.15)',
-//       },
-//     }}
-//   >
-//     {models.map((m: any) => (
-//       <MenuItem
-//         key={m.id}
-//         value={m.id}
-//         sx={{
-//           fontSize: '0.8rem',
-//           py: 1.2,
-//           px: 2,
-//         }}
-//       >
-//         {m.label}
-//       </MenuItem>
-//     ))}
-//   </Select>
-// </FormControl>
-//     </Box> */}
+              //       '&:hover fieldset': {
+              //         borderColor: '#cbd5f5',
+              //       },
 
-//                     {/* 🔥 SAME KPI DESIGN */}
-//                     {/* {(() => {
-//       const selected = models.find((m: any) => m.id === selectedModel);
+              //       '&.Mui-focused fieldset': {
+              //         borderColor: '#6366f1',
+              //         boxShadow: '0 0 0 2px rgba(99,102,241,0.15)',
+              //       },
+              //     }}
+              //   >
+              //     {models.map((m: any) => (
+              //       <MenuItem
+              //         key={m.id}
+              //         value={m.id}
+              //         sx={{
+              //           fontSize: '0.8rem',
+              //           py: 1.2,
+              //           px: 2,
+              //         }}
+              //       >
+              //         {m.label}
+              //       </MenuItem>
+              //     ))}
+              //   </Select>
+              // </FormControl>
+              //     </Box> */}
 
-//       const value =
-//         widget.id === 'roi-kpi-7'
-//           ? selected?.tokens?.toLocaleString() ?? llm?.totalTokens ?? '—'
-//           : `₹ ${selected?.cost ?? llm?.totalCost ?? '—'}`;
+              //                     {/* 🔥 SAME KPI DESIGN */}
+              //                     {/* {(() => {
+              //       const selected = models.find((m: any) => m.id === selectedModel);
 
-//       return (
-//         <KPIWidget
-//           config={widget}
-//           data={{
-//             value,
-//             trend: 0,
-//           }}
-//         />
-//       );
-//     })()}
-//   </Box> */}
-//                     {/* ) : (
-//                       renderWidget(
-//                         widget,
-//                         filters,
-//                         kpis?.[widget.id] || charts?.[widget.id]
-//                       )
-//                     )} */}
-//                   </WidgetBoundary>
-//                 </Box>
-//               );
+              //       const value =
+              //         widget.id === 'roi-kpi-7'
+              //           ? selected?.tokens?.toLocaleString() ?? llm?.totalTokens ?? '—'
+              //           : `₹ ${selected?.cost ?? llm?.totalCost ?? '—'}`;
+
+              //       return (
+              //         <KPIWidget
+              //           config={widget}
+              //           data={{
+              //             value,
+              //             trend: 0,
+              //           }}
+              //         />
+              //       );
+              //     })()}
+              //   </Box> */}
+              //                     {/* ) : (
+              //                       renderWidget(
+              //                         widget,
+              //                         filters,
+              //                         kpis?.[widget.id] || charts?.[widget.id]
+              //                       )
+              //                     )} */}
+              //                   </WidgetBoundary>
+              //                 </Box>
+              //               );
             })}
           </Box>
         )}

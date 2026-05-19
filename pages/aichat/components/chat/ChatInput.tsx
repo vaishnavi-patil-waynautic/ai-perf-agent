@@ -354,7 +354,7 @@
 // // export default ChatInput;
 
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   TextField,
   IconButton,
@@ -418,6 +418,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ inputValue, onInputChange }) => {
   const activeStreamId = useAppSelector((s) => s.chat.activeStreamId);
   const currentChatId = useAppSelector((s) => s.chat.currentChatId);
   const chatHistories = useAppSelector((s) => s.chat.chatHistories);
+  const hasModels = models.length > 0;
+  const isModelSelected = !!selectedModel;
 
   // Only freeze input if THIS chat is currently streaming
   const isCurrentChatStreaming = useAppSelector((s) => {
@@ -442,52 +444,95 @@ const ChatInput: React.FC<ChatInputProps> = ({ inputValue, onInputChange }) => {
 
   /* ---------------- LIVE MATCH DETECTION ⭐ ---------------- */
   const matchedFAQ = useMemo(() => {
-  if (!input.trim()) return null;
+    if (!input.trim()) return null;
 
-  const STOP_WORDS = ["is", "the", "are", "what", "how", "to", "for", "a", "an"];
+    const STOP_WORDS = ["is", "the", "are", "what", "how", "to", "for", "a", "an"];
 
-  const inputWords = input
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(w => !STOP_WORDS.includes(w));
-
-  let bestMatch = null;
-  let bestScore = 0;
-
-  for (const faq of faqList) {
-    const faqWords = faq
+    const inputWords = input
       .toLowerCase()
       .split(/\s+/)
       .filter(w => !STOP_WORDS.includes(w));
 
-    let score = 0;
+    let bestMatch = null;
+    let bestScore = 0;
 
-    for (const word of inputWords) {
-      if (faqWords.includes(word)) {
-        score++;
+    for (const faq of faqList) {
+      const faqWords = faq
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(w => !STOP_WORDS.includes(w));
+
+      let score = 0;
+
+      for (const word of inputWords) {
+        if (faqWords.includes(word)) {
+          score++;
+        }
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = faq;
       }
     }
 
-    if (score > bestScore) {
-      bestScore = score;
-      bestMatch = faq;
-    }
+    return bestScore > 0 ? bestMatch : null;
+  }, [input]);
+
+    const hasCheckedOnce = useRef(false);
+
+useEffect(() => {
+  if (selectedProject?.id) {
+    dispatch(fetchModels(selectedProject.id));
+    hasCheckedOnce.current = false;
+  }
+}, [dispatch, selectedProject?.id]);
+
+useEffect(() => {
+  if (
+    models.length &&
+    !models.find(m => String(m.id) === String(selectedModel))
+  ) {
+    dispatch(setSelectedModel(String(models[0].id)));
+  }
+}, [models]);
+
+useEffect(() => {
+  // skip first empty state before API responds
+  if (!hasCheckedOnce.current) {
+    hasCheckedOnce.current = true;
+    return;
   }
 
-  return bestScore > 0 ? bestMatch : null;
-}, [input]);
+  if (selectedProject?.id && models.length === 0) {
+    dispatch(showSnackbar({
+      message: 'No model available for this project. Please add a model.',
+      type: 'error',
+    }));
+  }
+}, [models, selectedProject?.id, dispatch]);
 
-  useEffect(() => {
-    if (selectedProject?.id) {
-      dispatch(fetchModels(selectedProject?.id));
-    }
-  }, [dispatch, selectedProject?.id]);
+  // useEffect(() => {
+  //   if (selectedProject?.id) {
+  //     dispatch(fetchModels(selectedProject?.id));
 
-  useEffect(() => {
-    if (models.length && !models.find(m => String(m.id) === String(selectedModel))) {
-      dispatch(setSelectedModel(String(models[0].id)));
-    }
-  }, [models]);
+  //   }
+  // }, [dispatch, selectedProject?.id]);
+
+  // useEffect(() => {
+  //   if (models.length && !models.find(m => String(m.id) === String(selectedModel))) {
+  //     dispatch(setSelectedModel(String(models[0].id)));
+  //   }
+  // }, [models]);
+
+  // useEffect(() => {
+  //   if (selectedProject?.id && models.length === 0) {
+  //     dispatch(showSnackbar({
+  //       message: 'No model available for this project. Please add a model.',
+  //       type: 'error',
+  //     }));
+  //   }
+  // }, [models, selectedProject?.id, dispatch]);
 
   const handleAbort = () => {
     if (activeStreamId) {
@@ -496,6 +541,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ inputValue, onInputChange }) => {
   };
 
   const handleSend = () => {
+    if (!hasModels) {
+      dispatch(showSnackbar({
+        message: 'No model available for this project. Please add a model.',
+        type: 'error',
+      }));
+      return;
+    }
+
+    if (!selectedModel) {
+      dispatch(showSnackbar({
+        message: 'Please select a model.',
+        type: 'error',
+      }));
+      return;
+    }
+
     if (input.trim()) {
 
       console.log("Sending message 1---------------------------------");
@@ -530,34 +591,34 @@ const ChatInput: React.FC<ChatInputProps> = ({ inputValue, onInputChange }) => {
     <div
       className={`relative py-4 w-full ${isFullScreen ? 'px-8' : 'px-4'}`}
     >
-  <div className={`relative group ${isFullScreen ? 'w-full max-w-4xl mx-auto' : 'w-full'}`}>
-    {/* Animated Ring Background */}
-    <div className="absolute -inset-[2px] rounded-[30px] overflow-hidden opacity-100 transition-opacity duration-500">
-      <div
-        style={{
-          width: '200%',
-          aspectRatio: '1/1',
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'conic-gradient(from 0deg, transparent 0deg, transparent 120deg, #93c5fd 150deg, #2563eb 180deg, #60a5fa 210deg, transparent 240deg, transparent 360deg)',
-          animation: 'spinRing 5s linear infinite',
-        }}
-      />
-      <style>{`@keyframes spinRing { to { transform: translate(-50%, -50%) rotate(360deg); } }`}</style>
-    </div>
+      <div className={`relative group ${isFullScreen ? 'w-full max-w-4xl mx-auto' : 'w-full'}`}>
+        {/* Animated Ring Background */}
+        <div className="absolute -inset-[2px] rounded-[30px] overflow-hidden opacity-100 transition-opacity duration-500">
+          <div
+            style={{
+              width: '200%',
+              aspectRatio: '1/1',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: 'conic-gradient(from 0deg, transparent 0deg, transparent 120deg, #93c5fd 150deg, #2563eb 180deg, #60a5fa 210deg, transparent 240deg, transparent 360deg)',
+              animation: 'spinRing 5s linear infinite',
+            }}
+          />
+          <style>{`@keyframes spinRing { to { transform: translate(-50%, -50%) rotate(360deg); } }`}</style>
+        </div>
 
-      {/* <div className={isFullScreen ? "w-full max-w-5xl" : "w-full"}> */}
-      <div className="w-full">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-t from-purple-50/50 via-blue-50/30 to-transparent pointer-events-none"></div>
+        {/* <div className={isFullScreen ? "w-full max-w-5xl" : "w-full"}> */}
+        <div className="w-full">
+          {/* Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-t from-purple-50/50 via-blue-50/30 to-transparent pointer-events-none"></div>
 
-        {/* Glass Container */}
-        <div className="relative bg-white rounded-[28px] p-4 border border-slate-100 focus-within:border-transparent transition-all shadow-sm group-focus-within:shadow-lg"> {/* <div className="flex items-end gap-3"> */}
-          <div className="flex items-end gap-3 w-full min-w-0">
-            {/* Model Selector with Glass Effect */}
-            {/* <FormControl size="small">
+          {/* Glass Container */}
+          <div className="relative bg-white rounded-[28px] p-4 border border-slate-100 focus-within:border-transparent transition-all shadow-sm group-focus-within:shadow-lg"> {/* <div className="flex items-end gap-3"> */}
+            <div className="flex items-end gap-3 w-full min-w-0">
+              {/* Model Selector with Glass Effect */}
+              {/* <FormControl size="small">
             <Tooltip title="Select AI Model" placement="top">
               <Select
                 value={selectedModel}
@@ -612,329 +673,395 @@ const ChatInput: React.FC<ChatInputProps> = ({ inputValue, onInputChange }) => {
             </Tooltip>
           </FormControl> */}
 
-            <FormControl size="small" sx={{ flexShrink: 0 }}>
-              <Tooltip title="Select AI Model" placement="top">
-                <Select
-                  value={selectedModel}
-                  onChange={(e) => dispatch(setSelectedModel(e.target.value))}
-                  variant="outlined"
-                  // sx={{
-                  //   width: 48,
-                  //   height: 48,
-                  //   background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))',
-                  //   backdropFilter: 'blur(10px)',
-                  //   border: '1.5px solid rgba(139, 92, 246, 0.3)',
-                  //   borderRadius: '12px',
-                  //   transition: 'all 0.3s ease',
-                  //   "& .MuiSelect-select": {
-                  //     display: "flex",
-                  //     alignItems: "center",
-                  //     justifyContent: "center",
-                  //     padding: "12px !important",
-                  //   },
-                  //   "& .MuiOutlinedInput-notchedOutline": {
-                  //     border: 'none',
-                  //   },
-                  //   '&:hover': {
-                  //     background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))',
-                  //     transform: 'scale(1.05)',
-                  //     boxShadow: '0 8px 24px rgba(139, 92, 246, 0.2)',
-                  //   },
-                  // }}
-                  sx={{
-  width: 56,
-  height: 56,
-  borderRadius: '20px',
-  background: '#eff6ff',
-  border: '1px solid #dbeafe',
-  transition: 'all 0.2s ease',
-  "& .MuiSelect-select": {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "0 !important",
-  },
-  "& .MuiOutlinedInput-notchedOutline": {
-    border: 'none',
-  },
-  '&:hover': {
-    background: '#dbeafe',
-  },
-}}
-                  IconComponent={() => null}
-                  // renderValue={(selected) => {
-                  //   // const m = models.find((x) => x.id === selected);
-                  //   const m = models.find((x) => String(x.id) === String(selected));
-                  //   return <div className="text-purple-600">{m?.icon || <Brain size={16} />}</div>;
-                  // }}
-
-                  renderValue={(selected) => {
-                    const m = models.find((x) => String(x.name) === String(selected));
-                    return (
-                      <div className="flex items-center justify-center">
-                        {m ? getModelIcon(m.provider) : <Brain size={16} />}
-                      </div>
-                    );
-                  }}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: {
-                        marginTop: '8px',
-                        borderRadius: '16px',
-                        backdropFilter: 'blur(20px)',
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        border: '1.5px solid rgba(139, 92, 246, 0.2)',
-                        boxShadow: '0 12px 40px rgba(139, 92, 246, 0.15)',
-                        overflow: 'hidden',
-                        '& .MuiList-root': {
-                          padding: '8px',
-                        },
-                      },
-                    },
-                  }}
-                >
-                  {models.map((model) => (
-                    <MenuItem
-                      key={model.id}
-                      value={model.name}
-                      sx={{
-                        borderRadius: '12px',
-                        margin: '4px 0',
-                        padding: '12px 16px',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        background: selectedModel === model.name
-                          ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))'
-                          : 'transparent',
-                        border: selectedModel === model.name
-                          ? '1.5px solid rgba(139, 92, 246, 0.3)'
-                          : '1.5px solid transparent',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))',
-                          transform: 'translateX(4px)',
-                          border: '1.5px solid rgba(139, 92, 246, 0.2)',
-                        },
-                        '&.Mui-selected': {
-                          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))',
-                          border: '1.5px solid rgba(139, 92, 246, 0.3)',
-                          '&:hover': {
-                            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))',
-                          },
-                        },
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, width: '100%' }}>
-                        <div
-                          className="flex items-center justify-center"
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: '8px',
-                            background: selectedModel === model.name
-                              ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))'
-                              : 'rgba(139, 92, 246, 0.05)',
-                            transition: 'all 0.2s ease',
-                          }}
-                        >
-                          <span className={selectedModel === model.name ? "text-purple-600" : "text-purple-500"}>
-                            {/* {model?.icon || <Brain size={16} />} */}
-                            {getModelIcon(model.provider)}
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <span className={`font-semibold text-sm ${selectedModel === model.name
-                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'
-                            : 'text-gray-700'
-                            }`}>
-                            {model.name}
-                          </span>
-                        </div>
-                        {selectedModel === model.name && (
-                          <div className="ml-auto">
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 16 16"
-                              fill="none"
-                              className="text-purple-600"
-                            >
-                              <path
-                                d="M13.5 4.5L6 12L2.5 8.5"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Tooltip>
-            </FormControl>
-
-            {/* Text Input with Glass Effect */}
-            {/* <div className="flex-1 relative"> */}
-            <div className="flex-1 relative min-w-0">
-              <TextField
-                fullWidth
-                multiline
-                maxRows={4}
-                placeholder="Ask me anything..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                variant="outlined"
-                size="small"
-                // sx={{
-                //   "& .MuiOutlinedInput-root": {
-                //     background: 'rgba(255, 255, 255, 0.5)',
-                //     backdropFilter: 'blur(10px)',
-                //     borderRadius: '14px',
-                //     transition: 'all 0.3s ease',
-                //     border: matchedFAQ
-                //       ? '2px solid rgba(16, 185, 129, 0.5)'
-                //       : isFocused
-                //         ? '2px solid rgba(139, 92, 246, 0.4)'
-                //         : '1.5px solid rgba(255, 255, 255, 0.6)',
-                //     "& fieldset": {
-                //       border: 'none',
-                //     },
-                //     '&:hover': {
-                //       background: 'rgba(255, 255, 255, 0.7)',
-                //       boxShadow: '0 4px 16px rgba(139, 92, 246, 0.1)',
-                //     },
-                //     // '&.Mui-focused': {
-                //     //   background: 'rgba(255, 255, 255, 0.8)',
-                //     //   boxShadow: '0 8px 32px rgba(139, 92, 246, 0.2)',
-                //     // },
-                //   },
-                //   // "& .MuiInputBase-input": {
-                //   //   padding: '12px 16px',
-                //   //   fontSize: '14px',
-                //   //   color: '#1f2937',
-                //   //   '&::placeholder': {
-                //   //     color: '#9ca3af',
-                //   //     opacity: 1,
-                //   //   },
-                //   // },
-                // }}
-                sx={{
-  "& .MuiOutlinedInput-root": {
-    background: 'transparent',
-    borderRadius: '0px',
-    border: 'none',
-    boxShadow: 'none',
-    "& fieldset": {
-      border: 'none',
-    },
-    '&:hover': {
-      background: 'transparent',
-    },
-  },
-  "& .MuiInputBase-input": {
-  padding: '12px 0',
-  fontSize: '16px',
-  color: '#334155',
-  lineHeight: '1.5',
-}
-  // "& .MuiInputBase-input": {
-  //   padding: '16px 0',
-  //   fontSize: '16px',
-  //   color: '#334155',
-  //   minHeight: '64px',
-  //   '&::placeholder': {
-  //     color: '#94a3b8',
-  //     opacity: 1,
-  //   },
-  // },
-}}
-              />
-
-              {/* Animated Glow Effect on Focus */}
-              {isFocused && (
-                <div
-                  className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl blur-sm opacity-20 -z-10 animate-pulse"
-                  style={{ pointerEvents: 'none' }}
-                ></div>
-              )}
-            </div>
-
-            {/* Send Button with Glass Effect */}
-            <span>
-
-              <Tooltip
-                title={isCurrentChatStreaming ? "Stop generating" : "Send message"}
-                placement="top"
-              >
-                <span>
-                  <IconButton
-                    onClick={isCurrentChatStreaming ? handleAbort : handleSend}
-                    disabled={!isCurrentChatStreaming && (!input.trim() || isLoading)}
+              <FormControl size="small" sx={{ flexShrink: 0 }}>
+                <Tooltip title="Select AI Model" placement="top">
+                  <Select
+                    value={selectedModel}
+                    onChange={(e) => dispatch(setSelectedModel(e.target.value))}
+                    variant="outlined"
                     // sx={{
                     //   width: 48,
                     //   height: 48,
+                    //   background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))',
+                    //   backdropFilter: 'blur(10px)',
+                    //   border: '1.5px solid rgba(139, 92, 246, 0.3)',
                     //   borderRadius: '12px',
-                    //   background: isStreamingActive
-                    //     ? 'linear-gradient(135deg, #fecaca, #f87171)' // red
-                    //     : (!input.trim() || isLoading
-                    //       ? 'rgba(209, 213, 219, 0.5)'
-                    //       : 'linear-gradient(135deg, #8b5cf6, #3b82f6)'),
                     //   transition: 'all 0.3s ease',
+                    //   "& .MuiSelect-select": {
+                    //     display: "flex",
+                    //     alignItems: "center",
+                    //     justifyContent: "center",
+                    //     padding: "12px !important",
+                    //   },
+                    //   "& .MuiOutlinedInput-notchedOutline": {
+                    //     border: 'none',
+                    //   },
                     //   '&:hover': {
-                    //     background: isStreamingActive
-                    //       ? 'linear-gradient(135deg, #f87171, #ef4444)'
-                    //       : 'linear-gradient(135deg, #7c3aed, #2563eb)',
-                    //     boxShadow: isStreamingActive
-                    //       ? '0 8px 24px rgba(239,68,68,0.4)'
-                    //       : '0 8px 24px rgba(139,92,246,0.4)',
+                    //     background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))',
+                    //     transform: 'scale(1.05)',
+                    //     boxShadow: '0 8px 24px rgba(139, 92, 246, 0.2)',
                     //   },
                     // }}
                     sx={{
-  width: 56,
-  height: 56,
-  borderRadius: '20px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  transition: 'all 0.2s ease',
-  background: (!input.trim() || isLoading) && !isCurrentChatStreaming
-    ? '#f1f5f9'
-    : isCurrentChatStreaming
-      ? '#fecaca'
-      : '#2563eb',
-  color: (!input.trim() || isLoading) && !isCurrentChatStreaming
-    ? '#cbd5f5'
-    : 'white',
-  '&:hover': {
-    background: isCurrentChatStreaming
-      ? '#ef4444'
-      : (!input.trim() || isLoading)
-        ? '#f1f5f9'
-        : '#1d4ed8',
-  },
-}}
-                  >
-                    {isCurrentChatStreaming ? (
-                      // STOP ICON
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                        <rect x="6" y="6" width="12" height="12" rx="2" />
-                      </svg>
-                    ) : (
-                      <SendIcon
-                        sx={{
-                          color: (!input.trim() || isLoading) ? '#9ca3af' : 'white',
-                        }}
-                      />
-                    )}
-                  </IconButton>
-                </span>
-              </Tooltip>
+                      width: 56,
+                      height: 56,
+                      borderRadius: '20px',
+                      background: '#eff6ff',
+                      border: '1px solid #dbeafe',
+                      transition: 'all 0.2s ease',
+                      "& .MuiSelect-select": {
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "0 !important",
+                      },
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        border: 'none',
+                      },
+                      '&:hover': {
+                        background: '#dbeafe',
+                      },
+                    }}
+                    IconComponent={() => null}
+                    // renderValue={(selected) => {
+                    //   // const m = models.find((x) => x.id === selected);
+                    //   const m = models.find((x) => String(x.id) === String(selected));
+                    //   return <div className="text-purple-600">{m?.icon || <Brain size={16} />}</div>;
+                    // }}
 
-              {/* <IconButton
+                    renderValue={(selected) => {
+                      const m = models.find((x) => String(x.name) === String(selected));
+                      return (
+                        <div className="flex items-center justify-center">
+                          {m ? getModelIcon(m.provider) : <Brain size={16} />}
+                        </div>
+                      );
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          marginTop: '8px',
+                          borderRadius: '16px',
+                          backdropFilter: 'blur(20px)',
+                          background: 'rgba(255, 255, 255, 0.95)',
+                          border: '1.5px solid rgba(139, 92, 246, 0.2)',
+                          boxShadow: '0 12px 40px rgba(139, 92, 246, 0.15)',
+                          overflow: 'hidden',
+                          '& .MuiList-root': {
+                            padding: '8px',
+                          },
+                        },
+                      },
+                    }}
+                  >
+                   {/* {models.map((model) => (
+                      <MenuItem
+                        key={model.id}
+                        value={model.name}
+                        sx={{
+                          borderRadius: '12px',
+                          margin: '4px 0',
+                          padding: '12px 16px',
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          background: selectedModel === model.name
+                            ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))'
+                            : 'transparent',
+                          border: selectedModel === model.name
+                            ? '1.5px solid rgba(139, 92, 246, 0.3)'
+                            : '1.5px solid transparent',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))',
+                            transform: 'translateX(4px)',
+                            border: '1.5px solid rgba(139, 92, 246, 0.2)',
+                          },
+                          '&.Mui-selected': {
+                            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))',
+                            border: '1.5px solid rgba(139, 92, 246, 0.3)',
+                            '&:hover': {
+                              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))',
+                            },
+                          },
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, width: '100%' }}>
+                          <div
+                            className="flex items-center justify-center"
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '8px',
+                              background: selectedModel === model.name
+                                ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))'
+                                : 'rgba(139, 92, 246, 0.05)',
+                              transition: 'all 0.2s ease',
+                            }}
+                          >
+                            <span className={selectedModel === model.name ? "text-purple-600" : "text-purple-500"}>
+                           
+                              {getModelIcon(model.provider)}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <span className={`font-semibold text-sm ${selectedModel === model.name
+                              ? 'bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'
+                              : 'text-gray-700'
+                              }`}>
+                              {model.name}
+                            </span>
+                          </div>
+                          {selectedModel === model.name && (
+                            <div className="ml-auto">
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                className="text-purple-600"
+                              >
+                                <path
+                                  d="M13.5 4.5L6 12L2.5 8.5"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                      </MenuItem>
+                    ))}  */}
+
+                    {models.length === 0 ? (
+  <MenuItem disabled>
+    <span
+      style={{
+        fontSize: '12px',
+        color: '#3e0202',
+        fontStyle: 'italic',
+      }}
+    >
+      No model available
+    </span>
+  </MenuItem>
+) : (
+  models.map((model) => (
+    <MenuItem
+      key={model.id}
+      value={model.name}
+      sx={{
+        borderRadius: '12px',
+        margin: '4px 0',
+        padding: '12px 16px',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        background: selectedModel === model.name
+          ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))'
+          : 'transparent',
+        border: selectedModel === model.name
+          ? '1.5px solid rgba(139, 92, 246, 0.3)'
+          : '1.5px solid transparent',
+        '&:hover': {
+          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))',
+          transform: 'translateX(4px)',
+          border: '1.5px solid rgba(139, 92, 246, 0.2)',
+        },
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 12, width: '100%' }}>
+        <div
+          className="flex items-center justify-center"
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: '8px',
+            background: 'rgba(139, 92, 246, 0.05)',
+          }}
+        >
+          {getModelIcon(model.provider)}
+        </div>
+
+        <span className="font-semibold text-sm text-gray-700">
+          {model.name}
+        </span>
+      </div>
+    </MenuItem>
+  ))
+)}
+                  </Select>
+                </Tooltip>
+              </FormControl>
+
+              {/* Text Input with Glass Effect */}
+              {/* <div className="flex-1 relative"> */}
+              <div className="flex-1 relative min-w-0">
+                <TextField
+                  fullWidth
+                  multiline
+                  maxRows={4}
+                  placeholder="Ask me anything..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  variant="outlined"
+                  size="small"
+                  // sx={{
+                  //   "& .MuiOutlinedInput-root": {
+                  //     background: 'rgba(255, 255, 255, 0.5)',
+                  //     backdropFilter: 'blur(10px)',
+                  //     borderRadius: '14px',
+                  //     transition: 'all 0.3s ease',
+                  //     border: matchedFAQ
+                  //       ? '2px solid rgba(16, 185, 129, 0.5)'
+                  //       : isFocused
+                  //         ? '2px solid rgba(139, 92, 246, 0.4)'
+                  //         : '1.5px solid rgba(255, 255, 255, 0.6)',
+                  //     "& fieldset": {
+                  //       border: 'none',
+                  //     },
+                  //     '&:hover': {
+                  //       background: 'rgba(255, 255, 255, 0.7)',
+                  //       boxShadow: '0 4px 16px rgba(139, 92, 246, 0.1)',
+                  //     },
+                  //     // '&.Mui-focused': {
+                  //     //   background: 'rgba(255, 255, 255, 0.8)',
+                  //     //   boxShadow: '0 8px 32px rgba(139, 92, 246, 0.2)',
+                  //     // },
+                  //   },
+                  //   // "& .MuiInputBase-input": {
+                  //   //   padding: '12px 16px',
+                  //   //   fontSize: '14px',
+                  //   //   color: '#1f2937',
+                  //   //   '&::placeholder': {
+                  //   //     color: '#9ca3af',
+                  //   //     opacity: 1,
+                  //   //   },
+                  //   // },
+                  // }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      background: 'transparent',
+                      borderRadius: '0px',
+                      border: 'none',
+                      boxShadow: 'none',
+                      "& fieldset": {
+                        border: 'none',
+                      },
+                      '&:hover': {
+                        background: 'transparent',
+                      },
+                    },
+                    "& .MuiInputBase-input": {
+                      padding: '12px 0',
+                      fontSize: '16px',
+                      color: '#334155',
+                      lineHeight: '1.5',
+                    }
+                    // "& .MuiInputBase-input": {
+                    //   padding: '16px 0',
+                    //   fontSize: '16px',
+                    //   color: '#334155',
+                    //   minHeight: '64px',
+                    //   '&::placeholder': {
+                    //     color: '#94a3b8',
+                    //     opacity: 1,
+                    //   },
+                    // },
+                  }}
+                />
+
+                {/* Animated Glow Effect on Focus */}
+                {isFocused && (
+                  <div
+                    className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl blur-sm opacity-20 -z-10 animate-pulse"
+                    style={{ pointerEvents: 'none' }}
+                  ></div>
+                )}
+              </div>
+
+              {/* Send Button with Glass Effect */}
+              <span>
+
+                <Tooltip
+                  title={isCurrentChatStreaming ? "Stop generating" : "Send message"}
+                  placement="top"
+                >
+                  <span>
+                    <IconButton
+                      onClick={isCurrentChatStreaming ? handleAbort : handleSend}
+                      disabled={
+                        !isCurrentChatStreaming &&
+                        (
+                          !input.trim() ||
+                          isLoading 
+                          
+                        )
+                      }
+
+                      // !hasModels ||
+                          // !isModelSelected
+                      // sx={{
+                      //   width: 48,
+                      //   height: 48,
+                      //   borderRadius: '12px',
+                      //   background: isStreamingActive
+                      //     ? 'linear-gradient(135deg, #fecaca, #f87171)' // red
+                      //     : (!input.trim() || isLoading
+                      //       ? 'rgba(209, 213, 219, 0.5)'
+                      //       : 'linear-gradient(135deg, #8b5cf6, #3b82f6)'),
+                      //   transition: 'all 0.3s ease',
+                      //   '&:hover': {
+                      //     background: isStreamingActive
+                      //       ? 'linear-gradient(135deg, #f87171, #ef4444)'
+                      //       : 'linear-gradient(135deg, #7c3aed, #2563eb)',
+                      //     boxShadow: isStreamingActive
+                      //       ? '0 8px 24px rgba(239,68,68,0.4)'
+                      //       : '0 8px 24px rgba(139,92,246,0.4)',
+                      //   },
+                      // }}
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s ease',
+                        background: (!input.trim() || isLoading) && !isCurrentChatStreaming
+                          ? '#f1f5f9'
+                          : isCurrentChatStreaming
+                            ? '#fecaca'
+                            : '#2563eb',
+                        color: (!input.trim() || isLoading) && !isCurrentChatStreaming
+                          ? '#cbd5f5'
+                          : 'white',
+                        '&:hover': {
+                          background: isCurrentChatStreaming
+                            ? '#ef4444'
+                            : (!input.trim() || isLoading)
+                              ? '#f1f5f9'
+                              : '#1d4ed8',
+                        },
+                      }}
+                    >
+                      {isCurrentChatStreaming ? (
+                        // STOP ICON
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                          <rect x="6" y="6" width="12" height="12" rx="2" />
+                        </svg>
+                      ) : (
+                        <SendIcon
+                          sx={{
+                            color: (!input.trim() || isLoading) ? '#9ca3af' : 'white',
+                          }}
+                        />
+                      )}
+                    </IconButton>
+                  </span>
+                </Tooltip>
+
+                {/* <IconButton
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading || isCurrentChatStreaming}
                   className="group relative overflow-hidden"
@@ -970,61 +1097,61 @@ const ChatInput: React.FC<ChatInputProps> = ({ inputValue, onInputChange }) => {
                     }}
                   />
                 </IconButton> */}
-            </span>
-          </div>
+              </span>
+            </div>
 
-          {/* FAQ Suggestion with Glass Effect */}
-          {matchedFAQ && !streamStatus && (
-            <div
-              className="mt-3 animate-slideDown"
-              style={{
-                animation: 'slideDown 0.3s ease-out',
-              }}
-            >
-              <Chip
-                label={`💡 Suggested: ${matchedFAQ}`}
-                clickable
-                onClick={() => setInput(matchedFAQ)}
-                sx={{
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15))',
-                  backdropFilter: 'blur(10px)',
-                  border: '1.5px solid rgba(16, 185, 129, 0.3)',
-                  color: '#059669',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  padding: '6px 4px',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.25))',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 16px rgba(16, 185, 129, 0.2)',
-                  },
+            {/* FAQ Suggestion with Glass Effect */}
+            {matchedFAQ && !streamStatus && (
+              <div
+                className="mt-3 animate-slideDown"
+                style={{
+                  animation: 'slideDown 0.3s ease-out',
                 }}
-              />
-            </div>
-          )}
-
-          {/* Streaming Status Indicator */}
-          {streamStatus && (
-            <div
-              className="mt-3 animate-slideDown flex items-center gap-2"
-              style={{
-                animation: 'slideDown 0.3s ease-out',
-              }}
-            >
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50/80 backdrop-blur-sm border border-blue-200/50">
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
-                </div>
-                <span className="text-sm text-blue-700 font-medium">{streamStatus}</span>
+              >
+                <Chip
+                  label={`💡 Suggested: ${matchedFAQ}`}
+                  clickable
+                  onClick={() => setInput(matchedFAQ)}
+                  sx={{
+                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15))',
+                    backdropFilter: 'blur(10px)',
+                    border: '1.5px solid rgba(16, 185, 129, 0.3)',
+                    color: '#059669',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    padding: '6px 4px',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.25))',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 16px rgba(16, 185, 129, 0.2)',
+                    },
+                  }}
+                />
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Helper Text */}
-          {/* <div className="text-xs text-gray-500 mt-3 text-center font-medium">
+            {/* Streaming Status Indicator */}
+            {streamStatus && (
+              <div
+                className="mt-3 animate-slideDown flex items-center gap-2"
+                style={{
+                  animation: 'slideDown 0.3s ease-out',
+                }}
+              >
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50/80 backdrop-blur-sm border border-blue-200/50">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
+                  </div>
+                  <span className="text-sm text-blue-700 font-medium">{streamStatus}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Helper Text */}
+            {/* <div className="text-xs text-gray-500 mt-3 text-center font-medium">
             <span className="inline-flex items-center gap-2">
               <kbd className="px-2 py-0.5 bg-white/60 border border-white/60 rounded shadow-sm font-mono">
                 Enter
@@ -1036,10 +1163,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ inputValue, onInputChange }) => {
               for new line
             </span>
           </div> */}
-        </div>
+          </div>
 
-        {/* Animation Keyframes */}
-        <style >{`
+          {/* Animation Keyframes */}
+          <style >{`
         @keyframes slideDown {
           from {
             opacity: 0;
@@ -1051,8 +1178,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ inputValue, onInputChange }) => {
           }
         }
       `}</style>
+        </div>
       </div>
-    </div>
 
     </div>
   );
